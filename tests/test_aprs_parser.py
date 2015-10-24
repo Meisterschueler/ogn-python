@@ -30,6 +30,10 @@ class TestStringMethods(unittest.TestCase):
             result = parse_aprs(line)
             print(str(result), "\n")
 
+    def test_fail_none(self):
+        with self.assertRaises(Exception):
+            parse_aprs(None)
+
     def test_fail_empty(self):
         with self.assertRaises(Exception):
             parse_aprs("")
