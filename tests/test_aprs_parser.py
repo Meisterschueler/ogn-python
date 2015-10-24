@@ -30,5 +30,9 @@ class TestStringMethods(unittest.TestCase):
             result = parse_aprs(line)
             print(str(result), "\n")
 
+    def test_fail_empty(self):
+        with self.assertRaises(Exception):
+            parse_aprs("")
+
 if __name__ == '__main__':
     unittest.main()
