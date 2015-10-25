@@ -1,10 +1,9 @@
-from datetime import *
 import re
 
 from sqlalchemy import Column, String, Integer, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 
-from ogn.aprs_utils import *
+from ogn.aprs_utils import createTimestamp, dmsToDeg, kts2kmh, feet2m
 from ogn.model.base import Base
 
 
@@ -24,8 +23,8 @@ class Beacon(AbstractConcreteBase, Base):
     symboltable = None
     longitude = Column(Float)
     symbolcode = None
-    ground_speed = Column(Float)
     track = Column(Integer)
+    ground_speed = Column(Float)
     altitude = Column(Integer)
     comment = None
 
@@ -52,11 +51,11 @@ class Beacon(AbstractConcreteBase, Base):
         self.symbolcode = result.group(9)
 
         if result.group(10) is not None:
-            self.ground_speed = int(result.group(11))*kts2kmh
-            self.track = int(result.group(12))
+            self.track = int(result.group(11))
+            self.ground_speed = int(result.group(12))*kts2kmh
         else:
-            self.speed = 0
             self.track = 0
+            self.ground_speed = 0
 
         self.altitude = int(result.group(13))*feet2m
 

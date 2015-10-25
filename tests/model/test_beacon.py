@@ -1,6 +1,6 @@
 import unittest
 
-from ogn.aprs_utils import *
+from ogn.aprs_utils import dmsToDeg, kts2kmh, m2feet
 from ogn.model.beacon import Beacon
 
 
@@ -16,7 +16,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(beacon.symboltable, '/')
         self.assertAlmostEqual(beacon.longitude, dmsToDeg(6.0003), 5)
         self.assertEqual(beacon.symbolcode, '\'')
-        self.assertEqual(beacon.ground_speed, 342*kts2kmh)
+        self.assertEqual(beacon.track, 342)
+        self.assertEqual(beacon.ground_speed, 49*kts2kmh)
         self.assertAlmostEqual(beacon.altitude*m2feet, 5524, 5)
         self.assertEqual(beacon.comment, "this is a comment")
 
