@@ -2,8 +2,9 @@ import re
 
 from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger
 
-from ogn.aprs_utils import *
+from ogn.aprs_utils import fpm2ms
 from ogn.model.beacon import Beacon
+from wsgiref.simple_server import software_version
 
 
 class Position(Beacon):
@@ -21,6 +22,10 @@ class Position(Beacon):
     frequency_offset = Column(Float)
     gps_status = Column(String)
 
+    software_version = None
+    hardware_version = None
+    real_id = None
+
     # Pattern
     address_pattern = re.compile(r"id(\S{2})(\S{6})")
     climb_rate_pattern = re.compile(r"([\+\-]\d+)fpm")
@@ -31,6 +36,10 @@ class Position(Beacon):
     hear_ID_pattern = re.compile(r"hear(\w{4})")
     frequency_offset_pattern = re.compile(r"([\+\-]\d+\.\d+)kHz")
     gps_status_pattern = re.compile(r"gps(\d+x\d+)")
+
+    software_version_pattern = re.compile(r"s(\d+\.\d+)")
+    hardware_version_pattern = re.compile(r"h(\d+)")
+    real_id_pattern = re.compile(r"r(\w{6})")
 
     def __init__(self, beacon=None):
         self.heared_aircraft_IDs = list()
@@ -59,6 +68,10 @@ class Position(Beacon):
             hear_ID_match = self.hear_ID_pattern.match(part)
             frequency_offset_match = self.frequency_offset_pattern.match(part)
             gps_status_match = self.gps_status_pattern.match(part)
+
+            software_version_match = self.software_version_pattern.match(part)
+            hardware_version_match = self.hardware_version_pattern.match(part)
+            real_id_match = self.real_id_pattern.match(part)
 
             if address_match is not None:
                 # Flarm ID type byte in APRS msg: PTTT TTII
@@ -90,9 +103,15 @@ class Position(Beacon):
                 self.frequency_offset = float(frequency_offset_match.group(1))
             elif gps_status_match is not None:
                 self.gps_status = gps_status_match.group(1)
+
+            elif software_version_match is not None:
+                self.software_version = float(software_version_match.group(1))
+            elif hardware_version_match is not None:
+                self.hardware_version = int(hardware_version_match.group(1))
+            elif real_id_match is not None:
+                self.real_id = real_id_match.group(1)
             else:
                 raise Exception("No valid position description: %s" % part)
 
     def __repr__(self):
-        #return("<Position %s: %s %s %s %s %s %s" % (self.name, self.latitude, self.longitude, self.altitude, self.ground_speed, self.track, self.climb_rate))
         return("<Position %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (self.name, self.address_type, self.aircraft_type, self.timestamp, self.address_type, self.aircraft_type, self.stealth, self.address, self.climb_rate, self.turn_rate, self.signal_strength, self.error_count, self.frequency_offset, self.gps_status))
