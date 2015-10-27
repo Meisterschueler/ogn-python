@@ -5,6 +5,11 @@ from ogn.model.beacon import Beacon
 
 
 class TestStringMethods(unittest.TestCase):
+    def test_fail_validation(self):
+        beacon = Beacon()
+        with self.assertRaises(Exception):
+            beacon.parse("notAValidString")
+
     def test_basic(self):
         beacon = Beacon()
 
