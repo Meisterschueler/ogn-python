@@ -1,4 +1,4 @@
-from datetime import *
+from datetime import datetime, timedelta
 import math
 
 
@@ -32,5 +32,5 @@ def createTimestamp(hhmmss, reference):
     elif (reference.hour == 0) & (hh == 23):
         reference = reference - timedelta(days=1)
     elif (abs(reference.hour - hh) > 1):
-        raise Exception("Time difference is big. Reference time:%s - timestamp:%s" % (reference, hhmmss))
+        raise Exception("Time difference is too big. Reference time:%s - timestamp:%s" % (reference, hhmmss))
     return datetime(reference.year, reference.month, reference.day, hh, mm, ss)
