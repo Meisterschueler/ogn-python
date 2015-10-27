@@ -1,6 +1,6 @@
 import re
 
-from sqlalchemy import Column, String, Integer, Float
+from sqlalchemy import Column, String
 
 from ogn.model.beacon import Beacon
 
