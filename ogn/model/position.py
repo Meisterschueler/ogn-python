@@ -13,7 +13,7 @@ class Position(Beacon):
     address_type = Column(SmallInteger)
     aircraft_type = Column(SmallInteger)
     stealth = Column(Boolean)
-    address = Column(String, index=True)
+    address = Column(String(6), index=True)
     climb_rate = Column(Float)
     turn_rate = Column(Float)
     signal_strength = Column(Float)
@@ -21,9 +21,9 @@ class Position(Beacon):
     frequency_offset = Column(Float)
     gps_status = Column(String)
 
-    software_version = None
-    hardware_version = None
-    real_id = None
+    software_version = Column(Float)
+    hardware_version = Column(SmallInteger)
+    real_id = Column(String(6))
 
     # Pattern
     address_pattern = re.compile(r"id(\S{2})(\S{6})")
