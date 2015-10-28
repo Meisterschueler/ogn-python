@@ -10,6 +10,7 @@ class Receiver(Beacon):
 
     # Receiver specific data
     version = Column(String)
+    platform = Column(String)
     cpu_load = 0
     cpu_temp = 0
     free_ram = 0
@@ -22,7 +23,7 @@ class Receiver(Beacon):
     rec_input_noise = 0
 
     # Pattern
-    version_pattern = re.compile(r"v(\d+\.\d+\.\d+)")
+    version_pattern = re.compile(r"v(\d+\.\d+\.\d+)\.?(.+)?")
     cpu_pattern = re.compile(r"CPU:(\d+\.\d+)")
     cpu_temp_pattern = re.compile(r"([\+\-]\d+\.\d+)C")
     ram_pattern = re.compile(r"RAM:(\d+\.\d+)/(\d+\.\d+)MB")
@@ -60,6 +61,7 @@ class Receiver(Beacon):
 
             if version_match is not None:
                 self.version = version_match.group(1)
+                self.platform = version_match.group(2)
             elif cpu_match is not None:
                 self.cpu_load = float(cpu_match.group(1))
             elif cpu_temp_match is not None:
