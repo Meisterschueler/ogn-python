@@ -7,8 +7,9 @@ class TestStringMethods(unittest.TestCase):
     def test_v022(self):
         receiver = Receiver()
 
-        receiver.parse("v0.2.2 CPU:0.5 RAM:669.9/887.7MB NTP:1.0ms/+6.2ppm +52.0C RF:+0.06dB")
+        receiver.parse("v0.2.2.x86 CPU:0.5 RAM:669.9/887.7MB NTP:1.0ms/+6.2ppm +52.0C RF:+0.06dB")
         self.assertEqual(receiver.version, '0.2.2')
+        self.assertEqual(receiver.platform, 'x86')
         self.assertEqual(receiver.cpu_load, 0.5)
         self.assertEqual(receiver.cpu_temp, 52.0)
         self.assertEqual(receiver.free_ram, 669.9)
