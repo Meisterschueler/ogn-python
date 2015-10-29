@@ -25,6 +25,8 @@ class Position(Beacon):
     hardware_version = Column(SmallInteger)
     real_id = Column(String(6))
 
+    flightlevel = Column(Float)
+
     # Pattern
     address_pattern = re.compile(r"id(\S{2})(\S{6})")
     climb_rate_pattern = re.compile(r"([\+\-]\d+)fpm")
@@ -39,6 +41,8 @@ class Position(Beacon):
     software_version_pattern = re.compile(r"s(\d+\.\d+)")
     hardware_version_pattern = re.compile(r"h(\d+)")
     real_id_pattern = re.compile(r"r(\w{6})")
+
+    flightlevel_pattern = re.compile(r"FL(\d{3}\.\d{2})")
 
     def __init__(self, beacon=None):
         self.heared_aircraft_IDs = list()
@@ -55,6 +59,9 @@ class Position(Beacon):
             self.comment = beacon.comment
 
             self.parse(beacon.comment)
+        else:
+            self.latitude = 0.0
+            self.longitude = 0.0
 
     def parse(self, text):
         for part in text.split(' '):
@@ -71,6 +78,8 @@ class Position(Beacon):
             software_version_match = self.software_version_pattern.match(part)
             hardware_version_match = self.hardware_version_pattern.match(part)
             real_id_match = self.real_id_pattern.match(part)
+
+            flightlevel_match = self.flightlevel_pattern.match(part)
 
             if address_match is not None:
                 # Flarm ID type byte in APRS msg: PTTT TTII
@@ -109,6 +118,9 @@ class Position(Beacon):
                 self.hardware_version = int(hardware_version_match.group(1))
             elif real_id_match is not None:
                 self.real_id = real_id_match.group(1)
+
+            elif flightlevel_match is not None:
+                self.flightlevel = float(flightlevel_match.group(1))
             else:
                 raise Exception("No valid position description: %s" % part)
 
