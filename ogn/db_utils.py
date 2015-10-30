@@ -1,8 +1,8 @@
 from urllib.request import urlopen
 
-from ogn.db import session
-from ogn.model.address_origin import AddressOrigin
-from ogn.model.flarm import *
+from .db import session
+from .model.address_origin import AddressOrigin
+from .model.flarm import Flarm
 
 
 def get_devices_from_ddb():
@@ -27,7 +27,7 @@ def get_devices_from_flarmnet():
     response = urlopen("http://flarmnet.org/files/data.fln")
     lines = response.readlines()
     for line in lines:
-        if (len(line) != FLARMNET_LINE_LENGTH):
+        if (len(line) != Flarm.FLARMNET_LINE_LENGTH):
             continue
 
         flarm = Flarm()

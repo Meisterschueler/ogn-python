@@ -2,8 +2,8 @@ import re
 
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, SmallInteger
 
-from ogn.model.address_origin import *
-from ogn.model.base import Base
+from .address_origin import AddressOrigin
+from .base import Base
 
 
 FLARMNET_LINE_LENGTH = 173

@@ -3,7 +3,7 @@ import re
 from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger
 
 from ogn.aprs_utils import fpm2ms
-from ogn.model.beacon import Beacon
+from .beacon import Beacon
 
 
 class Position(Beacon):

@@ -2,7 +2,7 @@ import re
 
 from sqlalchemy import Column, String
 
-from ogn.model.beacon import Beacon
+from .beacon import Beacon
 
 
 class Receiver(Beacon):

@@ -1,6 +1,6 @@
-from ogn.model.beacon import Beacon
-from ogn.model.position import Position
-from ogn.model.receiver import Receiver
+from .model.beacon import Beacon
+from .model.position import Position
+from .model.receiver import Receiver
 
 
 def parse_aprs(text):

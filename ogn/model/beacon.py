@@ -4,7 +4,7 @@ from sqlalchemy import Column, String, Integer, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 
 from ogn.aprs_utils import createTimestamp, dmsToDeg, kts2kmh, feet2m
-from ogn.model.base import Base
+from .base import Base
 
 
 # "original" pattern from OGN: "(.+?)>APRS,.+,(.+?):/(\\d{6})+h(\\d{4}\\.\\d{2})(N|S).(\\d{5}\\.\\d{2})(E|W).((\\d{3})/(\\d{3}))?/A=(\\d{6}).*?"
