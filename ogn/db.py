@@ -1,10 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ogn.model.base import Base
-from ogn.model.position import Position
-from ogn.model.receiver import Receiver
-from ogn.model.flarm import Flarm
+from .model import Base, Position, Receiver, Flarm
 
 
 # prepare db

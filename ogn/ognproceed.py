@@ -3,7 +3,8 @@ from time import time
 
 from ogn import db_utils
 from ogn import settings
-from ogn.aprs_parser import *
+from ogn.aprs_parser import parse_aprs
+from .model import Position, Receiver
 
 
 def proceed():

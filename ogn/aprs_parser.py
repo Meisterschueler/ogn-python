@@ -1,6 +1,4 @@
-from .model.beacon import Beacon
-from .model.position import Position
-from .model.receiver import Receiver
+from .model import Beacon, Position, Receiver
 
 
 def parse_aprs(text):

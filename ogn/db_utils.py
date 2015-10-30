@@ -1,8 +1,7 @@
 from urllib.request import urlopen
 
 from .db import session
-from .model.address_origin import AddressOrigin
-from .model.flarm import Flarm
+from .model import AddressOrigin, Flarm
 
 
 def get_devices_from_ddb():
