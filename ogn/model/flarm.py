@@ -6,9 +6,6 @@ from .address_origin import AddressOrigin
 from .base import Base
 
 
-FLARMNET_LINE_LENGTH = 173
-
-
 class Flarm(Base):
     __tablename__ = 'flarm'
 
@@ -25,6 +22,8 @@ class Flarm(Base):
     identified = Column(Boolean)
 
     address_origin = Column(SmallInteger)
+
+    FLARMNET_LINE_LENGTH = 173
 
     def parse_ogn(self, line):
         PATTERN = "\'([FIO])\',\'(.{6})\',\'([^\']+)?\',\'([^\']+)?\',\'([^\']+)?\',\'([YN])\',\'([YN])\'"
@@ -84,7 +83,7 @@ if __name__ == '__main__':
     response = urllib.request.urlopen("http://flarmnet.org/files/data.fln")
     lines = response.readlines()
     for line in lines:
-        if (len(line) != FLARMNET_LINE_LENGTH):
+        if (len(line) != Flarm.FLARMNET_LINE_LENGTH):
             continue
 
         flarm = Flarm()
