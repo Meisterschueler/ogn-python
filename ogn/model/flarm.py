@@ -66,26 +66,3 @@ class Flarm(Base):
 
     def __repr__(self):
         return("<Flarm: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (self.address_type, self.address, self.name, self.airport, self.aircraft, self.registration, self.competition, self.frequency, self.tracked, self.identified))
-
-
-if __name__ == '__main__':
-    import urllib.request
-    response = urllib.request.urlopen("http://ddb.glidernet.org/download")
-    lines = response.readlines()
-    for line in lines:
-        if (line.decode()[0] == "#"):
-            continue
-
-        flarm = Flarm()
-        flarm.parse_ogn(line.decode())
-        print(str(flarm))
-
-    response = urllib.request.urlopen("http://flarmnet.org/files/data.fln")
-    lines = response.readlines()
-    for line in lines:
-        if (len(line) != Flarm.FLARMNET_LINE_LENGTH):
-            continue
-
-        flarm = Flarm()
-        flarm.parse_flarmnet(line.decode())
-        print(str(flarm))
