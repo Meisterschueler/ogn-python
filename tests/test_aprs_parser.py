@@ -27,8 +27,7 @@ class TestStringMethods(unittest.TestCase):
         lines.append(           "ZK-GSC>APRS,qAS,Omarama:/210202h4429.25S/16959.33E'/A=001407 id05C821EA +020fpm +0.0rot 16.8dB 0e -3.1kHz gps1x3 hear1084 hearB597 hearB598")
 
         for line in lines:
-            result = parse_aprs(line)
-            print(str(result), "\n")
+            parse_aprs(line)
 
     def test_fail_none(self):
         with self.assertRaises(Exception):

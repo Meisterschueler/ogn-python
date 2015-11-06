@@ -42,7 +42,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(position.hardware_version, 44)
         self.assertEqual(position.real_id, "DF0C56")
 
-    def test_ogn_tracker(self):
+    def test_v024_ogn_tracker(self):
         position = Position()
         position.parse("!W34! id07353800 +020fpm -14.0rot FL004.43 38.5dB 0e -2.9kHz")
 
