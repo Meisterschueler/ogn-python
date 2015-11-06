@@ -4,7 +4,6 @@ from time import time
 from ogn import db_utils
 from ogn import settings
 from ogn.aprs_parser import parse_aprs
-from ogn.model import Position, Receiver
 
 
 def proceed():
@@ -53,10 +52,8 @@ def proceed_line(line):
         print('Reason: %s' % e)
         return
 
-    if isinstance(result, Position):
-        db_utils.put_position_into_db(result)
-    elif isinstance(result, Receiver):
-        db_utils.put_receiver_into_db(result)
+    if result is not None:
+        db_utils.put_into_db(result)
 
 if __name__ == '__main__':
     while True:
