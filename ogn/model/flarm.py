@@ -1,8 +1,5 @@
-import re
-
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, SmallInteger
 
-from .address_origin import AddressOrigin
 from .base import Base
 
 
@@ -22,47 +19,6 @@ class Flarm(Base):
     identified = Column(Boolean)
 
     address_origin = Column(SmallInteger)
-
-    FLARMNET_LINE_LENGTH = 173
-
-    def parse_ogn(self, line):
-        PATTERN = "\'([FIO])\',\'(.{6})\',\'([^\']+)?\',\'([^\']+)?\',\'([^\']+)?\',\'([YN])\',\'([YN])\'"
-        ogn_re = re.compile(PATTERN)
-
-        result = ogn_re.match(line)
-        if result is None:
-            raise Exception("No valid string: %s" % line)
-
-        self.address_type = result.group(1)
-        self.address = result.group(2)
-        self.aircraft = result.group(3)
-        self.registration = result.group(4)
-        self.competition = result.group(5)
-        self.tracked = result.group(6) == "Y"
-        self.identified = result.group(7) == "Y"
-
-        self.address_origin = AddressOrigin.ogn_ddb
-
-    def parse_flarmnet(self, line):
-        rawString = self.hexToString(line)
-
-        self.address_type = None
-        self.address = rawString[0:6].strip()
-        self.name = rawString[6:27].strip()
-        self.airport = rawString[27:48].strip()
-        self.aircraft = rawString[48:69].strip()
-        self.registration = rawString[69:76].strip()
-        self.competition = rawString[76:79].strip()
-        self.frequency = rawString[79:89].strip()
-
-        self.address_origin = AddressOrigin.flarmnet
-
-    def hexToString(self, hexString):
-        result = ''
-        for i in range(0, len(hexString)-1, 2):
-            result += chr(int(hexString[i:i+2], 16))
-
-        return(result)
 
     def __repr__(self):
         return("<Flarm: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (self.address_type, self.address, self.name, self.airport, self.aircraft, self.registration, self.competition, self.frequency, self.tracked, self.identified))
