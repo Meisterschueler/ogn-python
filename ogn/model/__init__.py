@@ -5,3 +5,4 @@ from .beacon import Beacon
 from .flarm import Flarm
 from .position import Position
 from .receiver import Receiver
+from .takeoff_landing import TakeoffLanding
