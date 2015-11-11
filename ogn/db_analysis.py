@@ -4,21 +4,21 @@ from sqlalchemy.sql import func
 from sqlalchemy import distinct, and_
 
 from ogn.db import session
-from ogn.model import Receiver
+from ogn.model import ReceiverBeacon
 
 back_24h = datetime.utcnow() - timedelta(days=1)
 receiver_messages_per_24h = 24*60 / 5
 
 
 def get_receiver_info():
-    sq = session.query(distinct(Receiver.name).label('name'), func.max(Receiver.timestamp).label('lastseen'), func.count(Receiver.name).label('messages_count')).\
-        filter(Receiver.timestamp > back_24h).\
-        group_by(Receiver.name).\
+    sq = session.query(distinct(ReceiverBeacon.name).label('name'), func.max(ReceiverBeacon.timestamp).label('lastseen'), func.count(ReceiverBeacon.name).label('messages_count')).\
+        filter(ReceiverBeacon.timestamp > back_24h).\
+        group_by(ReceiverBeacon.name).\
         subquery()
 
-    query = session.query(Receiver, sq.c.messages_count).\
-        filter(and_(Receiver.name == sq.c.name, Receiver.timestamp == sq.c.lastseen)).\
-        order_by(Receiver.name)
+    query = session.query(ReceiverBeacon, sq.c.messages_count).\
+        filter(and_(ReceiverBeacon.name == sq.c.name, ReceiverBeacon.timestamp == sq.c.lastseen)).\
+        order_by(ReceiverBeacon.name)
 
     print('--- Receivers ---')
     for [receiver, messages_count] in query.all():
@@ -26,15 +26,15 @@ def get_receiver_info():
 
 
 def get_software_stats():
-    sq = session.query(Receiver.name, func.max(Receiver.timestamp).label('lastseen')).\
-        filter(Receiver.timestamp > back_24h).\
-        group_by(Receiver.name).\
+    sq = session.query(ReceiverBeacon.name, func.max(ReceiverBeacon.timestamp).label('lastseen')).\
+        filter(ReceiverBeacon.timestamp > back_24h).\
+        group_by(ReceiverBeacon.name).\
         subquery()
 
-    versions = session.query(distinct(Receiver.version), func.count(Receiver.version)).\
-        filter(and_(Receiver.name == sq.c.name, Receiver.timestamp == sq.c.lastseen)).\
-        group_by(Receiver.version).\
-        order_by(Receiver.version)
+    versions = session.query(distinct(ReceiverBeacon.version), func.count(ReceiverBeacon.version)).\
+        filter(and_(ReceiverBeacon.name == sq.c.name, ReceiverBeacon.timestamp == sq.c.lastseen)).\
+        group_by(ReceiverBeacon.version).\
+        order_by(ReceiverBeacon.version)
 
     print('\n--- Versions ---')
     for [version, count] in versions.all():
@@ -42,15 +42,15 @@ def get_software_stats():
 
 
 def get_hardware_stats():
-    sq = session.query(Receiver.name, func.max(Receiver.timestamp).label('lastseen')).\
-        filter(Receiver.timestamp > back_24h).\
-        group_by(Receiver.name).\
+    sq = session.query(ReceiverBeacon.name, func.max(ReceiverBeacon.timestamp).label('lastseen')).\
+        filter(ReceiverBeacon.timestamp > back_24h).\
+        group_by(ReceiverBeacon.name).\
         subquery()
 
-    platforms = session.query(distinct(Receiver.platform), func.count(Receiver.platform)).\
-        filter(and_(Receiver.name == sq.c.name, Receiver.timestamp == sq.c.lastseen)).\
-        group_by(Receiver.platform).\
-        order_by(Receiver.platform)
+    platforms = session.query(distinct(ReceiverBeacon.platform), func.count(ReceiverBeacon.platform)).\
+        filter(and_(ReceiverBeacon.name == sq.c.name, ReceiverBeacon.timestamp == sq.c.lastseen)).\
+        group_by(ReceiverBeacon.platform).\
+        order_by(ReceiverBeacon.platform)
 
     print('\n--- Platforms ---')
     for [platform, count] in platforms.all():

@@ -1,4 +1,4 @@
-from .model import Beacon, Position, Receiver
+from .model import Beacon, AircraftBeacon, ReceiverBeacon
 
 
 def parse_aprs(text):
@@ -25,6 +25,6 @@ def parse_aprs(text):
     # /o: ?
 
     if beacon.symboltable == "I" and beacon.symbolcode == "&":
-        return Receiver(beacon)
+        return ReceiverBeacon(beacon)
     else:
-        return Position(beacon)
+        return AircraftBeacon(beacon)

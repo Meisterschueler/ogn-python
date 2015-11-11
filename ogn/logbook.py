@@ -5,7 +5,7 @@ from sqlalchemy import and_, or_, insert, between
 from sqlalchemy.sql.expression import case, true, false, label
 
 from ogn.db import session
-from ogn.model import Flarm, Position, TakeoffLanding
+from ogn.model import Flarm, AircraftBeacon, TakeoffLanding
 
 
 def compute_takeoff_and_landing():
@@ -19,30 +19,30 @@ def compute_takeoff_and_landing():
         last_takeoff_landing = datetime(2015, 1, 1, 0, 0, 0)
 
     # make a query with current, previous and next position, so we can detect takeoffs and landings
-    sq = session.query(Position.address,
-                       func.lag(Position.address).over(order_by=and_(Position.address, Position.timestamp)).label('address_prev'),
-                       func.lead(Position.address).over(order_by=and_(Position.address, Position.timestamp)).label('address_next'),
-                       Position.timestamp,
-                       func.lag(Position.timestamp).over(order_by=and_(Position.address, Position.timestamp)).label('timestamp_prev'),
-                       func.lead(Position.timestamp).over(order_by=and_(Position.address, Position.timestamp)).label('timestamp_next'),
-                       Position.latitude,
-                       func.lag(Position.latitude).over(order_by=and_(Position.address, Position.timestamp)).label('latitude_prev'),
-                       func.lead(Position.latitude).over(order_by=and_(Position.address, Position.timestamp)).label('latitude_next'),
-                       Position.longitude,
-                       func.lag(Position.longitude).over(order_by=and_(Position.address, Position.timestamp)).label('longitude_prev'),
-                       func.lead(Position.longitude).over(order_by=and_(Position.address, Position.timestamp)).label('longitude_next'),
-                       Position.ground_speed,
-                       Position.track,
-                       func.lag(Position.track).over(order_by=and_(Position.address, Position.timestamp)).label('track_prev'),
-                       func.lead(Position.track).over(order_by=and_(Position.address, Position.timestamp)).label('track_next'),
-                       Position.ground_speed,
-                       func.lag(Position.ground_speed).over(order_by=and_(Position.address, Position.timestamp)).label('ground_speed_prev'),
-                       func.lead(Position.ground_speed).over(order_by=and_(Position.address, Position.timestamp)).label('ground_speed_next'),
-                       Position.altitude,
-                       func.lag(Position.altitude).over(order_by=and_(Position.address, Position.timestamp)).label('altitude_prev'),
-                       func.lead(Position.altitude).over(order_by=and_(Position.address, Position.timestamp)).label('altitude_next')) \
-        .filter(Position.timestamp > last_takeoff_landing) \
-        .order_by(func.date(Position.timestamp), Position.address, Position.timestamp) \
+    sq = session.query(AircraftBeacon.address,
+                       func.lag(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_prev'),
+                       func.lead(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_next'),
+                       AircraftBeacon.timestamp,
+                       func.lag(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_prev'),
+                       func.lead(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_next'),
+                       AircraftBeacon.latitude,
+                       func.lag(AircraftBeacon.latitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('latitude_prev'),
+                       func.lead(AircraftBeacon.latitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('latitude_next'),
+                       AircraftBeacon.longitude,
+                       func.lag(AircraftBeacon.longitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('longitude_prev'),
+                       func.lead(AircraftBeacon.longitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('longitude_next'),
+                       AircraftBeacon.ground_speed,
+                       AircraftBeacon.track,
+                       func.lag(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_prev'),
+                       func.lead(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_next'),
+                       AircraftBeacon.ground_speed,
+                       func.lag(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('ground_speed_prev'),
+                       func.lead(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('ground_speed_next'),
+                       AircraftBeacon.altitude,
+                       func.lag(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_prev'),
+                       func.lead(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_next')) \
+        .filter(AircraftBeacon.timestamp > last_takeoff_landing) \
+        .order_by(func.date(AircraftBeacon.timestamp), AircraftBeacon.address, AircraftBeacon.timestamp) \
         .subquery()
 
     # find takeoffs and landings (look at the trigger_speed)

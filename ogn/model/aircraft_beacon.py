@@ -6,8 +6,8 @@ from ogn.aprs_utils import fpm2ms
 from .beacon import Beacon
 
 
-class Position(Beacon):
-    __tablename__ = "position"
+class AircraftBeacon(Beacon):
+    __tablename__ = "aircraft_beacon"
 
     # Flarm specific data
     address_type = Column(SmallInteger)
@@ -125,4 +125,4 @@ class Position(Beacon):
                 raise Exception("No valid position description: %s" % part)
 
     def __repr__(self):
-        return("<Position %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (self.name, self.address_type, self.aircraft_type, self.timestamp, self.address_type, self.aircraft_type, self.stealth, self.address, self.climb_rate, self.turn_rate, self.signal_strength, self.error_count, self.frequency_offset, self.gps_status))
+        return("<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (self.name, self.address_type, self.aircraft_type, self.timestamp, self.address_type, self.aircraft_type, self.stealth, self.address, self.climb_rate, self.turn_rate, self.signal_strength, self.error_count, self.frequency_offset, self.gps_status))

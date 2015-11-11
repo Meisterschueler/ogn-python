@@ -2,12 +2,12 @@ import unittest
 
 from ogn.aprs_utils import ms2fpm
 from ogn.model.beacon import Beacon
-from ogn.model.position import Position
+from ogn.model.aircraft_beacon import AircraftBeacon
 
 
 class TestStringMethods(unittest.TestCase):
     def test_basic(self):
-        position = Position()
+        position = AircraftBeacon()
         position.parse("id0ADDA5BA -454fpm -1.1rot 8.8dB 0e +51.2kHz gps4x5 hear1084 hearB597 hearB598")
 
         self.assertFalse(position.stealth)
@@ -25,7 +25,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(position.heared_aircraft_IDs[2], 'B598')
 
     def test_stealth(self):
-        position = Position()
+        position = AircraftBeacon()
         position.parse("id0ADD1234")
         self.assertFalse(position.stealth)
 
@@ -33,7 +33,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(position.stealth)
 
     def test_v024(self):
-        position = Position()
+        position = AircraftBeacon()
         position.parse("!W26! id21400EA9 -2454fpm +0.9rot 19.5dB 0e -6.6kHz gps1x1 s6.02 h44 rDF0C56")
 
         self.assertEqual(position.latitude, 0.002)
@@ -43,7 +43,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(position.real_id, "DF0C56")
 
     def test_v024_ogn_tracker(self):
-        position = Position()
+        position = AircraftBeacon()
         position.parse("!W34! id07353800 +020fpm -14.0rot FL004.43 38.5dB 0e -2.9kHz")
 
         self.assertEqual(position.flightlevel, 4.43)
@@ -51,7 +51,7 @@ class TestStringMethods(unittest.TestCase):
     def test_copy_constructor(self):
         beacon = Beacon()
         beacon.parse("FLRDDA5BA>APRS,qAS,LFMX:/160829h4415.41N/00600.03E'342/049/A=005524 id0ADDA5BA -454fpm -1.1rot 8.8dB 0e +51.2kHz gps4x5")
-        position = Position(beacon)
+        position = AircraftBeacon(beacon)
 
         self.assertEqual(position.name, 'FLRDDA5BA')
         self.assertEqual(position.address, 'DDA5BA')

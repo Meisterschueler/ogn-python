@@ -5,10 +5,10 @@ from sqlalchemy import Column, String
 from .beacon import Beacon
 
 
-class Receiver(Beacon):
-    __tablename__ = "receiver"
+class ReceiverBeacon(Beacon):
+    __tablename__ = "receiver_beacon"
 
-    # Receiver specific data
+    # ReceiverBeacon specific data
     version = Column(String)
     platform = Column(String)
     cpu_load = 0
@@ -85,4 +85,4 @@ class Receiver(Beacon):
                 raise Exception("No valid receiver description: %s" % part)
 
     def __repr__(self):
-        return("<Receiver %s: %s>" % (self.name, self.version))
+        return("<ReceiverBeacon %s: %s>" % (self.name, self.version))

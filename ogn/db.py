@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .model import Base, Position, Receiver, Flarm
+from .model import Base, AircraftBeacon, ReceiverBeacon, Flarm
 
 
 # prepare db

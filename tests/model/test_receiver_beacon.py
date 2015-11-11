@@ -1,11 +1,11 @@
 import unittest
 
-from ogn.model.receiver import Receiver
+from ogn.model.receiver_beacon import ReceiverBeacon
 
 
 class TestStringMethods(unittest.TestCase):
     def test_v022(self):
-        receiver = Receiver()
+        receiver = ReceiverBeacon()
 
         receiver.parse("v0.2.2.x86 CPU:0.5 RAM:669.9/887.7MB NTP:1.0ms/+6.2ppm +52.0C RF:+0.06dB")
         self.assertEqual(receiver.version, '0.2.2')
@@ -20,7 +20,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(receiver.rec_input_noise, 0.06)
 
     def test_v021(self):
-        receiver = Receiver()
+        receiver = ReceiverBeacon()
 
         receiver.parse("v0.2.1 CPU:0.8 RAM:25.6/458.9MB NTP:0.0ms/+0.0ppm +51.9C RF:+26-1.4ppm/-0.25dB")
         self.assertEqual(receiver.rec_crystal_correction, 26)
