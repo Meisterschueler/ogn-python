@@ -27,3 +27,9 @@ class TestStringMethods(unittest.TestCase):
         longitude = 11.0
         country_code = get_country_code(latitude, longitude)
         self.assertEquals(country_code, 'de')
+
+    def test_get_country_code_bad(self):
+        latitude = 0.0002274
+        longitude = -0.0009119
+        country_code = get_country_code(latitude, longitude)
+        self.assertEqual(country_code, None)

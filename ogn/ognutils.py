@@ -42,5 +42,8 @@ def get_ddb(csvfile=None):
 def get_country_code(latitude, longitude):
     geolocator = Nominatim()
     location = geolocator.reverse("%f, %f" % (latitude, longitude))
-    country_code = location.raw["address"]["country_code"]
+    try:
+        country_code = location.raw["address"]["country_code"]
+    except KeyError:
+        country_code = None
     return country_code
