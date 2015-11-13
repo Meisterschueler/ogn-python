@@ -1,0 +1,14 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %} Open Glider Network{% endblock %} 
+
+{% block navbar %}
+    {{nav.top.render()}}
+{% endblock %}
+
+{% block body %} 
+    {{super()}}
+    <div class="footer">
+        Copyright 2015 Konstantin Gründger
+    </div>
+{% endblock %}

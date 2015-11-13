@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    {{super()}}
+    <!-- Flags for receiver country code -->
+    <link rel="stylesheet" href="{{url_for('static', filename ='css/Base.css', _external = True)}}" /> 
+    <link rel="stylesheet" href="{{url_for('static', filename ='flags/flags.css', _external = True)}}" /> 
+{% endblock %}
+
+{% block content %} 
+	<table class="table">
+	<thead>
+		<tr>
+		<th>Name</th>
+		<th>Version</th>
+		<th>Lastseen</th>
+		<th>Availability</th>
+		<th>Beacons count</th>
+		<th>Country</th>
+		</tr>
+	</thead>
+	<tbody>
+	{% for receiver in receivers %}
+		<tr>
+		<td> {{ receiver.name }} </td>
+		<td> {{ receiver.version }} </td>
+		<td> {{ receiver.lastseen }} </td>
+		{% if receiver.availability < 80 %}
+		<td class="under-limit"> {{ receiver.availability }} </td>
+		{% else %}
+		<td> {{ receiver.availability }} </td>
+		{% endif %}
+		<td> {{ receiver.beacons_count }} </td>
+		<td> <img src="static/flags/blank.gif" class="flag flag-{{ receiver.country_code }}" alt="{{ receiver.country_code }}" /> </td>
+		</tr>
+	{% endfor %}
+	</tbody>
+	</table>
+{% endblock %}
