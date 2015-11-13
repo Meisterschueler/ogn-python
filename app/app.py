@@ -50,10 +50,11 @@ def index():
 def live():
     return render_template('live.html')
 
+
 @app.route('/aircraft_beacons')
 def aircraft_beacons():
     sq_last = session.query(AircraftBeacon.address, func.max(AircraftBeacon.timestamp).label('lastseen')) \
-        .filter(AircraftBeacon.timestamp > '2015-11-13 15:00:00') \
+        .filter(AircraftBeacon.timestamp > '2015-11-13 00:00:00') \
         .group_by(AircraftBeacon.address) \
         .subquery()
 
@@ -64,9 +65,21 @@ def aircraft_beacons():
     result = {}
     for [address, latitude, longitude, registration, aircraft] in aircraft_beacons_query.all():
         result[address] = {'lat': latitude, 'lng': longitude, 'registration': registration, 'aircraft': aircraft}
+
     return(json.dumps({'aircraft_beacons': result}))
 
-    #return(json.dumps(aircraft_beacons_query.all(), ensure_ascii=False))
+
+@app.route('/positions/<address>')
+def positions(address):
+    positions_query = session.query(AircraftBeacon) \
+        .filter(AircraftBeacon.address == address) \
+        .filter(AircraftBeacon.ground_speed > 0)
+
+    result = []
+    for position in positions_query.all():
+        result.append({'lat': position.latitude, 'lng': position.longitude})
+    return(json.dumps({'positions': result}))
+
 
 
 @app.route('/flarms')
@@ -107,5 +120,3 @@ def statistics():
 
 if __name__ == "__main__":
     app.run(debug=True)
-    #with app.app_context():
-    #    aircraft_beacons()

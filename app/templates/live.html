@@ -34,16 +34,38 @@ function initMap() {
 	        $.each(data.aircraft_beacons, function(i, item) {
 	            var latlng = new google.maps.LatLng(item.lat,item.lng);
 	            var marker = new google.maps.Marker({
+	            	address: i,
 	                position: latlng,
 	                map: map
 	            });
 	            if (item.registration === null) {
-	            	//marker.setIcon('http://maps.google.com/mapfiles/marker_yellow.png');
 	            	marker.setTitle(i);
 	            } else {
-	            	marker.setIcon('http://maps.google.com/mapfiles/arrow.png');
+	            	marker.setIcon('http://maps.google.com/mapfiles/marker_yellow.png');
 	            	marker.setTitle(item.registration);
 	            }
+	            
+	            
+	            marker.addListener('click', function() {
+	            	var mypath = new Array();
+	                $.getJSON('positions/' + marker.address, function(data) {
+	                	var i = 0;
+	                	$.each(data.positions, function(j, item2) {
+	                		var position = new google.maps.LatLng(item2.lat, item2.lng);
+	                		mypath.push(position);
+	                		i = i + 1;
+	                	})
+	                	
+	                	var polyline = new google.maps.Polyline({
+		                    path: mypath,
+		                    strokeColor: '#ff0000',
+		                    strokeOpacity: 1.0,
+		                    strokeWeight: 3
+		                });
+		                
+		                polyline.setMap(map);
+	                });
+	           	});
 	        });        
 	    });
 	});
