@@ -100,8 +100,8 @@ class AircraftBeacon(Beacon):
             elif error_count_match is not None:
                 self.error_count = int(error_count_match.group(1))
             elif coordinates_extension_match is not None:
-                dlat = int(coordinates_extension_match.group(1)) / 1000
-                dlon = int(coordinates_extension_match.group(2)) / 1000
+                dlat = int(coordinates_extension_match.group(1)) / 1000 / 60
+                dlon = int(coordinates_extension_match.group(2)) / 1000 / 60
 
                 self.latitude = self.latitude + dlat
                 self.longitude = self.longitude + dlon
