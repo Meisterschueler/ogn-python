@@ -25,10 +25,12 @@
 		<td> {{ receiver.name }} </td>
 		<td> {{ receiver.version }} </td>
 		<td> {{ receiver.lastseen }} </td>
-		{% if receiver.availability < 80 %}
-		<td class="under-limit"> {{ receiver.availability }} </td>
+		{% if receiver.availability > 80 %}
+		<td class="bg-success"> {{ '%02d%%' % receiver.availability }} </td>
+		{% elif receiver.availability > 10 %}
+		<td class="bg-warning"> {{ '%02d%%' % receiver.availability }} </td>
 		{% else %}
-		<td> {{ receiver.availability }} </td>
+		<td class="bg-danger"> {{ '%02d%%' % receiver.availability }} </td>
 		{% endif %}
 		<td> {{ receiver.beacons_count }} </td>
 		<td> <img src="static/flags/blank.gif" class="flag flag-{{ receiver.country_code }}" alt="{{ receiver.country_code }}" /> </td>
