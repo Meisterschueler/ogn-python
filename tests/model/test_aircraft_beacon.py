@@ -36,8 +36,8 @@ class TestStringMethods(unittest.TestCase):
         position = AircraftBeacon()
         position.parse("!W26! id21400EA9 -2454fpm +0.9rot 19.5dB 0e -6.6kHz gps1x1 s6.02 h44 rDF0C56")
 
-        self.assertEqual(position.latitude, 0.002)
-        self.assertEqual(position.longitude, 0.006)
+        self.assertEqual(position.latitude, 2 / 1000 / 60)
+        self.assertEqual(position.longitude, 6 / 1000 / 60)
         self.assertEqual(position.software_version, 6.02)
         self.assertEqual(position.hardware_version, 44)
         self.assertEqual(position.real_id, "DF0C56")

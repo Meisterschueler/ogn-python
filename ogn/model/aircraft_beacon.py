@@ -27,6 +27,11 @@ class AircraftBeacon(Beacon):
 
     flightlevel = Column(Float)
 
+    # Calculated values
+    radius = Column(Float)
+    theta = Column(Float)
+    phi = Column(Float)
+
     # Pattern
     address_pattern = re.compile(r"id(\S{2})(\S{6})")
     climb_rate_pattern = re.compile(r"([\+\-]\d+)fpm")
@@ -100,8 +105,8 @@ class AircraftBeacon(Beacon):
             elif error_count_match is not None:
                 self.error_count = int(error_count_match.group(1))
             elif coordinates_extension_match is not None:
-                dlat = int(coordinates_extension_match.group(1)) / 1000
-                dlon = int(coordinates_extension_match.group(2)) / 1000
+                dlat = int(coordinates_extension_match.group(1)) / 1000 / 60
+                dlon = int(coordinates_extension_match.group(2)) / 1000 / 60
 
                 self.latitude = self.latitude + dlat
                 self.longitude = self.longitude + dlon
