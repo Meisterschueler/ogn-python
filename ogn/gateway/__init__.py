@@ -11,6 +11,7 @@ from ogn.model import Base
 
 MODULE_VERSION = "0.1"
 
+
 class ognGateway:
     def __init__(self):
         pass
@@ -29,7 +30,6 @@ class ognGateway:
         login = 'user %s pass %s vers ogn-gateway-python %s %s\n'  % (aprs_user, settings.APRS_PASSCODE, MODULE_VERSION, settings.APRS_FILTER)
         self.sock.send(login.encode())
         self.sock_file = self.sock.makefile('rw')
-
 
     def run(self):
         keepalive_time = time()

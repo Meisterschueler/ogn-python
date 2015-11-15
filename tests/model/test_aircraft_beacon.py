@@ -1,8 +1,7 @@
 import unittest
 
 from ogn.aprs_utils import ms2fpm
-from ogn.model.beacon import Beacon
-from ogn.model.aircraft_beacon import AircraftBeacon
+from ogn.model import Beacon, AircraftBeacon
 
 
 class TestStringMethods(unittest.TestCase):

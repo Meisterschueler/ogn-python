@@ -1,6 +1,6 @@
 import unittest
 
-from ogn.model.receiver_beacon import ReceiverBeacon
+from ogn.model import ReceiverBeacon
 
 
 class TestStringMethods(unittest.TestCase):

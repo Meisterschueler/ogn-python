@@ -1,7 +1,7 @@
 import unittest
 
 from ogn.aprs_utils import dmsToDeg, kts2kmh, m2feet
-from ogn.model.beacon import Beacon
+from ogn.model import Beacon
 
 
 class TestStringMethods(unittest.TestCase):

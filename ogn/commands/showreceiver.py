@@ -16,7 +16,7 @@ manager = Manager()
 
 
 @manager.command
-def list():
+def list_all():
     """Show a list of all receivers."""
     sq = session.query(distinct(ReceiverBeacon.name).label('name'), func.max(ReceiverBeacon.timestamp).label('lastseen'), func.count(ReceiverBeacon.name).label('messages_count')).\
         filter(ReceiverBeacon.timestamp > back_24h).\

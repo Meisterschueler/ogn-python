@@ -19,4 +19,4 @@ def updateddb():
     print("Updating ddb data...")
     result = update_ddb_data.delay()
     counter = result.get()
-    print("Imported %i devieces."%counter)
+    print("Imported %i devices." % counter)
