@@ -1,68 +1,25 @@
+# -*- coding: utf-8 -*-
+
 from datetime import datetime, timedelta
 
 from sqlalchemy.sql import func, null
 from sqlalchemy import and_, or_, insert, between
 from sqlalchemy.sql.expression import case, true, false, label
 
-from ogn.db import session
 from ogn.model import Flarm, AircraftBeacon, TakeoffLanding
 
+from ogn.commands.dbutils import session
 
-def compute_takeoff_and_landing():
-    takeoff_speed = 30
-    landing_speed = 30
+from manager import Manager
+manager = Manager()
 
-    # get last takeoff_landing time as starting point for the following search
-    last_takeoff_landing_query = session.query(func.max(TakeoffLanding.timestamp))
-    last_takeoff_landing = last_takeoff_landing_query.one()[0]
-    if last_takeoff_landing is None:
-        last_takeoff_landing = datetime(2015, 1, 1, 0, 0, 0)
-
-    # make a query with current, previous and next position, so we can detect takeoffs and landings
-    sq = session.query(AircraftBeacon.address,
-                       func.lag(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_prev'),
-                       func.lead(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_next'),
-                       AircraftBeacon.timestamp,
-                       func.lag(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_prev'),
-                       func.lead(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_next'),
-                       AircraftBeacon.latitude,
-                       func.lag(AircraftBeacon.latitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('latitude_prev'),
-                       func.lead(AircraftBeacon.latitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('latitude_next'),
-                       AircraftBeacon.longitude,
-                       func.lag(AircraftBeacon.longitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('longitude_prev'),
-                       func.lead(AircraftBeacon.longitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('longitude_next'),
-                       AircraftBeacon.ground_speed,
-                       AircraftBeacon.track,
-                       func.lag(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_prev'),
-                       func.lead(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_next'),
-                       AircraftBeacon.ground_speed,
-                       func.lag(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('ground_speed_prev'),
-                       func.lead(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('ground_speed_next'),
-                       AircraftBeacon.altitude,
-                       func.lag(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_prev'),
-                       func.lead(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_next')) \
-        .filter(AircraftBeacon.timestamp > last_takeoff_landing) \
-        .order_by(func.date(AircraftBeacon.timestamp), AircraftBeacon.address, AircraftBeacon.timestamp) \
-        .subquery()
-
-    # find takeoffs and landings (look at the trigger_speed)
-    takeoff_landing_query = session.query(sq.c.address, sq.c.timestamp, sq.c.latitude, sq.c.longitude, sq.c.track, sq.c.ground_speed, sq.c.altitude, case([(sq.c.ground_speed>takeoff_speed, True), (sq.c.ground_speed<landing_speed, False)]).label('is_takeoff')) \
-        .filter(sq.c.address_prev == sq.c.address == sq.c.address_next) \
-        .filter(or_(and_(sq.c.ground_speed_prev < takeoff_speed,    # takeoff
-                         sq.c.ground_speed > takeoff_speed,
-                         sq.c.ground_speed_next > takeoff_speed),
-                    and_(sq.c.ground_speed_prev > landing_speed,    # landing
-                         sq.c.ground_speed < landing_speed,
-                         sq.c.ground_speed_next < landing_speed))) \
-        .order_by(func.date(sq.c.timestamp), sq.c.timestamp)
-
-    # ... and save them
-    ins = insert(TakeoffLanding).from_select((TakeoffLanding.address, TakeoffLanding.timestamp, TakeoffLanding.latitude, TakeoffLanding.longitude, TakeoffLanding.track, TakeoffLanding.ground_speed, TakeoffLanding.altitude, TakeoffLanding.is_takeoff), takeoff_landing_query)
-    session.execute(ins)
-    session.commit()
-
-
-def get_logbook(airport_name, latitude, longitude, altitude):
+@manager.command
+def show(airport_name, latitude, longitude, altitude):
+    """Show a logbook for <airport_name> located at given position."""
+    latitude = float(latitude)
+    longitude = float(longitude)
+    altitude = float(altitude)
+    # get_logbook('Königsdorf', 47.83, 11.46, 601)
     latmin = latitude - 0.15
     latmax = latitude + 0.15
     lonmin = longitude - 0.15
@@ -132,8 +89,3 @@ def get_logbook(airport_name, latitude, longitude, altitude):
     none_aircraft_replacer = lambda aircraft_object: '(unknown)' if aircraft_object is None else aircraft_object
     for [reftime, address, takeoff, takeoff_track, landing, landing_track, duration, registration, aircraft] in logbook_query.all():
         print('%10s   %8s (%2s)   %8s (%2s)   %8s   %8s   %s' % (reftime.date(), none_datetime_replacer(takeoff), none_track_replacer(takeoff_track), none_datetime_replacer(landing), none_track_replacer(landing_track), none_timedelta_replacer(duration), none_registration_replacer(registration, address), none_aircraft_replacer(aircraft)))
-
-if __name__ == '__main__':
-    compute_takeoff_and_landing()
-    get_logbook('Königsdorf', 47.83, 11.46, 601)
-
