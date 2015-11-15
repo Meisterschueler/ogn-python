@@ -1,5 +1,5 @@
 import unittest
-from ogn.ognutils import get_ddb, get_country_code
+from ogn.utils import get_ddb, get_country_code
 from ogn.model.address_origin import AddressOrigin
 
 

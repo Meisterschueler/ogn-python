@@ -5,7 +5,7 @@ from sqlalchemy import distinct, and_
 
 from ogn.model import ReceiverBeacon
 
-from dbutils import session
+from ogn.commands.dbutils import session
 
 back_24h = datetime.utcnow() - timedelta(days=1)
 receiver_messages_per_24h = 24*60 / 5

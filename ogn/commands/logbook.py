@@ -8,7 +8,7 @@ from sqlalchemy.sql.expression import case, true, false, label
 
 from ogn.model import Flarm, AircraftBeacon, TakeoffLanding
 
-from dbutils import session
+from ogn.commands.dbutils import session
 
 from manager import Manager
 manager = Manager()

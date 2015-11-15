@@ -1,7 +1,7 @@
 import socket
 from time import time
 
-from ogn import settings
+from ogn.gateway import settings
 from ogn.commands.dbutils import session
 from ogn.aprs_parser import parse_aprs
 
