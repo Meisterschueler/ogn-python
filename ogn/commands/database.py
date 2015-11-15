@@ -11,3 +11,12 @@ def init():
     from dbutils import engine
     Base.metadata.create_all(engine)
     print("Done.")
+
+
+@manager.command
+def updateddb():
+    """Update the ddb data."""
+    print("Updating ddb data...")
+    result = update_ddb_data.delay()
+    counter = result.get()
+    print("Imported %i devieces."%counter)

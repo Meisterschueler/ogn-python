@@ -1,25 +1,32 @@
+from __future__ import absolute_import
+
 from datetime import datetime, timedelta
+
+from celery.utils.log import get_task_logger
+from ogn.collect.celery import app
 
 from sqlalchemy.sql import func, null
 from sqlalchemy import and_, or_, insert, between
 from sqlalchemy.sql.expression import case, true, false, label
 
-from ogn.db import session
 from ogn.model import Flarm, AircraftBeacon, TakeoffLanding
 
+logger = get_task_logger(__name__)
 
+
+@app.task
 def compute_takeoff_and_landing():
     takeoff_speed = 30
     landing_speed = 30
 
     # get last takeoff_landing time as starting point for the following search
-    last_takeoff_landing_query = session.query(func.max(TakeoffLanding.timestamp))
+    last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.timestamp))
     last_takeoff_landing = last_takeoff_landing_query.one()[0]
     if last_takeoff_landing is None:
         last_takeoff_landing = datetime(2015, 1, 1, 0, 0, 0)
 
     # make a query with current, previous and next position, so we can detect takeoffs and landings
-    sq = session.query(AircraftBeacon.address,
+    sq = app.session.query(AircraftBeacon.address,
                        func.lag(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_prev'),
                        func.lead(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_next'),
                        AircraftBeacon.timestamp,
@@ -46,7 +53,7 @@ def compute_takeoff_and_landing():
         .subquery()
 
     # find takeoffs and landings (look at the trigger_speed)
-    takeoff_landing_query = session.query(sq.c.address, sq.c.timestamp, sq.c.latitude, sq.c.longitude, sq.c.track, sq.c.ground_speed, sq.c.altitude, case([(sq.c.ground_speed>takeoff_speed, True), (sq.c.ground_speed<landing_speed, False)]).label('is_takeoff')) \
+    takeoff_landing_query = app.session.query(sq.c.address, sq.c.timestamp, sq.c.latitude, sq.c.longitude, sq.c.track, sq.c.ground_speed, sq.c.altitude, case([(sq.c.ground_speed>takeoff_speed, True), (sq.c.ground_speed<landing_speed, False)]).label('is_takeoff')) \
         .filter(sq.c.address_prev == sq.c.address == sq.c.address_next) \
         .filter(or_(and_(sq.c.ground_speed_prev < takeoff_speed,    # takeoff
                          sq.c.ground_speed > takeoff_speed,
@@ -58,5 +65,8 @@ def compute_takeoff_and_landing():
 
     # ... and save them
     ins = insert(TakeoffLanding).from_select((TakeoffLanding.address, TakeoffLanding.timestamp, TakeoffLanding.latitude, TakeoffLanding.longitude, TakeoffLanding.track, TakeoffLanding.ground_speed, TakeoffLanding.altitude, TakeoffLanding.is_takeoff), takeoff_landing_query)
-    session.execute(ins)
-    session.commit()
+    app.session.execute(ins)
+    app.session.commit()
+
+
+
