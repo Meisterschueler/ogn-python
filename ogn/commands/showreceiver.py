@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.sql import func
 from sqlalchemy import distinct, and_
 
-from ogn.model import ReceiverBeacon
-from ogn.model.receiver_device import ReceiverDevice
+from ogn.model import ReceiverBeacon, ReceiverDevice
 
 from ogn.commands.dbutils import session
 
