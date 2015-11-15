@@ -16,14 +16,21 @@ def update_ddb_data():
     app.session.query(Flarm).delete()
 
     devices = get_ddb()
-    logger.info("Devices: %s"%str(devices))
-    app.session.bulk_save_objects(devices)
+    logger.debug("New Devices: %s" % str(devices))
 
+    app.session.bulk_save_objects(devices)
     app.session.commit()
+
     return len(devices)
 
-# TODO: Reimplement.
+
+@app.task
 def import_ddb_data(filename='custom.txt'):
-    flarms = get_ddb(filename)
-    db.session.bulk_save_objects(flarms)
-    session.commit()
+    logger.info("Import ddb data from file.")
+
+    devices = get_ddb(filename)
+
+    app.session.bulk_save_objects(devices)
+    app.session.commit()
+
+    return len(devices)
