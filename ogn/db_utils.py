@@ -3,11 +3,6 @@ from ogn.model import Flarm
 from ogn.ognutils import get_ddb
 
 
-def put_into_db(beacon):
-    session.add(beacon)
-    session.commit()
-
-
 def fill_flarm_db():
     session.query(Flarm).delete()
 
