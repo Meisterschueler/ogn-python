@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 from sqlalchemy import distinct, and_
 
 from ogn.model import ReceiverBeacon
+from ogn.model.receiver_device import ReceiverDevice
 
 from ogn.commands.dbutils import session
 
@@ -21,13 +22,13 @@ def list():
         group_by(ReceiverBeacon.name).\
         subquery()
 
-    query = session.query(ReceiverBeacon, sq.c.messages_count).\
-        filter(and_(ReceiverBeacon.name == sq.c.name, ReceiverBeacon.timestamp == sq.c.lastseen)).\
-        order_by(ReceiverBeacon.name)
+    query = session.query(ReceiverDevice, sq.c.messages_count).\
+        filter(ReceiverDevice.name == sq.c.name).\
+        order_by(ReceiverDevice.name)
 
     print('--- Receivers ---')
     for [receiver, messages_count] in query.all():
-        print('%9s: %3d%% avail, %s, %s ' % (receiver.name, 100.0*float(messages_count/receiver_messages_per_24h), receiver.version, receiver.platform))
+        print('%9s (%2s): %3d%% avail, %s, %s ' % (receiver.name, receiver.country_code, 100.0*float(messages_count/receiver_messages_per_24h), receiver.version, receiver.platform))
 
 
 @manager.command

@@ -27,6 +27,11 @@ class AircraftBeacon(Beacon):
 
     flightlevel = Column(Float)
 
+    # Calculated values
+    radius = Column(Float)
+    theta = Column(Float)
+    phi = Column(Float)
+
     # Pattern
     address_pattern = re.compile(r"id(\S{2})(\S{6})")
     climb_rate_pattern = re.compile(r"([\+\-]\d+)fpm")

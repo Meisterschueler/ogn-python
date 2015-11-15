@@ -1,5 +1,5 @@
 import unittest
-from ogn.utils import get_ddb, get_country_code
+from ogn.utils import get_ddb, get_country_code, wgs84_to_sphere
 from ogn.model.address_origin import AddressOrigin
 
 
@@ -33,3 +33,19 @@ class TestStringMethods(unittest.TestCase):
         longitude = -0.0009119
         country_code = get_country_code(latitude, longitude)
         self.assertEqual(country_code, None)
+
+    def test_wgs84_to_sphere(self):
+        # receiver
+        lat1 = 48.865
+        lon1 = 9.2225
+        alt1 = 574
+
+        # aircraft beacon
+        lat2 = 48.74435
+        lon2 = 9.578
+        alt2 = 929
+
+        [radius, theta, phi] = wgs84_to_sphere(lat1, lat2, lon1, lon2, alt1, alt2)
+        self.assertAlmostEqual(radius, 29265.6035812215, 5)
+        self.assertAlmostEqual(theta, 0.694979846308314, 5)
+        self.assertAlmostEqual(phi, 117.1275408121, 5)
