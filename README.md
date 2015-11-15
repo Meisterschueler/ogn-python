@@ -78,7 +78,7 @@ The task server must be running for `db.updateddb`.
 - [x] Document/Improve cli commands
 - [ ] Separate settings from module (currently at ogn/command/dbutils.py)
 - [ ] Enable granular data acquisition (eg. store receiver beacons only)
-- [ ] Future Database-Migrations: Use Alembric?
+- [ ] Future Database-Migrations: Use Alembic?
   - [ ] Rename 'Flarm' to 'Device'?
   - [ ] Rename self.heared\_aircraft\_IDs (lowercase) in aircraft\_beacon
   - [ ] Rename self.heared\_aircraft\_IDs
