@@ -14,6 +14,7 @@ receiver_messages_per_24h = 24*60 / 5
 from manager import Manager
 manager = Manager()
 
+
 @manager.command
 def list():
     """Show a list of all receivers."""
@@ -33,7 +34,7 @@ def list():
 
 @manager.command
 def software_stats():
-    """Show some statistics of receiver sotware."""
+    """Show some statistics of receiver software."""
     sq = session.query(ReceiverBeacon.name, func.max(ReceiverBeacon.timestamp).label('lastseen')).\
         filter(ReceiverBeacon.timestamp > back_24h).\
         group_by(ReceiverBeacon.name).\
@@ -44,7 +45,7 @@ def software_stats():
         group_by(ReceiverBeacon.version).\
         order_by(ReceiverBeacon.version)
 
-    print('\n--- Versions ---')
+    print('--- Versions ---')
     for [version, count] in versions.all():
         print('%5s: %s' % (version, count))
 
@@ -62,6 +63,6 @@ def hardware_stats():
         group_by(ReceiverBeacon.platform).\
         order_by(ReceiverBeacon.platform)
 
-    print('\n--- Platforms ---')
+    print('--- Platforms ---')
     for [platform, count] in platforms.all():
         print('%7s: %s' % (platform, count))
