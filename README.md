@@ -56,17 +56,17 @@ available commands:
   [db]
     init                   Initialize the database.
     updateddb              Update the ddb data.
-
+  
   [gateway]
     run                    Run the aprs client.
-
+  
   [logbook]
     show                   Show a logbook for <airport_name> located at given position.
-
+  
   [show.receiver]
     hardware_stats         Show some statistics of receiver hardware.
-    list                   Show a list of all receivers.
-    software_stats         Show some statistics of receiver sotware.
+    list_all               Show a list of all receivers.
+    software_stats         Show some statistics of receiver software.
 ```
 
 The task server must be running for `db.updateddb`.
