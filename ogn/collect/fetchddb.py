@@ -25,7 +25,7 @@ def update_ddb_data():
 
 
 @app.task
-def import_ddb_data(filename='custom.txt'):
+def import_ddb_data(filename='custom_ddb.txt'):
     logger.info("Import ddb data from file.")
 
     devices = get_ddb(filename)
