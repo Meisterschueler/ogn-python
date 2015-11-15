@@ -3,6 +3,7 @@ from .aircraft_type import AircraftType
 from .base import Base
 from .beacon import Beacon
 from .flarm import Flarm
-from ogn.model.aircraft_beacon import AircraftBeacon
-from ogn.model.receiver_beacon import ReceiverBeacon
+from .aircraft_beacon import AircraftBeacon
+from .receiver_beacon import ReceiverBeacon
+from .receiver_device import ReceiverDevice
 from .takeoff_landing import TakeoffLanding
