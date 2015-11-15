@@ -5,9 +5,9 @@ from datetime import datetime
 from celery.utils.log import get_task_logger
 from ogn.collect.celery import app
 
-from sqlalchemy.sql import func, null
-from sqlalchemy import and_, or_, insert, between
-from sqlalchemy.sql.expression import case, true, false, label
+from sqlalchemy.sql import func
+from sqlalchemy import and_, or_, insert
+from sqlalchemy.sql.expression import case
 
 from ogn.model import AircraftBeacon, TakeoffLanding
 

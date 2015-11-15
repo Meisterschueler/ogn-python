@@ -3,8 +3,8 @@
 from datetime import timedelta
 
 from sqlalchemy.sql import func, null
-from sqlalchemy import and_, or_, insert, between
-from sqlalchemy.sql.expression import case, true, false, label
+from sqlalchemy import and_, or_, between
+from sqlalchemy.sql.expression import true, false, label
 
 from ogn.model import Flarm, TakeoffLanding
 
