@@ -1,16 +1,16 @@
 from .model import Beacon, AircraftBeacon, ReceiverBeacon
+from ogn.exceptions import AprsParseError
 
-
-def parse_aprs(text):
-    if not isinstance(text, str):
-        raise Exception("Unknown type: %s" % type(text))
-    elif text == "":
-        raise Exception("String is empty")
-    elif text[0] == "#":
+def parse_aprs(packet):
+    if not isinstance(packet, str):
+        raise TypeError("Expected packet to be str, got %s" % type(packet))
+    elif packet == "":
+        raise AprsParseError(substring=packet, expected_type="non-empty aprs packet")
+    elif packet[0] == "#":
         return None
 
     beacon = Beacon()
-    beacon.parse(text)
+    beacon.parse(packet)
 
     # symboltable / symbolcodes used by OGN:
     # I&: used as receiver

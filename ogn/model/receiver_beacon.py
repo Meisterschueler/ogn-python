@@ -85,4 +85,4 @@ class ReceiverBeacon(Beacon):
                 raise Exception("No valid receiver description: %s" % part)
 
     def __repr__(self):
-        return("<ReceiverBeacon %s: %s>" % (self.name, self.version))
+        return "<ReceiverBeacon %s: %s>" % (self.name, self.version)

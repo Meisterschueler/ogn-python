@@ -97,7 +97,7 @@ class AircraftBeacon(Beacon):
                 self.stealth = ((int(address_match.group(1), 16) & 0b10000000) >> 7 == 1)
                 self.address = address_match.group(2)
             elif climb_rate_match is not None:
-                self.climb_rate = int(climb_rate_match.group(1))*fpm2ms
+                self.climb_rate = int(climb_rate_match.group(1)) * fpm2ms
             elif turn_rate_match is not None:
                 self.turn_rate = float(turn_rate_match.group(1))
             elif signal_strength_match is not None:
@@ -130,4 +130,18 @@ class AircraftBeacon(Beacon):
                 raise Exception("No valid position description: %s" % part)
 
     def __repr__(self):
-        return("<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (self.name, self.address_type, self.aircraft_type, self.timestamp, self.address_type, self.aircraft_type, self.stealth, self.address, self.climb_rate, self.turn_rate, self.signal_strength, self.error_count, self.frequency_offset, self.gps_status))
+        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+            self.name,
+            self.address_type,
+            self.aircraft_type,
+            self.timestamp,
+            self.address_type,
+            self.aircraft_type,
+            self.stealth,
+            self.address,
+            self.climb_rate,
+            self.turn_rate,
+            self.signal_strength,
+            self.error_count,
+            self.frequency_offset,
+            self.gps_status)

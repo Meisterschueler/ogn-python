@@ -4,12 +4,13 @@ from sqlalchemy import Column, String, Integer, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 
 from ogn.aprs_utils import createTimestamp, dmsToDeg, kts2kmh, feet2m
+from ogn.exceptions import AprsParseError
 from .base import Base
 
 
 # "original" pattern from OGN: "(.+?)>APRS,.+,(.+?):/(\\d{6})+h(\\d{4}\\.\\d{2})(N|S).(\\d{5}\\.\\d{2})(E|W).((\\d{3})/(\\d{3}))?/A=(\\d{6}).*?"
 PATTERN_APRS = r"^(.+?)>APRS,.+,(.+?):/(\d{6})+h(\d{4}\.\d{2})(N|S)(.)(\d{5}\.\d{2})(E|W)(.)((\d{3})/(\d{3}))?/A=(\d{6})\s(.*)$"
-prog = re.compile(PATTERN_APRS)
+re_pattern_aprs = re.compile(PATTERN_APRS)
 
 
 class Beacon(AbstractConcreteBase, Base):
@@ -29,9 +30,9 @@ class Beacon(AbstractConcreteBase, Base):
     comment = None
 
     def parse(self, text, reference_time=None):
-        result = prog.match(text)
+        result = re_pattern_aprs.match(text)
         if result is None:
-            raise Exception("String is not valid" % text)
+            raise AprsParseError(substring=text, expected_type="Beacon")
 
         self.name = result.group(1)
         self.receiver_name = result.group(2)
@@ -52,11 +53,11 @@ class Beacon(AbstractConcreteBase, Base):
 
         if result.group(10) is not None:
             self.track = int(result.group(11))
-            self.ground_speed = int(result.group(12))*kts2kmh
+            self.ground_speed = int(result.group(12)) * kts2kmh
         else:
             self.track = 0
             self.ground_speed = 0
 
-        self.altitude = int(result.group(13))*feet2m
+        self.altitude = int(result.group(13)) * feet2m
 
         self.comment = result.group(14)

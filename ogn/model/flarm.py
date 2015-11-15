@@ -21,4 +21,14 @@ class Flarm(Base):
     address_origin = Column(SmallInteger)
 
     def __repr__(self):
-        return("<Flarm: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (self.address_type, self.address, self.name, self.airport, self.aircraft, self.registration, self.competition, self.frequency, self.tracked, self.identified))
+        return "<Flarm: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+            self.address_type,
+            self.address,
+            self.name,
+            self.airport,
+            self.aircraft,
+            self.registration,
+            self.competition,
+            self.frequency,
+            self.tracked,
+            self.identified)

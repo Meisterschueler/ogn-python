@@ -5,6 +5,7 @@ manager = Manager()
 
 from ogn.collect.fetchddb import update_ddb_data
 
+
 @manager.command
 def init():
     """Initialize the database."""
