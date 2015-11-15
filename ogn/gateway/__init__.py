@@ -4,6 +4,7 @@ from time import time
 from ogn.gateway import settings
 from ogn.commands.dbutils import session
 from ogn.aprs_parser import parse_aprs
+from ogn.exceptions import AprsParseError
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -27,14 +28,14 @@ class ognGateway:
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.sock.connect((settings.APRS_SERVER_HOST, settings.APRS_SERVER_PORT))
 
-        login = 'user %s pass %s vers ogn-gateway-python %s %s\n'  % (aprs_user, settings.APRS_PASSCODE, MODULE_VERSION, settings.APRS_FILTER)
+        login = 'user %s pass %s vers ogn-gateway-python %s %s\n' % (aprs_user, settings.APRS_PASSCODE, MODULE_VERSION, settings.APRS_FILTER)
         self.sock.send(login.encode())
         self.sock_file = self.sock.makefile('rw')
 
     def run(self):
         keepalive_time = time()
         while True:
-            if time()-keepalive_time > 60:
+            if time() - keepalive_time > 60:
                 self.sock.send("#keepalive".encode())
                 keepalive_time = time()
 
@@ -60,9 +61,9 @@ class ognGateway:
     def proceed_line(self, line):
         try:
             beacon = parse_aprs(line)
-        except Exception as e:
-            print('Failed to parse line: %s' % line)
-            print('Reason: %s' % e)
+        except AprsParseError as e:
+            print(e.message)
+            print("Substring: " % e.substring)
             return
 
         if beacon is not None:
