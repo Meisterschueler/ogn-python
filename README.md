@@ -78,8 +78,10 @@ The task server must be running for `db.updateddb`.
 - [x] Document/Improve cli commands
 - [ ] Separate settings from module (currently at ogn/command/dbutils.py)
 - [ ] Enable granular data acquisition (eg. store receiver beacons only)
-- [ ] Database: Rename 'Flarm' to 'Device'?
 - [ ] Future Database-Migrations: Use Alembric?
+  - [ ] Rename 'Flarm' to 'Device'?
+  - [ ] Rename self.heared\_aircraft\_IDs (lowercase) in aircraft\_beacon
+  - [ ] Rename self.heared\_aircraft\_IDs
 - [ ] Fix command/logbook.py (@Meisterschueler?)
 - [ ] Introduce scheduled tasks with 'celery beat' (eg. updateddb)
 

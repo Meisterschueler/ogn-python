@@ -9,7 +9,7 @@ from ogn.model.receiver_device import ReceiverDevice
 from ogn.commands.dbutils import session
 
 back_24h = datetime.utcnow() - timedelta(days=1)
-receiver_messages_per_24h = 24*60 / 5
+receiver_messages_per_24h = 24 * 60 / 5
 
 from manager import Manager
 manager = Manager()

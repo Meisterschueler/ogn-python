@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from celery import Celery, Task
+from celery import Celery
 from celery.signals import worker_init, worker_shutdown
 
 app = Celery('ogn.collect',
@@ -13,6 +13,7 @@ app = Celery('ogn.collect',
 
 DB_URI = 'sqlite:///beacons.db'
 
+
 @worker_init.connect
 def connect_db(signal, sender):
     # Load settings like DB_URI...
@@ -20,6 +21,7 @@ def connect_db(signal, sender):
 
     Session = sessionmaker(bind=engine)
     sender.app.session = Session()
+
 
 @worker_shutdown.connect
 def close_db(signal, sender):
