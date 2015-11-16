@@ -3,7 +3,7 @@ import csv
 from io import StringIO
 from math import sin, cos, asin, atan2, sqrt, pi
 
-from .model import Flarm, AddressOrigin
+from .model import Device, AddressOrigin
 
 from geopy.geocoders import Nominatim
 
@@ -27,7 +27,7 @@ def get_ddb(csvfile=None):
 
     devices = list()
     for row in data:
-        flarm = Flarm()
+        flarm = Device()
         flarm.address_type = row[0]
         flarm.address = row[1]
         flarm.aircraft = row[2]

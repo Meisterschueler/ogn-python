@@ -6,7 +6,7 @@ from sqlalchemy.sql import func, null
 from sqlalchemy import and_, or_, between
 from sqlalchemy.sql.expression import true, false, label
 
-from ogn.model import Flarm, TakeoffLanding
+from ogn.model import Device, TakeoffLanding
 
 from ogn.commands.dbutils import session
 
@@ -133,9 +133,9 @@ def show(airport_name, latitude, longitude, altitude):
         union_query.c.landing,
         union_query.c.landing_track,
         union_query.c.duration,
-        Flarm.registration,
-        Flarm.aircraft) \
-        .outerjoin(Flarm, union_query.c.address == Flarm.address) \
+        Device.registration,
+        Device.aircraft) \
+        .outerjoin(Device, union_query.c.address == Device.address) \
         .order_by(union_query.c.reftime)
 
     print('--- Logbook (%s) ---' % airport_name)
