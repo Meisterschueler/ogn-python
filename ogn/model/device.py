@@ -3,8 +3,8 @@ from sqlalchemy import Column, Integer, String, Unicode, Boolean, SmallInteger
 from .base import Base
 
 
-class Flarm(Base):
-    __tablename__ = 'flarm'
+class Device(Base):
+    __tablename__ = 'device'
 
     id = Column(Integer, primary_key=True)
     address_type = None
@@ -21,7 +21,7 @@ class Flarm(Base):
     address_origin = Column(SmallInteger)
 
     def __repr__(self):
-        return "<Flarm: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<Device: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,
             self.address,
             self.name,

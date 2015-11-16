@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from celery.utils.log import get_task_logger
 from ogn.collect.celery import app
 
-from ogn.model import Flarm
+from ogn.model import Device
 from ogn.utils import get_ddb
 
 logger = get_task_logger(__name__)
@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 def update_ddb_data():
     logger.info("Update ddb data.")
 
-    app.session.query(Flarm).delete()
+    app.session.query(Device).delete()
 
     devices = get_ddb()
     logger.debug("New Devices: %s" % str(devices))

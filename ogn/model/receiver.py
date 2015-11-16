@@ -3,8 +3,8 @@ from sqlalchemy import Column, String, Integer, Float, DateTime
 from .base import Base
 
 
-class ReceiverDevice(Base):
-    __tablename__ = "receiver_device"
+class Receiver(Base):
+    __tablename__ = "receiver"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(9))
