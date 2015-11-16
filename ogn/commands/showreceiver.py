@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.sql import func
 from sqlalchemy import distinct, and_
 
-from ogn.model import ReceiverBeacon, ReceiverDevice
+from ogn.model import ReceiverBeacon, Receiver
 
 from ogn.commands.dbutils import session
 
@@ -22,9 +22,9 @@ def list_all():
         group_by(ReceiverBeacon.name).\
         subquery()
 
-    query = session.query(ReceiverDevice, sq.c.messages_count).\
-        filter(ReceiverDevice.name == sq.c.name).\
-        order_by(ReceiverDevice.name)
+    query = session.query(Receiver, sq.c.messages_count).\
+        filter(Receiver.name == sq.c.name).\
+        order_by(Receiver.name)
 
     print('--- Receivers ---')
     for [receiver, messages_count] in query.all():
