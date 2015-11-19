@@ -3,6 +3,7 @@ import re
 from sqlalchemy import Column, String
 
 from .beacon import Beacon
+from ogn.exceptions import OgnParseError
 
 
 class ReceiverBeacon(Beacon):
@@ -82,7 +83,7 @@ class ReceiverBeacon(Beacon):
                 self.rec_crystal_correction = int(rf_light2_match.group(1))
                 self.rec_crystal_correction_fine = float(rf_light2_match.group(2))
             else:
-                raise Exception("No valid receiver description: %s" % part)
+                raise OgnParseError(expected_type="ReceiverBeacon", substring=part)
 
     def __repr__(self):
         return "<ReceiverBeacon %s: %s>" % (self.name, self.version)

@@ -4,7 +4,7 @@ from time import time
 from ogn.gateway import settings
 from ogn.commands.dbutils import session
 from ogn.aprs_parser import parse_aprs
-from ogn.exceptions import AprsParseError
+from ogn.exceptions import AprsParseError, OgnParseError
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -32,6 +32,12 @@ class ognGateway:
         self.sock.send(login.encode())
         self.sock_file = self.sock.makefile('rw')
 
+    def disconnect(self):
+        # close everything
+        print('Close socket')
+        self.sock.shutdown(0)
+        self.sock.close()
+
     def run(self):
         keepalive_time = time()
         while True:
@@ -40,11 +46,7 @@ class ognGateway:
                 keepalive_time = time()
 
             # Read packet string from socket
-            try:
-                packet_str = self.sock_file.readline().strip()
-            except socket.error:
-                print('Socket error on readline')
-                continue
+            packet_str = self.sock_file.readline().strip()
 
             # A zero length line should not be return if keepalives are being sent
             # A zero length line will only be returned after ~30m if keepalives are not sent
@@ -53,17 +55,16 @@ class ognGateway:
                 break
 
             self.proceed_line(packet_str)
-        # close everything
-        print('Close socket')
-        self.sock.shutdown(0)
-        self.sock.close()
 
     def proceed_line(self, line):
         try:
             beacon = parse_aprs(line)
         except AprsParseError as e:
             print(e.message)
-            print("Substring: " % e.substring)
+            return
+        except OgnParseError as e:
+            print(e.message)
+            print("APRS line: %s" % line)
             return
 
         if beacon is not None:
