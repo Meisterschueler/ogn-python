@@ -1,11 +1,12 @@
 from .model import Beacon, AircraftBeacon, ReceiverBeacon
 from ogn.exceptions import AprsParseError
 
+
 def parse_aprs(packet):
     if not isinstance(packet, str):
         raise TypeError("Expected packet to be str, got %s" % type(packet))
     elif packet == "":
-        raise AprsParseError(substring=packet, expected_type="non-empty aprs packet")
+        raise AprsParseError("(empty string)")
     elif packet[0] == "#":
         return None
 

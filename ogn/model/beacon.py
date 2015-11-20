@@ -32,7 +32,7 @@ class Beacon(AbstractConcreteBase, Base):
     def parse(self, text, reference_time=None):
         result = re_pattern_aprs.match(text)
         if result is None:
-            raise AprsParseError(substring=text, expected_type="Beacon")
+            raise AprsParseError(text)
 
         self.name = result.group(1)
         self.receiver_name = result.group(2)
