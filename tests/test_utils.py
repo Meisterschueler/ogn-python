@@ -1,6 +1,7 @@
 import unittest
+
 from ogn.utils import get_ddb, get_country_code, wgs84_to_sphere
-from ogn.model.address_origin import AddressOrigin
+from ogn.model import AddressOrigin
 
 
 class TestStringMethods(unittest.TestCase):
@@ -16,7 +17,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(device.address, 'DD4711')
         self.assertEqual(device.aircraft, 'HK36 TTC')
         self.assertEqual(device.registration, 'D-EULE')
-        self.assertEqual(device.competition, '')
+        self.assertEqual(device.competition, 'CU')
         self.assertTrue(device.tracked)
         self.assertTrue(device.identified)
 

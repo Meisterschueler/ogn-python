@@ -1,5 +1,5 @@
-from datetime import datetime
 import unittest
+from datetime import datetime
 
 from ogn.aprs_utils import dmsToDeg, createTimestamp
 
