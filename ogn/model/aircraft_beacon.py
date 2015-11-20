@@ -4,6 +4,7 @@ from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger
 
 from ogn.aprs_utils import fpm2ms
 from .beacon import Beacon
+from ogn.exceptions import OgnParseError
 
 
 class AircraftBeacon(Beacon):
@@ -127,7 +128,7 @@ class AircraftBeacon(Beacon):
             elif flightlevel_match is not None:
                 self.flightlevel = float(flightlevel_match.group(1))
             else:
-                raise Exception("No valid position description: %s" % part)
+                raise OgnParseError(expected_type="AircraftBeacon", substring=part)
 
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

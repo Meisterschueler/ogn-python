@@ -2,12 +2,13 @@ import unittest
 
 from ogn.aprs_utils import dmsToDeg, kts2kmh, m2feet
 from ogn.model import Beacon
+from ogn.exceptions import AprsParseError
 
 
 class TestStringMethods(unittest.TestCase):
     def test_fail_validation(self):
         beacon = Beacon()
-        with self.assertRaises(Exception):
+        with self.assertRaises(AprsParseError):
             beacon.parse("notAValidString")
 
     def test_basic(self):
