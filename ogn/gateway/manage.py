@@ -18,8 +18,9 @@ def run(aprs_user="anon-dev"):
     gateway.connect_db()
 
     while user_interrupted is False:
-        print("Connect OGN gateway")
+        print("Connect OGN gateway as {}".format(aprs_user))
         gateway.connect(aprs_user)
+        socket_open = True
 
         try:
             gateway.run()
@@ -28,10 +29,11 @@ def run(aprs_user="anon-dev"):
             user_interrupted = True
         except BrokenPipeError:
             print("BrokenPipeError")
-        except socket.err:
+        except socket.error:
             print("socket error")
+            socket_open = False
 
-        print("Disconnect OGN gateway")
-        gateway.disconnect()
+        if socket_open:
+            gateway.disconnect()
 
     print("\nExit OGN gateway")
