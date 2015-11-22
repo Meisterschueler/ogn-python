@@ -4,3 +4,4 @@ APRS_USER = 'PyGrabber'
 APRS_PASSCODE = -1  # Read only
 
 APRS_FILTER = "filter r/+50.0000/+10.0000/5000"
+APRS_KEEPALIVE_TIME = 240
