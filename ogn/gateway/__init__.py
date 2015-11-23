@@ -4,14 +4,13 @@ from time import time
 from ogn.gateway import settings
 from ogn.commands.dbutils import session
 from ogn.aprs_parser import parse_aprs
+from ogn.aprs_utils import create_aprs_login
 from ogn.exceptions import AprsParseError, OgnParseError
 from ogn.logger import logger
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from ogn.model import Base
-
-MODULE_VERSION = "0.1"
 
 
 class ognGateway:
@@ -27,7 +26,7 @@ class ognGateway:
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.sock.connect((settings.APRS_SERVER_HOST, settings.APRS_SERVER_PORT))
 
-        login = 'user %s pass %s vers ogn-gateway-python %s %s\n' % (aprs_user, settings.APRS_PASSCODE, MODULE_VERSION, settings.APRS_FILTER)
+        login = create_aprs_login(aprs_user, -1, settings.APRS_APP_NAME, settings.APRS_APP_VER, settings.APRS_FILTER)
         self.sock.send(login.encode())
         self.sock_file = self.sock.makefile('rw')
 

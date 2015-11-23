@@ -34,3 +34,10 @@ def createTimestamp(hhmmss, reference):
     elif abs(reference.hour - hh) > 1:
         raise Exception("Time difference is too big. Reference time:%s - timestamp:%s" % (reference, hhmmss))
     return datetime(reference.year, reference.month, reference.day, hh, mm, ss)
+
+
+def create_aprs_login(user_name, pass_code, app_name, app_version, aprs_filter=None):
+    if not aprs_filter:
+        return "user %s pass %s vers %s %s\n" % (user_name, pass_code, app_name, app_version)
+    else:
+        return "user %s pass %s vers %s %s filter %s\n" % (user_name, pass_code, app_name, app_version, aprs_filter)
