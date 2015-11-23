@@ -10,7 +10,7 @@ class GatewayTest(unittest.TestCase):
 
     # try simple user interrupt
     @mock.patch('ogn.gateway.manage.ognGateway')
-    def test_user_interruption(self, mock_gateway):
+    def test_run_user_interruption(self, mock_gateway):
         instance = mock_gateway.return_value
         instance.run.side_effect = KeyboardInterrupt()
 
@@ -23,7 +23,7 @@ class GatewayTest(unittest.TestCase):
 
     # make BrokenPipeErrors and a socket error (may happen) and then a user interrupt (important!)
     @mock.patch('ogn.gateway.manage.ognGateway')
-    def test_BrokenPipeError(self, mock_gateway):
+    def test_run_multiple_errors(self, mock_gateway):
         instance = mock_gateway.return_value
         instance.run.side_effect = [BrokenPipeError(), socket.error(), KeyboardInterrupt()]
 
@@ -32,7 +32,7 @@ class GatewayTest(unittest.TestCase):
         instance.connect_db.assert_called_once_with()
         self.assertEqual(instance.connect.call_count, 3)
         self.assertEqual(instance.run.call_count, 3)
-        self.assertEqual(instance.disconnect.call_count, 2)  # not called if socket crashed
+        self.assertEqual(instance.disconnect.call_count, 3)
 
 if __name__ == '__main__':
     unittest.main()
