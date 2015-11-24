@@ -9,9 +9,17 @@ from sqlalchemy.sql.expression import true, false, label
 from ogn.model import Device, TakeoffLanding
 
 from ogn.commands.dbutils import session
+from ogn.collect.logbook import compute_takeoff_and_landing
 
 from manager import Manager
 manager = Manager()
+
+
+@manager.command
+def compute():
+    """Compute takeoffs and landings."""
+    print("Compute takeoffs and landings...")
+    compute_takeoff_and_landing.delay()
 
 
 @manager.command
