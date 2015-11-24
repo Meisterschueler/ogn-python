@@ -26,6 +26,7 @@ class GatewayTest(unittest.TestCase):
     def test_run_multiple_errors(self, mock_gateway):
         instance = mock_gateway.return_value
         instance.run.side_effect = [BrokenPipeError(), socket.error(), KeyboardInterrupt()]
+        instance.disconnect.side_effect = [True, True, OSError()]
 
         run("user_2")
 

@@ -3,7 +3,7 @@ from ogn.model import Base
 from manager import Manager
 manager = Manager()
 
-from ogn.collect.fetchddb import update_ddb_data
+from ogn.collect.fetchddb import update_ddb_from_ogn, update_ddb_from_file
 
 
 @manager.command
@@ -15,9 +15,18 @@ def init():
 
 
 @manager.command
-def updateddb():
-    """Update the ddb data."""
+def update_ddb_ogn():
+    """Update devices with data from ogn."""
     print("Updating ddb data...")
-    result = update_ddb_data.delay()
+    result = update_ddb_from_ogn.delay()
+    counter = result.get()
+    print("Imported %i devices." % counter)
+
+
+@manager.command
+def update_ddb_file():
+    """Update devices with data from local file."""
+    print("Updating ddb data...")
+    result = update_ddb_from_file.delay()
     counter = result.get()
     print("Imported %i devices." % counter)
