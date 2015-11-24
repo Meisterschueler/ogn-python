@@ -36,6 +36,7 @@ def update_ddb_from_file():
         .delete()
 
     devices = get_ddb('ogn/custom_ddb.txt')
+    logger.debug("New Devices: %s" % str(devices))
 
     app.session.bulk_save_objects(devices)
     app.session.commit()

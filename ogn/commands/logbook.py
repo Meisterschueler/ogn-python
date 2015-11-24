@@ -19,7 +19,9 @@ manager = Manager()
 def compute():
     """Compute takeoffs and landings."""
     print("Compute takeoffs and landings...")
-    compute_takeoff_and_landing.delay()
+    result = compute_takeoff_and_landing.delay()
+    counter = result.get()
+    print("New/recalculated takeoffs/landings: %s" % counter)
 
 
 @manager.command
