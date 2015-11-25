@@ -58,10 +58,10 @@ class ognGateway:
         try:
             beacon = parse_aprs(line)
         except AprsParseError:
-            logger.error('AprsParseError', exc_info=True)
+            logger.error('AprsParseError while parsing line: %s' % line, exc_info=True)
             return
         except OgnParseError:
-            logger.error('OgnParseError', exc_info=True)
+            logger.error('OgnParseError while parsing line: ' % line, exc_info=True)
             return
 
         if beacon is not None:

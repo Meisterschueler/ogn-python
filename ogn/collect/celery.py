@@ -9,7 +9,7 @@ from celery.signals import worker_init, worker_shutdown
 app = Celery('ogn.collect',
              broker='redis://localhost:6379/0',
              backend='redis://localhost:6379/0',
-             include=["ogn.collect.fetchddb"])
+             include=["ogn.collect.fetchddb", "ogn.collect.logbook"])
 
 DB_URI = 'sqlite:///beacons.db'
 

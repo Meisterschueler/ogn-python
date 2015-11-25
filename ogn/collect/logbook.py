@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from celery.utils.log import get_task_logger
 from ogn.collect.celery import app
@@ -16,14 +16,24 @@ logger = get_task_logger(__name__)
 
 @app.task
 def compute_takeoff_and_landing():
+    logger.info("Compute takeoffs and landings.")
+
     takeoff_speed = 30
     landing_speed = 30
 
-    # get last takeoff_landing time as starting point for the following search
+    # calculate the time where the computation starts
     last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.timestamp))
     last_takeoff_landing = last_takeoff_landing_query.one()[0]
     if last_takeoff_landing is None:
+        # if the table is empty
         last_takeoff_landing = datetime(2015, 1, 1, 0, 0, 0)
+    else:
+        # we get the beacons async. to be safe we delete takeoffs/landings from last 5 minutes and recalculate from then
+        # alternative: takeoff/landing has a primary key (timestamp,address)
+        last_takeoff_landing = last_takeoff_landing - timedelta(minutes=5)
+        app.session.query(TakeoffLanding) \
+            .filter(TakeoffLanding.timestamp > last_takeoff_landing) \
+            .delete()
 
     # make a query with current, previous and next position, so we can detect takeoffs and landings
     sq = app.session.query(
@@ -75,5 +85,9 @@ def compute_takeoff_and_landing():
 
     # ... and save them
     ins = insert(TakeoffLanding).from_select((TakeoffLanding.address, TakeoffLanding.timestamp, TakeoffLanding.latitude, TakeoffLanding.longitude, TakeoffLanding.track, TakeoffLanding.ground_speed, TakeoffLanding.altitude, TakeoffLanding.is_takeoff), takeoff_landing_query)
-    app.session.execute(ins)
+    result = app.session.execute(ins)
+    counter = result.rowcount
     app.session.commit()
+    logger.debug("New/recalculated takeoffs and landings: %s" % counter)
+
+    return counter
