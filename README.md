@@ -55,12 +55,14 @@ available commands:
 
   [db]
     init                   Initialize the database.
-    updateddb              Update the ddb data.
+    update_ddb_file        Update devices with data from local file.
+    update_ddb_ogn         Update devices with data from ogn.
   
   [gateway]
     run                    Run the aprs client.
   
   [logbook]
+    compute                Compute takeoffs and landings.
     show                   Show a logbook for <airport_name> located at given position.
   
   [show.receiver]
@@ -78,17 +80,17 @@ The task server must be running for `db.updateddb`.
 - [x] Document/Improve cli commands
 - [ ] Separate settings from module (currently at ogn/command/dbutils.py)
 - [ ] Enable granular data acquisition (eg. store receiver beacons only)
-- [ ] Future Database-Migrations: Use Alembic?
-  - [ ] Rename 'Flarm' to 'Device'?
+- [x] Future Database-Migrations: Use Alembic?
+  - [x] Rename 'Flarm' to 'Device'?
   - [ ] Rename self.heared\_aircraft\_IDs (lowercase) in aircraft\_beacon
   - [ ] Rename self.heared\_aircraft\_IDs
-- [ ] Fix command/logbook.py (@Meisterschueler?)
+- [x] Fix command/logbook.py (@Meisterschueler?)
 - [ ] Introduce scheduled tasks with 'celery beat' (eg. updateddb)
 
 ### Scheduled tasks
 - ogn.collect.fetchddb (generate Flarm table)
 - ogn.collect.receiver (generate Receiver table)
-- ogn.collect.logbook  (generate TaoffLanding table)
+- ogn.collect.logbook  (generate TakeoffLanding table)
 
 ## How to use virtualenv
 ```
