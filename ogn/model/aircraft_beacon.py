@@ -24,7 +24,7 @@ class AircraftBeacon(Beacon):
 
     software_version = Column(Float)
     hardware_version = Column(SmallInteger)
-    real_id = Column(String(6))
+    real_address = Column(String(6))
 
     flightlevel = Column(Float)
 
@@ -33,6 +33,8 @@ class AircraftBeacon(Beacon):
     theta = Column(Float)
     phi = Column(Float)
 
+    flight_state = Column(SmallInteger)
+
     # Pattern
     address_pattern = re.compile(r"id(\S{2})(\S{6})")
     climb_rate_pattern = re.compile(r"([\+\-]\d+)fpm")
@@ -40,18 +42,18 @@ class AircraftBeacon(Beacon):
     signal_strength_pattern = re.compile(r"(\d+\.\d+)dB")
     error_count_pattern = re.compile(r"(\d+)e")
     coordinates_extension_pattern = re.compile(r"\!W(.)(.)!")
-    hear_ID_pattern = re.compile(r"hear(\w{4})")
+    hear_address_pattern = re.compile(r"hear(\w{4})")
     frequency_offset_pattern = re.compile(r"([\+\-]\d+\.\d+)kHz")
     gps_status_pattern = re.compile(r"gps(\d+x\d+)")
 
     software_version_pattern = re.compile(r"s(\d+\.\d+)")
     hardware_version_pattern = re.compile(r"h(\d+)")
-    real_id_pattern = re.compile(r"r(\w{6})")
+    real_address_pattern = re.compile(r"r(\w{6})")
 
     flightlevel_pattern = re.compile(r"FL(\d{3}\.\d{2})")
 
     def __init__(self, beacon=None):
-        self.heared_aircraft_IDs = list()
+        self.heared_aircraft_addresses = list()
 
         if beacon is not None:
             self.name = beacon.name
@@ -77,13 +79,13 @@ class AircraftBeacon(Beacon):
             signal_strength_match = self.signal_strength_pattern.match(part)
             error_count_match = self.error_count_pattern.match(part)
             coordinates_extension_match = self.coordinates_extension_pattern.match(part)
-            hear_ID_match = self.hear_ID_pattern.match(part)
+            hear_address_match = self.hear_address_pattern.match(part)
             frequency_offset_match = self.frequency_offset_pattern.match(part)
             gps_status_match = self.gps_status_pattern.match(part)
 
             software_version_match = self.software_version_pattern.match(part)
             hardware_version_match = self.hardware_version_pattern.match(part)
-            real_id_match = self.real_id_pattern.match(part)
+            real_address_match = self.real_address_pattern.match(part)
 
             flightlevel_match = self.flightlevel_pattern.match(part)
 
@@ -111,8 +113,8 @@ class AircraftBeacon(Beacon):
 
                 self.latitude = self.latitude + dlat
                 self.longitude = self.longitude + dlon
-            elif hear_ID_match is not None:
-                self.heared_aircraft_IDs.append(hear_ID_match.group(1))
+            elif hear_address_match is not None:
+                self.heared_aircraft_addresses.append(hear_address_match.group(1))
             elif frequency_offset_match is not None:
                 self.frequency_offset = float(frequency_offset_match.group(1))
             elif gps_status_match is not None:
@@ -122,8 +124,8 @@ class AircraftBeacon(Beacon):
                 self.software_version = float(software_version_match.group(1))
             elif hardware_version_match is not None:
                 self.hardware_version = int(hardware_version_match.group(1))
-            elif real_id_match is not None:
-                self.real_id = real_id_match.group(1)
+            elif real_address_match is not None:
+                self.real_address = real_address_match.group(1)
 
             elif flightlevel_match is not None:
                 self.flightlevel = float(flightlevel_match.group(1))

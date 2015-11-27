@@ -3,9 +3,8 @@ from __future__ import absolute_import
 from celery.utils.log import get_task_logger
 from ogn.collect.celery import app
 
-from ogn.model import Device
+from ogn.model import AddressOrigin, Device
 from ogn.utils import get_ddb
-from ogn.model.address_origin import AddressOrigin
 
 logger = get_task_logger(__name__)
 

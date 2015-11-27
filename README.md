@@ -82,8 +82,8 @@ The task server must be running for `db.updateddb`.
 - [ ] Enable granular data acquisition (eg. store receiver beacons only)
 - [x] Future Database-Migrations: Use Alembic?
   - [x] Rename 'Flarm' to 'Device'?
-  - [ ] Rename self.heared\_aircraft\_IDs (lowercase) in aircraft\_beacon
-  - [ ] Rename self.heared\_aircraft\_IDs
+  - [x] Rename self.heared\_aircraft\_IDs (lowercase) in aircraft\_beacon
+  - [x] Rename self.heared\_aircraft\_IDs
 - [x] Fix command/logbook.py (@Meisterschueler?)
 - [ ] Introduce scheduled tasks with 'celery beat' (eg. updateddb)
 
