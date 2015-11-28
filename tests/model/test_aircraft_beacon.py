@@ -24,10 +24,10 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(aircraft_beacon.frequency_offset, 51.2)
         self.assertEqual(aircraft_beacon.gps_status, '4x5')
 
-        self.assertEqual(len(aircraft_beacon.heared_aircraft_IDs), 3)
-        self.assertEqual(aircraft_beacon.heared_aircraft_IDs[0], '1084')
-        self.assertEqual(aircraft_beacon.heared_aircraft_IDs[1], 'B597')
-        self.assertEqual(aircraft_beacon.heared_aircraft_IDs[2], 'B598')
+        self.assertEqual(len(aircraft_beacon.heared_aircraft_addresses), 3)
+        self.assertEqual(aircraft_beacon.heared_aircraft_addresses[0], '1084')
+        self.assertEqual(aircraft_beacon.heared_aircraft_addresses[1], 'B597')
+        self.assertEqual(aircraft_beacon.heared_aircraft_addresses[2], 'B598')
 
     def test_stealth(self):
         aircraft_beacon = AircraftBeacon()
@@ -45,7 +45,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(aircraft_beacon.longitude, 6 / 1000 / 60)
         self.assertEqual(aircraft_beacon.software_version, 6.02)
         self.assertEqual(aircraft_beacon.hardware_version, 44)
-        self.assertEqual(aircraft_beacon.real_id, "DF0C56")
+        self.assertEqual(aircraft_beacon.real_address, "DF0C56")
 
     def test_v024_ogn_tracker(self):
         aircraft_beacon = AircraftBeacon()
