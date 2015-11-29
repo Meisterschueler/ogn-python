@@ -17,13 +17,10 @@ def list_all():
 
     timestamp_24h_ago = datetime.utcnow() - timedelta(days=1)
 
-    sq = session.query(
-            distinct(ReceiverBeacon.name).label('name'),
-            func.max(ReceiverBeacon.timestamp).label('lastseen'),
-            func.count(ReceiverBeacon.name).label('messages_count')).\
-        filter(ReceiverBeacon.timestamp > timestamp_24h_ago).\
-            group_by(ReceiverBeacon.name).\
-            subquery()
+    sq = session.query(distinct(ReceiverBeacon.name).label('name'),
+                       func.max(ReceiverBeacon.timestamp).label('lastseen'),
+                       func.count(ReceiverBeacon.name).label('messages_count')
+                       ).filter(ReceiverBeacon.timestamp > timestamp_24h_ago).group_by(ReceiverBeacon.name).subquery()
 
     query = session.query(Receiver, sq.c.messages_count).\
         filter(Receiver.name == sq.c.name).\
