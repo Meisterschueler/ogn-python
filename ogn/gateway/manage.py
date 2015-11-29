@@ -1,6 +1,6 @@
 import socket
 
-from ogn.gateway import ognGateway
+from ogn.gateway.client import ognGateway
 from ogn.logger import logger
 
 from manager import Manager
