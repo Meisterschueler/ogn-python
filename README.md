@@ -28,6 +28,7 @@ $ apt-get install redis-server
 3. Create database
 ```
 $ ./manage.py db.init
+$ alembic stamp head
 ```
 
 ## Running the aprs client and task server
