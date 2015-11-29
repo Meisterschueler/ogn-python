@@ -3,6 +3,9 @@ language: python
 python:
   - 3.4
 
+before_script:
+  - "pep8 --ignore=E501 --exclude=logbook.py,utils.py ogn"
+
 script:
   - nosetests --with-coverage --cover-package=ogn
 
