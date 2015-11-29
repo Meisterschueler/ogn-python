@@ -3,15 +3,16 @@ import socket
 from ogn.gateway import ognGateway
 from ogn.logger import logger
 
-DB_URI = 'sqlite:///beacons.db'
-
 from manager import Manager
 manager = Manager()
+
+DB_URI = 'sqlite:///beacons.db'
 
 
 @manager.command
 def run(aprs_user="anon-dev"):
     """Run the aprs client."""
+
     if len(aprs_user) < 3 or len(aprs_user) > 9:
         print("aprs_user must be a string of 3-9 characters")
         return
