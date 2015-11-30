@@ -1,39 +1,22 @@
 import unittest
 import unittest.mock as mock
 
-import socket
-
 from ogn.gateway.manage import run
 
 
-class GatewayTest(unittest.TestCase):
-
+class GatewayManagerTest(unittest.TestCase):
     # try simple user interrupt
     @mock.patch('ogn.gateway.manage.ognGateway')
     def test_run_user_interruption(self, mock_gateway):
         instance = mock_gateway.return_value
         instance.run.side_effect = KeyboardInterrupt()
 
-        run("user_1")
+        run(aprs_user="testuser")
 
-        instance.connect_db.assert_called_once_with()
-        instance.connect.assert_called_once_with("user_1")
-        instance.run.assert_called_once_with()
+        instance.connect.assert_called_once_with()
+        self.assertEqual(instance.run.call_count, 1)
         instance.disconnect.assert_called_once_with()
 
-    # make BrokenPipeErrors and a socket error (may happen) and then a user interrupt (important!)
-    @mock.patch('ogn.gateway.manage.ognGateway')
-    def test_run_multiple_errors(self, mock_gateway):
-        instance = mock_gateway.return_value
-        instance.run.side_effect = [BrokenPipeError(), socket.error(), KeyboardInterrupt()]
-        instance.disconnect.side_effect = [True, True, OSError()]
-
-        run("user_2")
-
-        instance.connect_db.assert_called_once_with()
-        self.assertEqual(instance.connect.call_count, 3)
-        self.assertEqual(instance.run.call_count, 3)
-        self.assertEqual(instance.disconnect.call_count, 3)
 
 if __name__ == '__main__':
     unittest.main()
