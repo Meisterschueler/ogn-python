@@ -19,7 +19,14 @@ class ognGateway:
         # create socket, connect to server, login and make a file object associated with the socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        self.sock.connect((settings.APRS_SERVER_HOST, settings.APRS_SERVER_PORT))
+
+        if self.aprs_filter:
+            port = settings.APRS_SERVER_PORT_CLIENT_DEFINED_FILTERS
+        else:
+            port = settings.APRS_SERVER_PORT_FULL_FEED
+
+        self.sock.connect((settings.APRS_SERVER_HOST, port))
+        self.logger.debug('Server port {}'.format(port))
 
         login = create_aprs_login(self.aprs_user, -1, settings.APRS_APP_NAME, settings.APRS_APP_VER, self.aprs_filter)
         self.sock.send(login.encode())

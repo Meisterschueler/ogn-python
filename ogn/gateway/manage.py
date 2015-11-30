@@ -28,7 +28,6 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
         log_handlers.append(logging.FileHandler(logfile))
     logging.basicConfig(format=logging_formatstr, level=loglevel, handlers=log_handlers)
 
-
     print('Start ogn gateway')
     gateway = ognGateway(aprs_user)
     gateway.connect()
