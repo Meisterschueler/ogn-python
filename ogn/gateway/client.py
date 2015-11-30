@@ -1,4 +1,5 @@
 import socket
+import logging
 from time import time
 
 from ogn.gateway import settings
@@ -6,7 +7,6 @@ from ogn.commands.dbutils import session
 from ogn.aprs_parser import parse_aprs
 from ogn.aprs_utils import create_aprs_login
 from ogn.exceptions import AprsParseError, OgnParseError
-from ogn.logger import logger
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -16,9 +16,9 @@ from ogn.model import Base
 class ognGateway:
     def __init__(self):
         pass
-
     def connect_db(self):
         self.session = session
+        self.logger = logging.getLogger(__name__)
 
     def connect(self, aprs_user):
         # create socket, connect to server, login and make a file object associated with the socket
@@ -57,11 +57,12 @@ class ognGateway:
     def proceed_line(self, line):
         try:
             beacon = parse_aprs(line)
+            self.logger.debug('Received beacon: {}'.format(beacon))
         except AprsParseError:
-            logger.error('AprsParseError while parsing line: %s' % line, exc_info=True)
+            self.logger.error('AprsParseError while parsing line: {}'.format(line), exc_info=True)
             return
         except OgnParseError:
-            logger.error('OgnParseError while parsing line: ' % line, exc_info=True)
+            self.logger.error('OgnParseError while parsing line: {}'.format(line), exc_info=True)
             return
 
         if beacon is not None:
