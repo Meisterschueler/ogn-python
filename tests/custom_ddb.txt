@@ -1,4 +1,7 @@
 #DEVICE_TYPE,DEVICE_ID,AIRCRAFT_MODEL,REGISTRATION,CN,TRACKED,IDENTIFIED
 'F','DD4711','HK36 TTC','D-EULE','CU','Y','Y'
-'F','DD0815','Ventus 2cxM','D-1234','','Y','Y'
-'F','DD3141','Arcus T','OE-4321','','Y','Y'
+'F','DD0815','Ventus 2cxM','D-1234','','Y','N'
+'F','DD1234','LS 8 18m','D-8654','12','N','Y'
+'F','DD3141','Arcus T','OE-4321','','N','N'
+'O','DEADBE','Baloon','OE-ABC','','Y','Y'
+'I','999999','A380','G-XXXL','XXL','Y','Y'
