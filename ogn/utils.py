@@ -12,6 +12,10 @@ DDB_URL = "http://ddb.glidernet.org/download"
 deg2rad = pi/180
 rad2deg = 1/deg2rad
 
+address_prefixes = {'F':'FLR',
+                    'O':'OGN',
+                    'I':'ICA'}
+
 
 def get_ddb(csvfile=None):
     if csvfile is None:
@@ -41,6 +45,14 @@ def get_ddb(csvfile=None):
         devices.append(flarm)
 
     return devices
+
+
+def get_trackable(ddb):
+   l = []
+   for i in ddb:
+       if i.tracked and i.address_type in address_prefixes:
+           l.append('{}{}'.format(address_prefixes[i.address_type], i.address))
+   return l
 
 
 def get_country_code(latitude, longitude):

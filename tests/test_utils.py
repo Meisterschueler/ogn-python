@@ -1,6 +1,6 @@
 import unittest
 
-from ogn.utils import get_ddb, get_country_code, wgs84_to_sphere
+from ogn.utils import get_ddb, get_trackable, get_country_code, wgs84_to_sphere
 from ogn.model import AddressOrigin
 
 
@@ -11,7 +11,7 @@ class TestStringMethods(unittest.TestCase):
 
     def test_get_ddb_from_file(self):
         devices = get_ddb('tests/custom_ddb.txt')
-        self.assertEqual(len(devices), 3)
+        self.assertEqual(len(devices), 6)
         device = devices[0]
 
         self.assertEqual(device.address, 'DD4711')
@@ -22,6 +22,15 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(device.identified)
 
         self.assertEqual(device.address_origin, AddressOrigin.userdefined)
+
+    def test_get_trackable(self):
+        devices = get_ddb('tests/custom_ddb.txt')
+        trackable = get_trackable(devices)
+        self.assertEqual(len(trackable), 4)
+        self.assertIn('FLRDD4711', trackable)
+        self.assertIn('FLRDD0815', trackable)
+        self.assertIn('OGNDEADBE', trackable)
+        self.assertIn('ICA999999', trackable)
 
     def test_get_country_code(self):
         latitude = 48.0
