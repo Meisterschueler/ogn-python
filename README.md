@@ -16,20 +16,23 @@ To schedule tasks like fetching ddb data,
 
 ## Installation and Setup
 1. Install python requirements
-```
-pip install -r requirements.txt
-```
+
+    ```
+    pip install -r requirements.txt
+    ```
 
 2. Install redis for asynchronous tasks ('ogn.collect.\*')
-```
-$ apt-get install redis-server
-```
+
+    ```
+    apt-get install redis-server
+    ```
 
 3. Create database
-```
-$ ./manage.py db.init
-$ alembic stamp head
-```
+
+    ```
+    ./manage.py db.init
+    alembic stamp head
+    ```
 
 ## Running the aprs client and task server
 This scripts run in the foreground and should be deamonized
