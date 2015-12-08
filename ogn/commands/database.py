@@ -57,7 +57,7 @@ def stats():
     print('--- Devices ---')
     for [address_origin, device_count, nt_count, ni_count, ntni_count] in query.all():
         print('{:12s} Total:{:5d} - not tracked:{:3d}, not identified:{:3d}, not tracked & not identified: {:3d}'
-              .format(AddressOrigin(address_origin).name,
+              .format(AddressOrigin(address_origin).name(),
                       device_count,
                       nt_count,
                       ni_count,

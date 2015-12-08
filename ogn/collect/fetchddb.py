@@ -14,7 +14,7 @@ def update_ddb_from_ogn():
     logger.info("Update ddb data from ogn.")
 
     app.session.query(Device) \
-        .filter(AddressOrigin(Device.address_origin) is AddressOrigin.ogn_ddb) \
+        .filter(Device.address_origin == AddressOrigin.ogn_ddb) \
         .delete()
 
     devices = get_ddb()
@@ -31,7 +31,7 @@ def update_ddb_from_file():
     logger.info("Import ddb data from file.")
 
     app.session.query(Device) \
-        .filter(AddressOrigin(Device.address_origin) is AddressOrigin.userdefined) \
+        .filter(Device.address_origin == AddressOrigin.userdefined) \
         .delete()
 
     devices = get_ddb('ogn/custom_ddb.txt')
