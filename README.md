@@ -58,10 +58,10 @@ optional arguments:
 available commands:
 
   [db]
+    import_ddb             Import registered devices from the DDB.
+    import_file            Import registered devices from local file.
     init                   Initialize the database.
-    update_ddb_file        Update devices with data from local file.
-    update_ddb_ogn         Update devices with data from ogn.
-  
+
   [gateway]
     run                    Run the aprs client.
 
@@ -78,7 +78,7 @@ available commands:
     software_stats         Show some statistics of receiver software.
 ```
 
-The task server must be running for `db.updateddb`.
+Only the command `logbook.compute` requires a running task server (celery) at the moment.
 
 ## TODO
 - [x] Write celery backend and add task 'fetchddb'
@@ -95,9 +95,13 @@ The task server must be running for `db.updateddb`.
 - [ ] Introduce scheduled tasks with 'celery beat' (eg. updateddb)
 
 ### Scheduled tasks
-- ogn.collect.fetchddb (generate Flarm table)
-- ogn.collect.receiver (generate Receiver table)
-- ogn.collect.logbook  (generate TakeoffLanding table)
+- ogn.collect.database
+  - import_ddb - Import registered devices from the ddb
+  - import_file - Import registered devices from a local file
+- ogn.collect.receiver
+  - populate - generate Receiver table (not implemented)
+- ogn.collect.logbook
+  - compute - generate TakeoffLanding table
 
 ## How to use virtualenv
 ```

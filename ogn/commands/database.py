@@ -1,8 +1,7 @@
-from sqlalchemy import func, and_, true, false
-
-from ogn.model import Base, AddressOrigin, Device
-from ogn.collect.fetchddb import update_ddb_from_ogn, update_ddb_from_file
 from ogn.commands.dbutils import engine, session
+from ogn.model import Base, AddressOrigin
+from ogn.utils import get_ddb
+from ogn.collect.database import update_devices
 
 from manager import Manager
 manager = Manager()
@@ -17,22 +16,19 @@ def init():
 
 
 @manager.command
-def update_ddb_ogn():
-    """Update devices with data from ogn."""
-    print("Updating ddb data...")
-    result = update_ddb_from_ogn.delay()
-    counter = result.get()
+def import_ddb():
+    """Import registered devices from the DDB."""
+
+    print("Import registered devices fom the DDB...")
+    counter = update_devices(session, AddressOrigin.ogn_ddb, get_ddb())
     print("Imported %i devices." % counter)
 
 
 @manager.command
-def update_ddb_file():
-    """Update devices with data from local file."""
-    print("Updating ddb data...")
-    result = update_ddb_from_file.delay()
-    counter = result.get()
+def import_file(path='tests/custom_ddb.txt'):
+    """Import registered devices from a local file."""
+    # (flushes previously manually imported entries)
+
+    print("Import registered devices from '{}'...".format(path))
+    counter = update_devices(session, AddressOrigin.user_defined, get_ddb(path))
     print("Imported %i devices." % counter)
-
-
-@manager.command
-

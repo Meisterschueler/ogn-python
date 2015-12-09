@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -9,7 +7,7 @@ from celery.signals import worker_init, worker_shutdown
 app = Celery('ogn.collect',
              broker='redis://localhost:6379/0',
              backend='redis://localhost:6379/0',
-             include=["ogn.collect.fetchddb", "ogn.collect.logbook"])
+             include=["ogn.collect.database", "ogn.collect.logbook"])
 
 DB_URI = 'sqlite:///beacons.db'
 
