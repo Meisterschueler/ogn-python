@@ -64,11 +64,14 @@ available commands:
   
   [gateway]
     run                    Run the aprs client.
-  
+
   [logbook]
     compute                Compute takeoffs and landings.
     show                   Show a logbook for <airport_name> located at given position.
-  
+
+  [show.devices]
+    stats                  Show some stats on registered devices.
+
   [show.receiver]
     hardware_stats         Show some statistics of receiver hardware.
     list_all               Show a list of all receivers.
