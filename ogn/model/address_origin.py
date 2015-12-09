@@ -1,7 +1,7 @@
 class AddressOrigin:
     ogn_ddb = 1
     flarmnet = 2
-    userdefined = 3
+    user_defined = 3
 
     def __init__(self, origin):
         if origin in [1, 2, 3]:
@@ -11,9 +11,9 @@ class AddressOrigin:
 
     def name(self):
         if self.origin == self.ogn_ddb:
-            return 'ogn_ddb'
+            return 'OGN-DDB'
         elif self.origin == self.flarmnet:
-            return 'flarmnet'
-        elif self.origin == self.userdefined:
-            return 'userdefined'
+            return 'FlarmNet'
+        elif self.origin == self.user_defined:
+            return 'user-defined'
         return ''

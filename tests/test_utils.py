@@ -21,7 +21,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(device.tracked)
         self.assertTrue(device.identified)
 
-        self.assertEqual(device.address_origin, AddressOrigin.userdefined)
+        self.assertEqual(device.address_origin, AddressOrigin.user_defined)
 
     def test_get_trackable(self):
         devices = get_ddb('tests/custom_ddb.txt')

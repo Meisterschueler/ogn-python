@@ -25,7 +25,7 @@ def get_ddb(csvfile=None):
     else:
         r = open(csvfile, 'r')
         rows = ''.join(i for i in r.readlines() if i[0] != '#')
-        address_origin = AddressOrigin.userdefined
+        address_origin = AddressOrigin.user_defined
 
     data = csv.reader(StringIO(rows), quotechar="'", quoting=csv.QUOTE_ALL)
 
