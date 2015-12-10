@@ -10,16 +10,16 @@ class TestStringMethods(unittest.TestCase):
         self.assertAlmostEqual(dmsToDeg(dms), 50.805, 5)
 
     def test_createTimestamp_seconds_behind(self):
-        timestamp = createTimestamp('235959', datetime(2015, 10, 16,  0,  0,  1))
-        self.assertEqual(timestamp,           datetime(2015, 10, 15, 23, 59, 59))
+        timestamp = createTimestamp('235959', reference=datetime(2015, 10, 16, 0, 0, 1))
+        self.assertEqual(timestamp, datetime(2015, 10, 15, 23, 59, 59))
 
     def test_createTimestamp_seconds_before(self):
-        timestamp = createTimestamp('000001', datetime(2015, 10, 15, 23, 59, 59))
-        self.assertEqual(timestamp,           datetime(2015, 10, 16,  0,  0,  1))
+        timestamp = createTimestamp('000001', reference=datetime(2015, 10, 15, 23, 59, 59))
+        self.assertEqual(timestamp, datetime(2015, 10, 16, 0, 0, 1))
 
     def test_createTimestamp_big_difference(self):
         with self.assertRaises(Exception):
-            createTimestamp(datetime(2015, 10, 15, 23, 59, 59), '123456')
+            createTimestamp('123456', reference=datetime(2015, 10, 15, 23, 59, 59), validate=True)
 
     def test_create_aprs_login(self):
         basic_login = create_aprs_login('klaus', -1, 'myApp', '0.1')

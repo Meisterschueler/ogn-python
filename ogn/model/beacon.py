@@ -29,7 +29,7 @@ class Beacon(AbstractConcreteBase, Base):
     altitude = Column(Integer)
     comment = None
 
-    def parse(self, text, reference_time=None):
+    def parse(self, text):
         result = re_pattern_aprs.match(text)
         if result is None:
             raise AprsParseError(text)
@@ -37,7 +37,7 @@ class Beacon(AbstractConcreteBase, Base):
         self.name = result.group(1)
         self.receiver_name = result.group(2)
 
-        self.timestamp = createTimestamp(result.group(3), reference_time)
+        self.timestamp = createTimestamp(result.group(3))
 
         self.latitude = dmsToDeg(float(result.group(4)) / 100)
         if result.group(5) == "S":
