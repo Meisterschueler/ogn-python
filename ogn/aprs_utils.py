@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 import math
 
+from ogn.exceptions import AmbigousTimeError
+
 
 kmh2kts = 0.539957
 feet2m = 0.3048
@@ -18,18 +20,19 @@ def dmsToDeg(dms):
     return d + m
 
 
-def createTimestamp(hhmmss, reference=datetime.utcnow(), validate=False):
-    hh = int(hhmmss[0:2])
-    mm = int(hhmmss[2:4])
-    ss = int(hhmmss[4:6])
+def createTimestamp(hhmmss, reference):
+    packet_time = datetime.strptime(hhmmss, '%H%M%S').time()
+    timestamp = datetime.combine(reference, packet_time)
 
-    if (reference.hour == 23) & (hh == 0):
-        reference = reference + timedelta(days=1)
-    elif (reference.hour == 0) & (hh == 23):
-        reference = reference - timedelta(days=1)
-    elif validate and abs(reference.hour - hh) > 1:
-        raise Exception("Time difference is too big. Reference time:%s - timestamp:%s" % (reference, hhmmss))
-    return datetime(reference.year, reference.month, reference.day, hh, mm, ss)
+    if reference.hour == 23 and timestamp.hour == 0:
+        timestamp = timestamp + timedelta(days=1)
+    elif reference.hour == 0 and timestamp.hour == 23:
+        timestamp = timestamp - timedelta(days=1)
+
+    if reference - timestamp > timedelta(hours=1):
+        raise AmbigousTimeError(reference, packet_time)
+
+    return timestamp
 
 
 def create_aprs_login(user_name, pass_code, app_name, app_version, aprs_filter=None):

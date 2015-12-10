@@ -5,7 +5,7 @@ from time import time
 from ogn.gateway import settings
 from ogn.aprs_parser import parse_aprs
 from ogn.aprs_utils import create_aprs_login
-from ogn.exceptions import AprsParseError, OgnParseError
+from ogn.exceptions import AprsParseError, OgnParseError, AmbigousTimeError
 
 
 class ognGateway:
@@ -82,6 +82,9 @@ class ognGateway:
             return
         except OgnParseError:
             self.logger.error('OgnParseError while parsing line: {}'.format(line), exc_info=True)
+            return
+        except AmbigousTimeError as e:
+            self.logger.error('Drop packet, {:.0f}s from past.'.format(e.timedelta.total_seconds()))
             return
 
         if beacon is not None:
