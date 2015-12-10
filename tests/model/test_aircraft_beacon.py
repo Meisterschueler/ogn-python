@@ -1,5 +1,7 @@
 import unittest
 
+from datetime import datetime
+
 from ogn.aprs_utils import ms2fpm
 from ogn.model import Beacon, AircraftBeacon
 from ogn.exceptions import OgnParseError
@@ -55,7 +57,8 @@ class TestStringMethods(unittest.TestCase):
 
     def test_copy_constructor(self):
         beacon = Beacon()
-        beacon.parse("FLRDDA5BA>APRS,qAS,LFMX:/160829h4415.41N/00600.03E'342/049/A=005524 id0ADDA5BA -454fpm -1.1rot 8.8dB 0e +51.2kHz gps4x5")
+        beacon.parse("FLRDDA5BA>APRS,qAS,LFMX:/160829h4415.41N/00600.03E'342/049/A=005524 id0ADDA5BA -454fpm -1.1rot 8.8dB 0e +51.2kHz gps4x5",
+                     reference_date=datetime(2015, 1, 1, 16, 8, 29))
         aircraft_beacon = AircraftBeacon(beacon)
 
         self.assertEqual(aircraft_beacon.name, 'FLRDDA5BA')
