@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from .model import Beacon, AircraftBeacon, ReceiverBeacon
 from ogn.exceptions import AprsParseError
 
 
-def parse_aprs(packet):
+def parse_aprs(packet, reference_date=datetime.utcnow()):
     if not isinstance(packet, str):
         raise TypeError("Expected packet to be str, got %s" % type(packet))
     elif packet == "":
@@ -11,7 +13,7 @@ def parse_aprs(packet):
         return None
 
     beacon = Beacon()
-    beacon.parse(packet)
+    beacon.parse(packet, reference_date)
 
     # symboltable / symbolcodes used by OGN:
     # I&: used as receiver

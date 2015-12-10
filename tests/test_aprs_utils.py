@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 
 from ogn.aprs_utils import dmsToDeg, createTimestamp, create_aprs_login
+from ogn.exceptions import AmbigousTimeError
 
 
 class TestStringMethods(unittest.TestCase):
@@ -18,8 +19,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(timestamp, datetime(2015, 10, 16, 0, 0, 1))
 
     def test_createTimestamp_big_difference(self):
-        with self.assertRaises(Exception):
-            createTimestamp('123456', reference=datetime(2015, 10, 15, 23, 59, 59), validate=True)
+        with self.assertRaises(AmbigousTimeError):
+            createTimestamp('123456', reference=datetime(2015, 10, 15, 23, 59, 59))
 
     def test_create_aprs_login(self):
         basic_login = create_aprs_login('klaus', -1, 'myApp', '0.1')
