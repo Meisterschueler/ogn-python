@@ -30,7 +30,9 @@ class Beacon(AbstractConcreteBase, Base):
     altitude = Column(Integer)
     comment = None
 
-    def parse(self, text, reference_date=datetime.utcnow()):
+    def parse(self, text, reference_date=None):
+        if reference_date is None:
+            reference_date = datetime.utcnow()
         result = re_pattern_aprs.match(text)
         if result is None:
             raise AprsParseError(text)
