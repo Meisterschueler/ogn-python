@@ -1,4 +1,5 @@
-from ogn.model import Device
+from ogn.utils import get_ddb
+from ogn.model import Device, AddressOrigin
 
 from celery.utils.log import get_task_logger
 from ogn.collect.celery import app
