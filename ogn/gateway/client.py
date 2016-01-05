@@ -38,7 +38,7 @@ class ognGateway:
             # close everything
             self.sock.shutdown(0)
             self.sock.close()
-        except OSError as e:
+        except OSError:
             self.logger.error('Socket close error', exc_info=True)
 
     def run(self, callback, autoreconnect=False):

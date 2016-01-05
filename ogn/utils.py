@@ -9,9 +9,9 @@ from geopy.geocoders import Nominatim
 DDB_URL = "http://ddb.glidernet.org/download"
 
 
-address_prefixes = {'F':'FLR',
-                    'O':'OGN',
-                    'I':'ICA'}
+address_prefixes = {'F': 'FLR',
+                    'O': 'OGN',
+                    'I': 'ICA'}
 
 
 def get_ddb(csvfile=None):
@@ -45,11 +45,11 @@ def get_ddb(csvfile=None):
 
 
 def get_trackable(ddb):
-   l = []
-   for i in ddb:
-       if i.tracked and i.address_type in address_prefixes:
-           l.append('{}{}'.format(address_prefixes[i.address_type], i.address))
-   return l
+    l = []
+    for i in ddb:
+        if i.tracked and i.address_type in address_prefixes:
+            l.append('{}{}'.format(address_prefixes[i.address_type], i.address))
+    return l
 
 
 def get_country_code(latitude, longitude):
