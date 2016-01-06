@@ -9,5 +9,8 @@ before_script:
 script:
   - nosetests --with-coverage --cover-package=ogn
 
+  - pip install . --upgrade
+  - python -c 'import ogn'
+
 after_success:
   - coveralls
