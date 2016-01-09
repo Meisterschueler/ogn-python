@@ -19,7 +19,7 @@ class TestStringMethods(unittest.TestCase):
 
         self.assertFalse(aircraft_beacon.stealth)
         self.assertEqual(aircraft_beacon.address, "DDA5BA")
-        self.assertAlmostEqual(aircraft_beacon.climb_rate*ms2fpm, -454, 2)
+        self.assertAlmostEqual(aircraft_beacon.climb_rate * ms2fpm, -454, 2)
         self.assertEqual(aircraft_beacon.turn_rate, -1.1)
         self.assertEqual(aircraft_beacon.signal_strength, 8.8)
         self.assertEqual(aircraft_beacon.error_count, 0)

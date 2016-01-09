@@ -1,3 +1,4 @@
+# flake8: noqa
 from .address_origin import AddressOrigin
 from .aircraft_type import AircraftType
 from .base import Base

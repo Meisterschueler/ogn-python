@@ -26,8 +26,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertAlmostEqual(beacon.longitude, dmsToDeg(6.0003), 5)
         self.assertEqual(beacon.symbolcode, '\'')
         self.assertEqual(beacon.track, 342)
-        self.assertEqual(beacon.ground_speed, 49*kts2kmh)
-        self.assertAlmostEqual(beacon.altitude*m2feet, 5524, 5)
+        self.assertEqual(beacon.ground_speed, 49 * kts2kmh)
+        self.assertAlmostEqual(beacon.altitude * m2feet, 5524, 5)
         self.assertEqual(beacon.comment, "this is a comment")
 
 

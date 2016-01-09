@@ -1,4 +1,4 @@
-from ogn.commands.dbutils import engine, session
+from ogn.commands.dbutils import session
 from ogn.model import AddressOrigin, Device
 from sqlalchemy import func, and_, true, false
 

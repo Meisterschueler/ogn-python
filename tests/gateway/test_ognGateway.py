@@ -25,5 +25,3 @@ class GatewayTest(unittest.TestCase):
         self.gw.disconnect()
         self.gw.sock.shutdown.assert_called_once_with(0)
         self.gw.sock.close.assert_called_once_with()
-
-

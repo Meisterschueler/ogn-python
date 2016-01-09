@@ -40,57 +40,49 @@ def show(airport_name, latitude, longitude, altitude):
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
         TakeoffLanding.address,
-        func.lag(TakeoffLanding.address) \
+        func.lag(TakeoffLanding.address)
             .over(
                 order_by=and_(func.date(TakeoffLanding.timestamp),
                               TakeoffLanding.address,
-                              TakeoffLanding.timestamp)) \
+                              TakeoffLanding.timestamp))
             .label('address_prev'),
-        func.lead(TakeoffLanding.address) \
-            .over(
-                order_by=and_(func.date(TakeoffLanding.timestamp),
-                              TakeoffLanding.address,
-                              TakeoffLanding.timestamp)) \
-           .label('address_next'),
-       TakeoffLanding.timestamp,
-       func.lag(
-           TakeoffLanding.timestamp) \
-               .over(
-                   order_by=and_(func.date(TakeoffLanding.timestamp),
-                                 TakeoffLanding.address,
-                                 TakeoffLanding.timestamp)) \
-               .label('timestamp_prev'),
-       func.lead(
-           TakeoffLanding.timestamp) \
-               .over(order_by=and_(func.date(TakeoffLanding.timestamp),
-                                   TakeoffLanding.address,
-                                   TakeoffLanding.timestamp)) \
-               .label('timestamp_next'),
-       TakeoffLanding.track,
-       func.lag(
-           TakeoffLanding.track) \
-               .over(order_by=and_(func.date(TakeoffLanding.timestamp),
-                                   TakeoffLanding.address,
-                                   TakeoffLanding.timestamp)) \
-               .label('track_prev'),
-       func.lead(
-           TakeoffLanding.track) \
-               .over(order_by=and_(func.date(TakeoffLanding.timestamp),
-                                   TakeoffLanding.address,
-                                   TakeoffLanding.timestamp)) \
-               .label('track_next'),
-       TakeoffLanding.is_takeoff,
-       func.lag(
-           TakeoffLanding.is_takeoff) \
-               .over(order_by=and_(func.date(TakeoffLanding.timestamp),
-                                   TakeoffLanding.address,
-                                   TakeoffLanding.timestamp)) \
-               .label('is_takeoff_prev'),
-       func.lead(
-           TakeoffLanding.is_takeoff) \
+        func.lead(TakeoffLanding.address)
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp),
+                                TakeoffLanding.address,
+                                TakeoffLanding.timestamp))
+            .label('address_next'),
+        TakeoffLanding.timestamp,
+        func.lag(TakeoffLanding.timestamp)
                 .over(order_by=and_(func.date(TakeoffLanding.timestamp),
                                     TakeoffLanding.address,
-                                    TakeoffLanding.timestamp)) \
+                                    TakeoffLanding.timestamp))
+                .label('timestamp_prev'),
+        func.lead(TakeoffLanding.timestamp)
+                .over(order_by=and_(func.date(TakeoffLanding.timestamp),
+                                    TakeoffLanding.address,
+                                    TakeoffLanding.timestamp))
+                .label('timestamp_next'),
+        TakeoffLanding.track,
+        func.lag(TakeoffLanding.track)
+                .over(order_by=and_(func.date(TakeoffLanding.timestamp),
+                                    TakeoffLanding.address,
+                                    TakeoffLanding.timestamp))
+                .label('track_prev'),
+        func.lead(TakeoffLanding.track)
+                .over(order_by=and_(func.date(TakeoffLanding.timestamp),
+                                    TakeoffLanding.address,
+                                    TakeoffLanding.timestamp))
+                .label('track_next'),
+        TakeoffLanding.is_takeoff,
+        func.lag(TakeoffLanding.is_takeoff)
+                .over(order_by=and_(func.date(TakeoffLanding.timestamp),
+                                    TakeoffLanding.address,
+                                    TakeoffLanding.timestamp))
+                .label('is_takeoff_prev'),
+        func.lead(TakeoffLanding.is_takeoff)
+                .over(order_by=and_(func.date(TakeoffLanding.timestamp),
+                                    TakeoffLanding.address,
+                                    TakeoffLanding.timestamp))
                 .label('is_takeoff_next')) \
         .filter(and_(between(TakeoffLanding.latitude, latmin, latmax),
                      between(TakeoffLanding.longitude, lonmin, lonmax))) \
