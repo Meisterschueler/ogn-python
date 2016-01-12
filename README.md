@@ -6,46 +6,94 @@
 (https://coveralls.io/r/glidernet/ogn-python)
 
 A python module for the [Open Glider Network](http://wiki.glidernet.org/).
-The submodule 'ogn.gateway' is an aprs client, saving all received beacons
-into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
-Other submodules process this data.
+The submodule 'ogn.gateway' is an aprs client which could be invoked via a CLI
+or used by other python projects.
+The CLI allows to save all received beacons into a
+[sqlite](https://www.sqlite.org/)-database with [SQLAlchemy](http://www.sqlalchemy.org/).
+An external python project would instantiate ogn.gateway and register a custom callback,
+called each time a beacon is received.
 
-To schedule tasks like fetching ddb data,
-[Celery](http://www.celeryproject.org/) with [Redis](http://www.redis.io/) is used.
+[Examples](https://github.com/glidernet/ogn-python/wiki/Examples)
 
 
-## Installation and Setup
-1. Install python requirements
+## Usage - python module
+Implement your own gateway by using ogn.gateway with a custom callback function.
+Each time a beacon is received, this function gets called and
+lets you process the incoming data.
+
+Example:
+```python
+#!/usr/bin/env python3
+
+from ogn.model import AircraftBeacon, ReceiverBeacon
+from ogn.gateway.client import ognGateway
+
+
+def process_beacon(beacon):
+    if type(beacon) is AircraftBeacon:
+        print('Received aircraft beacon from {}'.format(beacon.name))
+    elif type(beacon) is ReceiverBeacon:
+        print('Received receiver beacon from {}'.format(beacon.name))
+
+
+if __name__ == '__main__':
+    gateway = ognGateway(aprs_user='N0CALL')
+    gateway.connect()
+
+    try:
+        gateway.run(callback=process_beacon, autoreconnect=True)
+    except KeyboardInterrupt:
+        print('\nStop ogn gateway')
+
+    gateway.disconnect()
+```
+
+
+## Usage - CLI
+### Installation and Setup
+1. Checkout the repository
+
+   ```
+   git clone https://github.com/glidernet/ogn-python.git
+   ```
+
+2. Install python requirements
 
     ```
     pip install -r requirements.txt
     ```
 
-2. Install redis for asynchronous tasks ('ogn.collect.\*')
+3. Install redis for asynchronous tasks (like takeoff/landing-detection)
 
     ```
     apt-get install redis-server
     ```
 
-3. Create database
+4. Create database
 
     ```
     ./manage.py db.init
-    alembic stamp head
     ```
 
-## Running the aprs client and task server
-This scripts run in the foreground and should be deamonized
+### Running the aprs client and task server
+To schedule tasks like takeoff/landing-detection (`logbook.compute`),
+[Celery](http://www.celeryproject.org/) with [Redis](http://www.redis.io/) is used.
+The following scripts run in the foreground and should be deamonized
 (eg. use [supervisord](http://supervisord.org/)).
-```
-# start aprs client
-$ ./manage.py gateway.run
 
-# start task server (make sure redis is up and running)
-$ celery -A ogn.collect worker -l info
-```
+- start aprs client
 
-## manage.py - CLI options
+  ```
+  ./manage.py gateway.run
+  ```
+
+- start task server (make sure redis is up and running)
+
+  ```
+  celery -A ogn.collect worker -l info
+  ```
+
+### manage.py - CLI options
 ```
 usage: manage.py [<namespace>.]<command> [<args>]
 
@@ -58,8 +106,9 @@ optional arguments:
 available commands:
 
   [db]
+    drop                   Drop all tables.
     import_ddb             Import registered devices from the DDB.
-    import_file            Import registered devices from local file.
+    import_file            Import registered devices from a local file.
     init                   Initialize the database.
 
   [gateway]
@@ -74,38 +123,22 @@ available commands:
 
   [show.receiver]
     hardware_stats         Show some statistics of receiver hardware.
-    list_all               Show a list of all receivers.
+    list_all               Show a list of all receivers (NOT IMPLEMENTED).
     software_stats         Show some statistics of receiver software.
 ```
 
 Only the command `logbook.compute` requires a running task server (celery) at the moment.
 
-## TODO
-- [x] Write celery backend and add task 'fetchddb'
-- [x] Rewrite manage.py with <https://github.com/Birdback/manage.py> or flask-script
-- [x] Rename existing cli commands
-- [x] Document/Improve cli commands
-- [ ] Separate settings from module (currently at ogn/command/dbutils.py)
-- [ ] Enable granular data acquisition (eg. store receiver beacons only)
-- [x] Future Database-Migrations: Use Alembic?
-  - [x] Rename 'Flarm' to 'Device'?
-  - [x] Rename self.heared\_aircraft\_IDs (lowercase) in aircraft\_beacon
-  - [x] Rename self.heared\_aircraft\_IDs
-- [x] Fix command/logbook.py (@Meisterschueler?)
-- [ ] Introduce scheduled tasks with 'celery beat' (eg. updateddb)
 
 ### Scheduled tasks
 - ogn.collect.database
-  - import_ddb - Import registered devices from the ddb
-  - import_file - Import registered devices from a local file
+  - `import_ddb` - Import registered devices from the ddb
+  - `import_file` - Import registered devices from a local file
 - ogn.collect.receiver
-  - populate - generate Receiver table (not implemented)
+  - `populate` - generate Receiver table (NOT IMPLEMENTED)
 - ogn.collect.logbook
-  - compute - generate TakeoffLanding table
+  - `compute_takeoff_and_landing` - generate TakeoffLanding table
 
-## How to use virtualenv
-```
-$ sudo apt-get install python-virtualenv
 
-$ virtualenv env
-$ source env/bin/activate
+## License
+Licensed under the [AGPLv3](LICENSE).
