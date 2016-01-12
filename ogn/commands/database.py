@@ -21,6 +21,16 @@ def init():
 
 
 @manager.command
+def drop(sure='n'):
+    """Drop all tables."""
+    if sure == 'y':
+        Base.metadata.drop_all(engine)
+        print('Dropped all tables.')
+    else:
+        print("Add argument '--sure y' to drop all tables.")
+
+
+@manager.command
 def import_ddb():
     """Import registered devices from the DDB."""
 
