@@ -143,19 +143,19 @@ def show(airport_name, latitude, longitude, altitude):
     print('--- Logbook (%s) ---' % airport_name)
 
     def none_datetime_replacer(datetime_object):
-        '--:--:--' if datetime_object is None else datetime_object.time()
+        return '--:--:--' if datetime_object is None else datetime_object.time()
 
     def none_track_replacer(track_object):
-        '--' if track_object is None else round(track_object / 10.0)
+        return '--' if track_object is None else round(track_object / 10.0)
 
     def none_timedelta_replacer(timedelta_object):
-        '--:--:--' if timedelta_object is None else timedelta_object
+        return '--:--:--' if timedelta_object is None else timedelta_object
 
     def none_registration_replacer(registration_object, address):
-        '[' + address + ']' if registration_object is None else registration_object
+        return '[' + address + ']' if registration_object is None else registration_object
 
     def none_aircraft_replacer(aircraft_object):
-        '(unknown)' if aircraft_object is None else aircraft_object
+        return '(unknown)' if aircraft_object is None else aircraft_object
 
     for [reftime, address, takeoff, takeoff_track, landing, landing_track, duration, registration, aircraft] in logbook_query.all():
         print('%10s   %8s (%2s)   %8s (%2s)   %8s   %8s   %s' % (
