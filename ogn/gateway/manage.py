@@ -1,9 +1,11 @@
 import logging
 
 from ogn.gateway.client import ognGateway
-from ogn.commands.dbutils import session
+from ogn.commands.dbutils import session, update_receiver_childs
+from ogn.model import ReceiverBeacon
 
 from manager import Manager
+
 manager = Manager()
 
 logging_formatstr = '%(asctime)s - %(levelname).4s - %(name)s - %(message)s'
@@ -33,6 +35,8 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
     gateway.connect()
 
     def process_beacon(beacon):
+        if isinstance(beacon, ReceiverBeacon):
+            update_receiver_childs(beacon.name)
         session.add(beacon)
         session.commit()
 
