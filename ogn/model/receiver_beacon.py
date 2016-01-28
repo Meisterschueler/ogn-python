@@ -1,6 +1,6 @@
 import re
 
-from sqlalchemy import Column, String
+from sqlalchemy import Column, Float, String
 
 from .beacon import Beacon
 from ogn.exceptions import OgnParseError
@@ -12,16 +12,16 @@ class ReceiverBeacon(Beacon):
     # ReceiverBeacon specific data
     version = Column(String)
     platform = Column(String)
-    cpu_load = 0
-    cpu_temp = 0
-    free_ram = 0
-    total_ram = 0
-    ntp_error = 0
-    rt_crystal_correction = 0
+    cpu_load = Column(Float)
+    cpu_temp = Column(Float)
+    free_ram = Column(Float)
+    total_ram = Column(Float)
+    ntp_error = Column(Float)
+    rt_crystal_correction = Column(Float)
 
-    rec_crystal_correction = 0
-    rec_crystal_correction_fine = 0
-    rec_input_noise = 0
+    rec_crystal_correction = 0       # obsolete since 0.2.0
+    rec_crystal_correction_fine = 0  # obsolete since 0.2.0
+    rec_input_noise = Column(Float)
 
     # Pattern
     version_pattern = re.compile(r"v(\d+\.\d+\.\d+)\.?(.+)?")
