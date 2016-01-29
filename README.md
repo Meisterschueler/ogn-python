@@ -93,6 +93,14 @@ The following scripts run in the foreground and should be deamonized
   celery -A ogn.collect worker -l info
   ```
 
+To load a custom configuration, create a file `myconfig.py` (see [config/default.py](config/default.py))
+and set the environment variable `OGN_CONFIG_MODULE` accordingly.
+
+```
+export OGN_CONFIG_MODULE="myconfig.py"
+./manage.py gateway.run
+```
+
 ### manage.py - CLI options
 ```
 usage: manage.py [<namespace>.]<command> [<args>]
