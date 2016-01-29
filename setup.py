@@ -51,6 +51,9 @@ setup(
             'coveralls==0.4.4',
             'flake8==2.5.0'
         ],
+        'postgresql': [
+            'psycopg2==2.6.1'
+        ]
     },
     zip_safe=False
 )

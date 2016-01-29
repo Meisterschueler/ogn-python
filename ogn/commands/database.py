@@ -1,6 +1,3 @@
-from alembic.config import Config
-from alembic import command
-
 from ogn.commands.dbutils import engine, session
 from ogn.model import Base, AddressOrigin
 from ogn.utils import get_ddb
@@ -13,6 +10,9 @@ manager = Manager()
 @manager.command
 def init():
     """Initialize the database."""
+
+    from alembic.config import Config
+    from alembic import command
 
     Base.metadata.create_all(engine)
     alembic_cfg = Config("alembic.ini")

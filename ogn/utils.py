@@ -60,3 +60,18 @@ def get_country_code(latitude, longitude):
     except KeyError:
         country_code = None
     return country_code
+
+
+def haversine_distance(location0, location1):
+    from math import asin, sqrt, sin, cos, atan2, radians, degrees
+
+    lat0 = radians(location0[0])
+    lon0 = radians(location0[1])
+    lat1 = radians(location1[0])
+    lon1 = radians(location1[1])
+
+    distance = 6366000 * 2 * asin(sqrt((sin((lat0 - lat1) / 2))**2 + cos(lat0) * cos(lat1) * (sin((lon0 - lon1) / 2))**2))
+    print(distance)
+    phi = degrees(atan2(sin(lon0 - lon1) * cos(lat1), cos(lat0) * sin(lat1) - sin(lat0) * cos(lat1) * cos(lon0 - lon1)))
+
+    return distance, phi

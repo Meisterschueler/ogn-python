@@ -1,6 +1,6 @@
 import unittest
 
-from ogn.utils import get_ddb, get_trackable, get_country_code
+from ogn.utils import get_ddb, get_trackable, get_country_code, haversine_distance
 from ogn.model import AddressOrigin
 
 
@@ -43,3 +43,28 @@ class TestStringMethods(unittest.TestCase):
         longitude = -0.0009119
         country_code = get_country_code(latitude, longitude)
         self.assertEqual(country_code, None)
+
+    def test_haversine_distance(self):
+        # delta: one latitude degree
+        location0 = (0, 0)
+        location1 = (-1, 0)
+
+        (distance, phi) = haversine_distance(location0, location1)
+        self.assertAlmostEqual(distance, 60 * 1852, -2)
+        self.assertEqual(phi, 180)
+
+        # delta: one longitude degree at the equator
+        location0 = (0, 0)
+        location1 = (0, -1)
+
+        (distance, phi) = haversine_distance(location0, location1)
+        self.assertAlmostEqual(distance, 60 * 1852, -2)
+        self.assertEqual(phi, 90)
+
+        # delta: 29000m
+        location0 = (48.865, 9.2225)
+        location1 = (48.74435, 9.578)
+
+        (distance, phi) = haversine_distance(location0, location1)
+        self.assertAlmostEqual(distance, 29265.6035812215, -1)
+        self.assertAlmostEqual(phi, -117.1275408121, 5)

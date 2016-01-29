@@ -84,7 +84,7 @@ class ognGateway:
             self.logger.error('OgnParseError while parsing line: {}'.format(line), exc_info=True)
             return
         except AmbigousTimeError as e:
-            self.logger.error('Drop packet, {:.0f}s from past.'.format(e.timedelta.total_seconds()))
+            self.logger.error('Drop packet, {:.0f}s from past: {}'.format(e.timedelta.total_seconds(), line))
             return
 
         if beacon is not None:

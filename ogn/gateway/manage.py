@@ -4,6 +4,7 @@ from ogn.gateway.client import ognGateway
 from ogn.commands.dbutils import session
 
 from manager import Manager
+
 manager = Manager()
 
 logging_formatstr = '%(asctime)s - %(levelname).4s - %(name)s - %(message)s'
