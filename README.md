@@ -143,9 +143,12 @@ Only the command `logbook.compute` requires a running task server (celery) at th
   - `import_ddb` - Import registered devices from the ddb
   - `import_file` - Import registered devices from a local file
 - ogn.collect.receiver
-  - `populate` - generate Receiver table (NOT IMPLEMENTED)
+  - `populate` - Generate Receiver table (NOT IMPLEMENTED)
 - ogn.collect.logbook
-  - `compute_takeoff_and_landing` - generate TakeoffLanding table
+  - `compute_takeoff_and_landing` - Generate TakeoffLanding table
+- ogn.collect.heatmap
+  - `update_beacon_receiver_distance_all` - Calculate the distance between aircraft and
+    receiver for the last aircraft beacons
 
 
 ## License
