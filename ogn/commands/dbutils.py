@@ -6,7 +6,7 @@ from sqlalchemy.sql import null
 from sqlalchemy.orm import sessionmaker
 
 from ogn.model import AircraftBeacon, ReceiverBeacon
-from ogn.utils import wgs84_to_sphere
+from ogn.utils import haversine_distance
 
 
 os.environ.setdefault('OGN_CONFIG_MODULE', 'config.default')
@@ -33,9 +33,16 @@ def update_receiver_childs(name):
                      AircraftBeacon.radius == null()))
 
     for aircraft_beacon in aircraft_beacons_query.all():
-        [radius, theta, phi] = wgs84_to_sphere(last_receiver_beacon,
-                                               aircraft_beacon)
-        aircraft_beacon.radius = radius
+        location0 = (last_receiver_beacon.latitude, last_receiver_beacon.longitude)
+        location1 = (aircraft_beacon.latitude, aircraft_beacon.longitude)
+        alt0 = last_receiver_beacon.altitude
+        alt1 = aircraft_beacon.altitude
+
+        (flat_distance, phi) = haversine_distance(location0, location1)
+        theta = atan2(alt1 - alt0, flat_distance) * 180 / pi
+        distance = sqrt(flat_distance**2 + (alt1 - alt0)**2)
+
+        aircraft_beacon.radius = distance
         aircraft_beacon.theta = theta
         aircraft_beacon.phi = phi
     session.commit()

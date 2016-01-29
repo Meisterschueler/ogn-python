@@ -62,22 +62,16 @@ def get_country_code(latitude, longitude):
     return country_code
 
 
-def wgs84_to_sphere(receiver_beacon, aircraft_beacon):
-    from math import pi, asin, sqrt, sin, cos, atan2
-    deg2rad = pi / 180
-    rad2deg = 180 / pi
+def haversine_distance(location0, location1):
+    from math import asin, sqrt, sin, cos, atan2, radians, degrees
 
-    lat1 = receiver_beacon.latitude * deg2rad
-    lon1 = receiver_beacon.longitude * deg2rad
-    alt1 = receiver_beacon.altitude
+    lat0 = radians(location0[0])
+    lon0 = radians(location0[1])
+    lat1 = radians(location1[0])
+    lon1 = radians(location1[1])
 
-    lat2 = aircraft_beacon.latitude * deg2rad
-    lon2 = aircraft_beacon.longitude * deg2rad
-    alt2 = aircraft_beacon.altitude
+    distance = 6366000 * 2 * asin(sqrt((sin((lat0 - lat1) / 2))**2 + cos(lat0) * cos(lat1) * (sin((lon0 - lon1) / 2))**2))
+    print(distance)
+    phi = degrees(atan2(sin(lon0 - lon1) * cos(lat1), cos(lat0) * sin(lat1) - sin(lat0) * cos(lat1) * cos(lon0 - lon1)))
 
-    distance = 6366000 * 2 * asin(sqrt((sin((lat1 - lat2) / 2))**2 + cos(lat1) * cos(lat2) * (sin((lon1 - lon2) / 2))**2))
-    theta = atan2(alt2 - alt1, distance) * rad2deg
-    phi = atan2(sin(lon1 - lon2) * cos(lat2), cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon1 - lon2)) * rad2deg
-
-    radius = sqrt(distance**2 + (alt2 - alt1)**2)
-    return radius, theta, phi
+    return distance, phi
