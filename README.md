@@ -81,17 +81,24 @@ To schedule tasks like takeoff/landing-detection (`logbook.compute`),
 The following scripts run in the foreground and should be deamonized
 (eg. use [supervisord](http://supervisord.org/)).
 
-- start aprs client
+- Start the aprs client
 
   ```
   ./manage.py gateway.run
   ```
 
-- start task server (make sure redis is up and running)
+- Start a task server (make sure redis is up and running)
 
   ```
   celery -A ogn.collect worker -l info
   ```
+
+- Start the task scheduler (make sure a task server is up and running)
+
+  ```
+  celery -A ogn.collect beat -l info
+  ```
+
 
 To load a custom configuration, create a file `myconfig.py` (see [config/default.py](config/default.py))
 and set the environment variable `OGN_CONFIG_MODULE` accordingly.
@@ -138,7 +145,7 @@ available commands:
 Only the command `logbook.compute` requires a running task server (celery) at the moment.
 
 
-### Scheduled tasks
+### Available tasks
 - ogn.collect.database
   - `import_ddb` - Import registered devices from the ddb
   - `import_file` - Import registered devices from a local file

@@ -2,7 +2,6 @@ import logging
 
 from ogn.gateway.client import ognGateway
 from ogn.commands.dbutils import session
-from ogn.collect.heatmap import update_beacon_receiver_distance
 
 from manager import Manager
 
@@ -35,8 +34,6 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
     gateway.connect()
 
     def process_beacon(beacon):
-        if isinstance(beacon, ReceiverBeacon):
-            update_beacon_receiver_distance(beacon.name)
         session.add(beacon)
         session.commit()
 
