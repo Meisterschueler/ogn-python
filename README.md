@@ -125,6 +125,7 @@ available commands:
     import_ddb             Import registered devices from the DDB.
     import_file            Import registered devices from a local file.
     init                   Initialize the database.
+    upgrade                Upgrade database to the latest version.
 
   [gateway]
     run                    Run the aprs client.

@@ -6,6 +6,8 @@ from ogn.collect.database import update_devices
 from manager import Manager
 manager = Manager()
 
+ALEMBIC_CONFIG_FILE = "alembic.ini"
+
 
 @manager.command
 def init():
@@ -15,9 +17,20 @@ def init():
     from alembic import command
 
     Base.metadata.create_all(engine)
-    alembic_cfg = Config("alembic.ini")
+    alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
     command.stamp(alembic_cfg, "head")
     print("Done.")
+
+
+@manager.command
+def upgrade():
+    """Upgrade database to the latest version."""
+
+    from alembic.config import Config
+    from alembic import command
+
+    alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
+    command.upgrade(alembic_cfg, 'head')
 
 
 @manager.command
