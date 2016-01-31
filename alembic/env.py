@@ -5,25 +5,23 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
-config = context.config
+
+# Provides access to the values within the .ini file in use.
+alembic_config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name)
+fileConfig(alembic_config.config_file_name)
 
 # Get database path from ogn config
 os.environ.setdefault('OGN_CONFIG_MODULE', 'config.default')
 ogn_config = importlib.import_module(os.environ['OGN_CONFIG_MODULE'])
 
 alembic_config.set_main_option('sqlalchemy.url', ogn_config.SQLALCHEMY_DATABASE_URI)
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
 
+# Import metadata for autogeneration of migrations
+from ogn.model import Base
+target_metadata = Base.metadata
 
 
 def run_migrations_offline():
@@ -54,7 +52,7 @@ def run_migrations_online():
 
     """
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        alembic_config.get_section(alembic_config.config_ini_section),
         prefix='sqlalchemy.',
         poolclass=pool.NullPool)
 
