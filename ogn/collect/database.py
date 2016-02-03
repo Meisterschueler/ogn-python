@@ -30,7 +30,7 @@ def import_ddb():
 
     logger.info("Import registered devices fom the DDB...")
     counter = update_devices(app.session, AddressOrigin.ogn_ddb, get_ddb())
-    logger.info("Imported %i devices." % counter)
+    logger.info("Imported {} devices.".format(counter))
 
 
 @app.task
@@ -39,7 +39,7 @@ def import_file(path='tests/custom_ddb.txt'):
 
     logger.info("Import registered devices from '{}'...".format(path))
     counter = update_devices(app.session, AddressOrigin.user_defined, get_ddb(path))
-    logger.info("Imported %i devices." % counter)
+    logger.info("Imported {} devices.".format(counter))
 
 
 @app.task

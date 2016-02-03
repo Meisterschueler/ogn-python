@@ -49,15 +49,15 @@ def get_trackable(ddb):
     l = []
     for i in ddb:
         if i.tracked and i.address_type in address_prefixes:
-            l.append('{}{}'.format(address_prefixes[i.address_type], i.address))
+            l.append("{}{}".format(address_prefixes[i.address_type], i.address))
     return l
 
 
 def get_country_code(latitude, longitude):
     geolocator = Nominatim()
     try:
-        location = geolocator.reverse("%f, %f" % (latitude, longitude))
-        country_code = location.raw["address"]["country_code"]
+        location = geolocator.reverse("{}, {}".format(latitude, longitude))
+        country_code = location.raw['address']['country_code']
     except KeyError:
         country_code = None
     except GeopyError:

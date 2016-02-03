@@ -21,7 +21,7 @@ def compute():
     print("Compute takeoffs and landings...")
     result = compute_takeoff_and_landing.delay()
     counter = result.get()
-    print("New/recalculated takeoffs/landings: %s" % counter)
+    print("New/recalculated takeoffs/landings: {}"format(counter))
 
 
 @manager.command
