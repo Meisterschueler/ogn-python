@@ -5,6 +5,7 @@ from io import StringIO
 from .model import Device, AddressOrigin
 
 from geopy.geocoders import Nominatim
+from geopy.exc import GeopyError
 
 DDB_URL = "http://ddb.glidernet.org/download"
 
@@ -54,10 +55,12 @@ def get_trackable(ddb):
 
 def get_country_code(latitude, longitude):
     geolocator = Nominatim()
-    location = geolocator.reverse("%f, %f" % (latitude, longitude))
     try:
+        location = geolocator.reverse("%f, %f" % (latitude, longitude))
         country_code = location.raw["address"]["country_code"]
     except KeyError:
+        country_code = None
+    except GeopyError:
         country_code = None
     return country_code
 
@@ -71,7 +74,6 @@ def haversine_distance(location0, location1):
     lon1 = radians(location1[1])
 
     distance = 6366000 * 2 * asin(sqrt((sin((lat0 - lat1) / 2))**2 + cos(lat0) * cos(lat1) * (sin((lon0 - lon1) / 2))**2))
-    print(distance)
     phi = degrees(atan2(sin(lon0 - lon1) * cos(lat1), cos(lat0) * sin(lat1) - sin(lat0) * cos(lat1) * cos(lon0 - lon1)))
 
     return distance, phi

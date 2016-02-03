@@ -11,6 +11,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'ogn.collect.heatmap.update_beacon_receiver_distance_all',
         'schedule': timedelta(minutes=5),
     },
+    'update-receiver-table': {
+        'task': 'ogn.collect.database.update_receivers',
+        'schedule': timedelta(minutes=5),
+    },
 }
 
 CELERY_TIMEZONE = 'UTC'

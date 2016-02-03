@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
-from sqlalchemy.sql import func
-from sqlalchemy import distinct, and_
+from sqlalchemy.sql import func, null
+from sqlalchemy.sql.functions import coalesce
+from sqlalchemy import distinct, and_, or_
 
 from ogn.model import ReceiverBeacon, Receiver
 from ogn.commands.dbutils import session
@@ -13,8 +14,7 @@ receiver_beacons_per_day = 24 * 60 / 5
 
 @manager.command
 def list_all():
-    """Show a list of all receivers (NOT IMPLEMENTED)."""
-
+    """Show a list of all receivers."""
     timestamp_24h_ago = datetime.utcnow() - timedelta(days=1)
 
     sq = session.query(distinct(ReceiverBeacon.name).label('name'),
