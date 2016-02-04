@@ -139,7 +139,7 @@ available commands:
 
   [show.receiver]
     hardware_stats         Show some statistics of receiver hardware.
-    list_all               Show a list of all receivers (NOT IMPLEMENTED).
+    list_all               Show a list of all receivers.
     software_stats         Show some statistics of receiver software.
 ```
 
@@ -151,7 +151,7 @@ Only the command `logbook.compute` requires a running task server (celery) at th
   - `import_ddb` - Import registered devices from the ddb
   - `import_file` - Import registered devices from a local file
 - ogn.collect.receiver
-  - `populate` - Generate Receiver table (NOT IMPLEMENTED)
+  - `update_receivers` - Populate/update receiver table
 - ogn.collect.logbook
   - `compute_takeoff_and_landing` - Generate TakeoffLanding table
 - ogn.collect.heatmap
