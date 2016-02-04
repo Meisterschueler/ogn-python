@@ -104,7 +104,8 @@ To load a custom configuration, create a file `myconfig.py` (see [config/default
 and set the environment variable `OGN_CONFIG_MODULE` accordingly.
 
 ```
-export OGN_CONFIG_MODULE="myconfig.py"
+touch myconfig.py
+export OGN_CONFIG_MODULE="myconfig"
 ./manage.py gateway.run
 ```
 
@@ -147,17 +148,20 @@ Only the command `logbook.compute` requires a running task server (celery) at th
 
 
 ### Available tasks
-- ogn.collect.database
-  - `import_ddb` - Import registered devices from the ddb
-  - `import_file` - Import registered devices from a local file
-- ogn.collect.receiver
-  - `update_receivers` - Populate/update receiver table
-- ogn.collect.logbook
-  - `compute_takeoff_and_landing` - Generate TakeoffLanding table
-- ogn.collect.heatmap
-  - `update_beacon_receiver_distance_all` - Calculate the distance between aircraft and
-    receiver for the last aircraft beacons
 
+- `ogn.collect.database.import_ddb` - Import registered devices from the ddb
+- `ogn.collect.database.import_file` - Import registered devices from a local file
+- `ogn.collect.heatmap.update_beacon_receiver_distance_all` - Calculate the distance between aircraft and receiver for the last aircraft beacons
+- `ogn.collect.receiver.update_receivers` - Populate/update receiver table (requires postgresql-backend)
+- `ogn.collect.logbook.compute_takeoff_and_landing` - Generate TakeoffLanding table (requires postgresql-backend)
+
+If the task server is up and running, tasks could be started manually.
+
+```
+python3
+>>>from ogn.collect.database import import_ddb
+>>>import_ddb.delay()
+```
 
 ## License
 Licensed under the [AGPLv3](LICENSE).
