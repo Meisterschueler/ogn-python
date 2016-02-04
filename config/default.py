@@ -12,7 +12,7 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(minutes=5),
     },
     'update-receiver-table': {
-        'task': 'ogn.collect.database.update_receivers',
+        'task': 'ogn.collect.receiver.update_receivers',
         'schedule': timedelta(minutes=5),
     },
 }
