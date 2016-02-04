@@ -104,7 +104,8 @@ To load a custom configuration, create a file `myconfig.py` (see [config/default
 and set the environment variable `OGN_CONFIG_MODULE` accordingly.
 
 ```
-export OGN_CONFIG_MODULE="myconfig.py"
+touch myconfig.py
+export OGN_CONFIG_MODULE="myconfig"
 ./manage.py gateway.run
 ```
 
