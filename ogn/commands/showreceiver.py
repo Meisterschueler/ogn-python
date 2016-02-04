@@ -13,8 +13,7 @@ receiver_beacons_per_day = 24 * 60 / 5
 
 @manager.command
 def list_all():
-    """Show a list of all receivers (NOT IMPLEMENTED)."""
-
+    """Show a list of all receivers."""
     timestamp_24h_ago = datetime.utcnow() - timedelta(days=1)
 
     sq = session.query(distinct(ReceiverBeacon.name).label('name'),

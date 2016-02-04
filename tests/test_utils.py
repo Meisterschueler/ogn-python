@@ -1,4 +1,5 @@
 import unittest
+import unittest.mock as mock
 
 from ogn.utils import get_ddb, get_trackable, get_country_code, haversine_distance
 from ogn.model import AddressOrigin
@@ -43,6 +44,15 @@ class TestStringMethods(unittest.TestCase):
         longitude = -0.0009119
         country_code = get_country_code(latitude, longitude)
         self.assertEqual(country_code, None)
+
+    @mock.patch('ogn.utils.Nominatim')
+    def test_gec_country_code_exception(self, nominatim_mock):
+        from geopy.exc import GeocoderTimedOut
+        instance = nominatim_mock.return_value
+
+        instance.reverse.side_effect = GeocoderTimedOut('Too busy')
+        country_code = get_country_code(0, 0)
+        self.assertIsNone(country_code)
 
     def test_haversine_distance(self):
         # delta: one latitude degree

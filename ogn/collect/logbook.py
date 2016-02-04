@@ -86,6 +86,6 @@ def compute_takeoff_and_landing():
     result = app.session.execute(ins)
     counter = result.rowcount
     app.session.commit()
-    logger.debug("New/recalculated takeoffs and landings: %s" % counter)
+    logger.debug("New/recalculated takeoffs and landings: {}".format(counter))
 
     return counter
