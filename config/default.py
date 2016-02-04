@@ -15,14 +15,15 @@ CELERYBEAT_SCHEDULE = {
         'task': 'ogn.collect.heatmap.update_beacon_receiver_distance_all',
         'schedule': timedelta(minutes=5),
     },
-   'update-logbook': {
-       'task': 'ogn.collect.logbook.compute_takeoff_and_landing',
-       'schedule': timedelta(minutes=15),
-   },
-   'update-receiver-table': {
-       'task': 'ogn.collect.receiver.update_receivers',
-       'schedule': timedelta(minutes=5),
-   },
+# Only supported with postgresql backend
+#    'update-logbook': {
+#        'task': 'ogn.collect.logbook.compute_takeoff_and_landing',
+#        'schedule': timedelta(minutes=15),
+#    },
+#    'update-receiver-table': {
+#        'task': 'ogn.collect.receiver.update_receivers',
+#        'schedule': timedelta(minutes=5),
+#    },
 }
 
 CELERY_TIMEZONE = 'UTC'

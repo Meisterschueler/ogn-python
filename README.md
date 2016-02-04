@@ -151,8 +151,8 @@ Only the command `logbook.compute` requires a running task server (celery) at th
 - `ogn.collect.database.import_ddb` - Import registered devices from the ddb
 - `ogn.collect.database.import_file` - Import registered devices from a local file
 - `ogn.collect.heatmap.update_beacon_receiver_distance_all` - Calculate the distance between aircraft and receiver for the last aircraft beacons
-- `ogn.collect.receiver.update_receivers` - Populate/update receiver table
-- `ogn.collect.logbook.compute_takeoff_and_landing` - Generate TakeoffLanding table
+- `ogn.collect.receiver.update_receivers` - Populate/update receiver table (requires postgresql-backend)
+- `ogn.collect.logbook.compute_takeoff_and_landing` - Generate TakeoffLanding table (requires postgresql-backend)
 
 If the task server is up and running, tasks could be started manually.
 
