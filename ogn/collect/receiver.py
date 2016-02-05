@@ -45,7 +45,7 @@ def update_receivers():
                                       Receiver.longitude != sq.columns.longitude))) \
                      .update({"latitude": sq.columns.latitude,
                               "longitude": sq.columns.longitude,
-                              "country_code": ""})
+                              "country_code": null()})
 
     logger.info("Count of receivers who changed lat or lon: {}".format(upd))
     app.session.commit()
