@@ -26,34 +26,34 @@ def update_receivers():
                                          .subquery()
 
     receivers_to_update = app.session.query(ReceiverBeacon.name,
-                           ReceiverBeacon.latitude,
-                           ReceiverBeacon.longitude,
-                           ReceiverBeacon.altitude,
-                           last_receiver_beacon_sq.columns.lastseen,
-                           ReceiverBeacon.version,
-                           ReceiverBeacon.platform) \
-                    .filter(and_(ReceiverBeacon.name == last_receiver_beacon_sq.columns.name,
-                                 ReceiverBeacon.timestamp == last_receiver_beacon_sq.columns.lastseen)) \
-                    .subquery()
+                                            ReceiverBeacon.latitude,
+                                            ReceiverBeacon.longitude,
+                                            ReceiverBeacon.altitude,
+                                            last_receiver_beacon_sq.columns.lastseen,
+                                            ReceiverBeacon.version,
+                                            ReceiverBeacon.platform) \
+                                     .filter(and_(ReceiverBeacon.name == last_receiver_beacon_sq.columns.name,
+                                                  ReceiverBeacon.timestamp == last_receiver_beacon_sq.columns.lastseen)) \
+                                     .subquery()
 
     # set country code to None if lat or lon changed
     count = app.session.query(Receiver) \
-                     .filter(and_(Receiver.name == receivers_to_update.columns.name,
-                                  or_(Receiver.latitude != receivers_to_update.columns.latitude,
-                                      Receiver.longitude != receivers_to_update.columns.longitude))) \
-                     .update({"latitude": receivers_to_update.columns.latitude,
-                              "longitude": receivers_to_update.columns.longitude,
-                              "country_code": null()})
+                       .filter(and_(Receiver.name == receivers_to_update.columns.name,
+                                    or_(Receiver.latitude != receivers_to_update.columns.latitude,
+                                        Receiver.longitude != receivers_to_update.columns.longitude))) \
+                       .update({"latitude": receivers_to_update.columns.latitude,
+                                "longitude": receivers_to_update.columns.longitude,
+                                "country_code": null()})
 
     logger.info("Count of receivers who changed lat or lon: {}".format(count))
 
     # update lastseen of known receivers
     count = app.session.query(Receiver) \
-                     .filter(Receiver.name == receivers_to_update.columns.name) \
-                     .update({"altitude": receivers_to_update.columns.altitude,
-                              "lastseen": receivers_to_update.columns.lastseen,
-                              "version": receivers_to_update.columns.version,
-                              "platform": receivers_to_update.columns.platform})
+                       .filter(Receiver.name == receivers_to_update.columns.name) \
+                       .update({"altitude": receivers_to_update.columns.altitude,
+                                "lastseen": receivers_to_update.columns.lastseen,
+                                "version": receivers_to_update.columns.version,
+                                "platform": receivers_to_update.columns.platform})
 
     logger.info("Count of receivers who where updated: {}".format(count))
 
