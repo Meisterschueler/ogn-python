@@ -14,58 +14,54 @@ logger = get_task_logger(__name__)
 @app.task
 def update_receivers():
     """Update the receiver table."""
-    # get current receiver data
-    last_entry_sq = app.session.query(coalesce(func.max(Receiver.lastseen), '2015-01-01 00:00:00').label('last_entry')) \
-                               .subquery()
+    # get the timestamp of last update
+    last_update_query = app.session.query(coalesce(func.max(Receiver.lastseen), '2015-01-01 00:00:00').label('last_entry'))
+    last_update = last_update_query.one().last_entry
 
+    # get last receiver beacons since last update
     last_receiver_beacon_sq = app.session.query(ReceiverBeacon.name,
-                                                func.min(ReceiverBeacon.timestamp).label('firstseen'),
                                                 func.max(ReceiverBeacon.timestamp).label('lastseen')) \
-                                         .filter(ReceiverBeacon.timestamp >= last_entry_sq.columns.last_entry) \
+                                         .filter(ReceiverBeacon.timestamp >= last_update) \
                                          .group_by(ReceiverBeacon.name) \
                                          .subquery()
 
-    # update existing receivers
-    sq = app.session.query(ReceiverBeacon.name,
-                           ReceiverBeacon.latitude,
-                           ReceiverBeacon.longitude,
-                           ReceiverBeacon.altitude,
-                           last_receiver_beacon_sq.columns.firstseen,
-                           last_receiver_beacon_sq.columns.lastseen,
-                           ReceiverBeacon.version,
-                           ReceiverBeacon.platform) \
-                    .filter(and_(ReceiverBeacon.name == last_receiver_beacon_sq.columns.name,
-                                 ReceiverBeacon.timestamp == last_receiver_beacon_sq.columns.lastseen)) \
-                    .subquery()
+    receivers_to_update = app.session.query(ReceiverBeacon.name,
+                                            ReceiverBeacon.latitude,
+                                            ReceiverBeacon.longitude,
+                                            ReceiverBeacon.altitude,
+                                            last_receiver_beacon_sq.columns.lastseen,
+                                            ReceiverBeacon.version,
+                                            ReceiverBeacon.platform) \
+                                     .filter(and_(ReceiverBeacon.name == last_receiver_beacon_sq.columns.name,
+                                                  ReceiverBeacon.timestamp == last_receiver_beacon_sq.columns.lastseen)) \
+                                     .subquery()
 
     # set country code to None if lat or lon changed
-    upd = app.session.query(Receiver) \
-                     .filter(and_(Receiver.name == sq.columns.name,
-                                  or_(Receiver.latitude != sq.columns.latitude,
-                                      Receiver.longitude != sq.columns.longitude))) \
-                     .update({"latitude": sq.columns.latitude,
-                              "longitude": sq.columns.longitude,
-                              "country_code": null()})
+    count = app.session.query(Receiver) \
+                       .filter(and_(Receiver.name == receivers_to_update.columns.name,
+                                    or_(Receiver.latitude != receivers_to_update.columns.latitude,
+                                        Receiver.longitude != receivers_to_update.columns.longitude))) \
+                       .update({"latitude": receivers_to_update.columns.latitude,
+                                "longitude": receivers_to_update.columns.longitude,
+                                "country_code": null()})
 
-    logger.info("Count of receivers who changed lat or lon: {}".format(upd))
-    app.session.commit()
+    logger.info("Count of receivers who changed lat or lon: {}".format(count))
 
     # update lastseen of known receivers
-    upd = app.session.query(Receiver) \
-                     .filter(Receiver.name == sq.columns.name) \
-                     .update({"altitude": sq.columns.altitude,
-                              "lastseen": sq.columns.lastseen,
-                              "version": sq.columns.version,
-                              "platform": sq.columns.platform})
+    count = app.session.query(Receiver) \
+                       .filter(Receiver.name == receivers_to_update.columns.name) \
+                       .update({"altitude": receivers_to_update.columns.altitude,
+                                "lastseen": receivers_to_update.columns.lastseen,
+                                "version": receivers_to_update.columns.version,
+                                "platform": receivers_to_update.columns.platform})
 
-    logger.info("Count of receivers who where updated: {}".format(upd))
+    logger.info("Count of receivers who where updated: {}".format(count))
 
     # add new receivers
     empty_sq = app.session.query(ReceiverBeacon.name,
                                  ReceiverBeacon.latitude,
                                  ReceiverBeacon.longitude,
                                  ReceiverBeacon.altitude,
-                                 last_receiver_beacon_sq.columns.firstseen,
                                  last_receiver_beacon_sq.columns.lastseen,
                                  ReceiverBeacon.version, ReceiverBeacon.platform) \
                           .filter(and_(ReceiverBeacon.name == last_receiver_beacon_sq.columns.name,
@@ -80,7 +76,7 @@ def update_receivers():
         receiver.latitude = receiver_beacon.latitude
         receiver.longitude = receiver_beacon.longitude
         receiver.altitude = receiver_beacon.altitude
-        receiver.firstseen = receiver_beacon.firstseen
+        receiver.firstseen = None
         receiver.lastseen = receiver_beacon.lastseen
         receiver.version = receiver_beacon.version
         receiver.platform = receiver_beacon.platform
@@ -88,7 +84,18 @@ def update_receivers():
         app.session.add(receiver)
         logger.info("{} added".format(receiver.name))
 
-    app.session.commit()
+    # update firstseen if None
+    firstseen_null_query = app.session.query(Receiver.name,
+                                             func.min(ReceiverBeacon.timestamp).label('firstseen')) \
+                                      .filter(Receiver.firstseen == null()) \
+                                      .join(ReceiverBeacon, Receiver.name == ReceiverBeacon.name) \
+                                      .group_by(Receiver.name) \
+                                      .subquery()
+
+    count = app.session.query(Receiver) \
+                       .filter(Receiver.name == firstseen_null_query.columns.name) \
+                       .update({'firstseen': firstseen_null_query.columns.firstseen})
+    logger.info("Total: {} receivers added".format(count))
 
     # update country code if None
     unknown_country_query = app.session.query(Receiver) \
