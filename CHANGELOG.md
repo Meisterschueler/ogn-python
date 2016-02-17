@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.2.1 - 2016-02-17
+First release via PyPi.
+- Added CHANGELOG.
+
 ## 0.2
 - Changed database schema.
 - Changed aprs app name to 'ogn-gateway-python'.
