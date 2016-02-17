@@ -8,8 +8,9 @@
 A python module for the [Open Glider Network](http://wiki.glidernet.org/).
 The submodule 'ogn.gateway' is an aprs client which could be invoked via a CLI
 or used by other python projects.
-The CLI allows to save all received beacons into a
-[sqlite](https://www.sqlite.org/)-database with [SQLAlchemy](http://www.sqlalchemy.org/).
+The CLI allows to save all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
+The [sqlite](https://www.sqlite.org/)-backend is sufficient for simple testing,
+but some tasks (e.g. logbook generation) require a proper backend like [postgresql](http://www.postgresql.org/).
 An external python project would instantiate ogn.gateway and register a custom callback,
 called each time a beacon is received.
 
