@@ -1,6 +1,8 @@
 # OGN stuff
+*.db
+*.log
 
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 
@@ -33,4 +35,7 @@ docs/_build/
 *.swo
 
 # Python virtualenv
-env
+env/
+
+# Celery beat
+celerybeat-schedule
