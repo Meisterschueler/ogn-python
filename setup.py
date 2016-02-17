@@ -15,15 +15,12 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='ogn-python',
     version=PACKAGE_VERSION,
-    description='A python framework for the Open Glider Network (OGN)',
+    description='A python module for the Open Glider Network',
     long_description=long_description,
     url='https://github.com/glidernet/ogn-python',
-
     author='Konstantin Gründger aka Meisterschueler, Fabian P. Schmidt aka kerel',
     author_email='kerel-fs@gmx.de',
-
     license='AGPLv3',
-
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -35,7 +32,6 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
     keywords='gliding ogn',
-
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
         'SQLAlchemy==1.0.8',
@@ -44,7 +40,6 @@ setup(
         'celery[redis]>=3.1,<3.2',
         'alembic==0.8.3'
     ],
-
     extras_require={
         'dev': [
             'nose==1.3.7',
