@@ -1,8 +1,8 @@
 import unittest
 from datetime import datetime
 
-from ogn.aprs_utils import dmsToDeg, createTimestamp
-from ogn.exceptions import AmbigousTimeError
+from ogn.parser.utils import dmsToDeg, createTimestamp
+from ogn.parser.exceptions import AmbigousTimeError
 
 
 class TestStringMethods(unittest.TestCase):

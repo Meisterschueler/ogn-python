@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
 import math
+from datetime import datetime, timedelta
 
-from ogn.exceptions import AmbigousTimeError
+from ogn.parser.exceptions import AmbigousTimeError
 
 
 kmh2kts = 0.539957
