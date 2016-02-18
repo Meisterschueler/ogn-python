@@ -4,7 +4,11 @@ exception definitions
 from datetime import datetime
 
 
-class AprsParseError(Exception):
+class ParseError(Exception):
+    pass
+
+
+class AprsParseError(ParseError):
     """Parse error while parsing an aprs packet."""
     def __init__(self, aprs_string):
         self.aprs_string = aprs_string
@@ -13,7 +17,7 @@ class AprsParseError(Exception):
         super(AprsParseError, self).__init__(self.message)
 
 
-class OgnParseError(Exception):
+class OgnParseError(ParseError):
     """Parse error while parsing an ogn message from aprs comment."""
     def __init__(self, aprs_comment):
         self.aprs_comment = aprs_comment
@@ -22,7 +26,7 @@ class OgnParseError(Exception):
         super(OgnParseError, self).__init__(self.message)
 
 
-class AmbigousTimeError(Exception):
+class AmbigousTimeError(ParseError):
     """Timstamp from the past/future, can't fully reconstruct datetime from timestamp."""
     def __init__(self, reference, packet_time):
         self.reference = reference

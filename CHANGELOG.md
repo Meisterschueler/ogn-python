@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## Unreleased
+- Moved exceptions from `ogn.exceptions` to `ogn.parser.exceptions`
+
 ## 0.2.1 - 2016-02-17
 First release via PyPi.
 - Added CHANGELOG.
