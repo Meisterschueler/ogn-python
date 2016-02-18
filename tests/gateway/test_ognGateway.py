@@ -1,11 +1,18 @@
 import unittest
 import unittest.mock as mock
 
-from ogn.gateway.client import ognGateway
+from ogn.gateway.client import create_aprs_login, ognGateway
 from ogn.gateway.settings import APRS_APP_NAME, APRS_APP_VER
 
 
 class GatewayTest(unittest.TestCase):
+    def test_create_aprs_login(self):
+        basic_login = create_aprs_login('klaus', -1, 'myApp', '0.1')
+        self.assertEqual('user klaus pass -1 vers myApp 0.1\n', basic_login)
+
+        login_with_filter = create_aprs_login('klaus', -1, 'myApp', '0.1', 'r/48.0/11.0/100')
+        self.assertEqual('user klaus pass -1 vers myApp 0.1 filter r/48.0/11.0/100\n', login_with_filter)
+
     def test_initialisation(self):
         self.gw = ognGateway(aprs_user='testuser', aprs_filter='')
         self.assertEqual(self.gw.aprs_user, 'testuser')

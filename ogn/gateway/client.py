@@ -4,8 +4,14 @@ from time import time
 
 from ogn.gateway import settings
 from ogn.aprs_parser import parse_aprs
-from ogn.aprs_utils import create_aprs_login
 from ogn.exceptions import AprsParseError, OgnParseError, AmbigousTimeError
+
+
+def create_aprs_login(user_name, pass_code, app_name, app_version, aprs_filter=None):
+    if not aprs_filter:
+        return "user {} pass {} vers {} {}\n".format(user_name, pass_code, app_name, app_version)
+    else:
+        return "user {} pass {} vers {} {} filter {}\n".format(user_name, pass_code, app_name, app_version, aprs_filter)
 
 
 class ognGateway:
