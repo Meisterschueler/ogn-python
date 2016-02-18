@@ -4,7 +4,7 @@ from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger
 
 from ogn.parser.utils import fpm2ms
 from .beacon import Beacon
-from ogn.exceptions import OgnParseError
+from ogn.parser.exceptions import OgnParseError
 
 
 class AircraftBeacon(Beacon):

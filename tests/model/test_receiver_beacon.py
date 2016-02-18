@@ -1,7 +1,7 @@
 import unittest
 
 from ogn.model import ReceiverBeacon
-from ogn.exceptions import OgnParseError
+from ogn.parser.exceptions import OgnParseError
 
 
 class TestStringMethods(unittest.TestCase):

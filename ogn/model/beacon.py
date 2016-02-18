@@ -5,7 +5,7 @@ from sqlalchemy import Column, String, Integer, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 
 from ogn.parser.utils import createTimestamp, dmsToDeg, kts2kmh, feet2m
-from ogn.exceptions import AprsParseError
+from ogn.parser.exceptions import AprsParseError
 from .base import Base
 
 

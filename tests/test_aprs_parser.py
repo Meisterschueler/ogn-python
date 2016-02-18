@@ -5,7 +5,7 @@ from datetime import datetime
 from time import sleep
 
 from ogn.aprs_parser import parse_aprs
-from ogn.exceptions import AprsParseError, OgnParseError
+from ogn.parser.exceptions import AprsParseError, OgnParseError
 
 
 class TestStringMethods(unittest.TestCase):

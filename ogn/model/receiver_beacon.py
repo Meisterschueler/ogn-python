@@ -3,7 +3,7 @@ import re
 from sqlalchemy import Column, Float, String
 
 from .beacon import Beacon
-from ogn.exceptions import OgnParseError
+from ogn.parser.exceptions import OgnParseError
 
 
 class ReceiverBeacon(Beacon):

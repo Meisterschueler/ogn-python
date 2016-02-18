@@ -4,7 +4,7 @@ from datetime import datetime
 
 from ogn.parser.utils import dmsToDeg, kts2kmh, m2feet
 from ogn.model import Beacon
-from ogn.exceptions import AprsParseError
+from ogn.parser.exceptions import AprsParseError
 
 
 class TestStringMethods(unittest.TestCase):

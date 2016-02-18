@@ -4,7 +4,7 @@ from datetime import datetime
 
 from ogn.parser.utils import ms2fpm
 from ogn.model import Beacon, AircraftBeacon
-from ogn.exceptions import OgnParseError
+from ogn.parser.exceptions import OgnParseError
 
 
 class TestStringMethods(unittest.TestCase):

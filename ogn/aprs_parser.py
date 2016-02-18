@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from .model import Beacon, AircraftBeacon, ReceiverBeacon
-from ogn.exceptions import AprsParseError
+from ogn.parser.exceptions import AprsParseError
 
 
 def parse_aprs(packet, reference_date=None):
