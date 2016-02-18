@@ -27,16 +27,23 @@ lets you process the incoming data.
 Example:
 ```python
 #!/usr/bin/env python3
-
-from ogn.model import AircraftBeacon, ReceiverBeacon
 from ogn.gateway.client import ognGateway
+from ogn.parser.parse import parse_aprs, parse_ogn_beacon
+from ogn.parser.exceptions import ParseError
 
 
-def process_beacon(beacon):
-    if type(beacon) is AircraftBeacon:
-        print('Received aircraft beacon from {}'.format(beacon.name))
-    elif type(beacon) is ReceiverBeacon:
-        print('Received receiver beacon from {}'.format(beacon.name))
+def process_beacon(raw_message):
+    if raw_message[0] == '#':
+        print('Server Status: {}'.format(raw_message))
+        return
+
+    try:
+        message = parse_aprs(raw_message)
+        message.update(parse_ogn_beacon(message['comment']))
+
+        print('Received {beacon_type} from {name}'.format(**message))
+    except ParseError as e:
+        print('Error, {}'.format(e.message))
 
 
 if __name__ == '__main__':

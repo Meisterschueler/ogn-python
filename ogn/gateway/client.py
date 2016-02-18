@@ -3,8 +3,6 @@ import logging
 from time import time
 
 from ogn.gateway import settings
-from ogn.aprs_parser import parse_aprs
-from ogn.parser.exceptions import AprsParseError, OgnParseError, AmbigousTimeError
 
 
 def create_aprs_login(user_name, pass_code, app_name, app_version, aprs_filter=None):
@@ -48,8 +46,6 @@ class ognGateway:
             self.logger.error('Socket close error', exc_info=True)
 
     def run(self, callback, autoreconnect=False):
-        self.process_beacon = callback
-
         while True:
             try:
                 keepalive_time = time()
@@ -68,7 +64,7 @@ class ognGateway:
                         self.logger.warning('Read returns zero length string. Failure.  Orderly closeout')
                         break
 
-                    self.proceed_line(packet_str)
+                    callback(packet_str)
             except BrokenPipeError:
                 self.logger.error('BrokenPipeError', exc_info=True)
             except socket.error:
@@ -78,20 +74,3 @@ class ognGateway:
                 self.connect()
             else:
                 return
-
-    def proceed_line(self, line):
-        try:
-            beacon = parse_aprs(line)
-            self.logger.debug('Received beacon: {}'.format(beacon))
-        except AprsParseError:
-            self.logger.error('AprsParseError while parsing line: {}'.format(line), exc_info=True)
-            return
-        except OgnParseError:
-            self.logger.error('OgnParseError while parsing line: {}'.format(line), exc_info=True)
-            return
-        except AmbigousTimeError as e:
-            self.logger.error('Drop packet, {:.0f}s from past: {}'.format(e.timedelta.total_seconds(), line))
-            return
-
-        if beacon is not None:
-            self.process_beacon(beacon)
