@@ -1,7 +1,7 @@
 import logging
 
 from ogn.gateway.client import ognGateway
-from ogn.commands.dbutils import session
+from ogn.gateway.process import process_beacon
 
 from manager import Manager
 
@@ -32,10 +32,6 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
     print('Start ogn gateway')
     gateway = ognGateway(aprs_user)
     gateway.connect()
-
-    def process_beacon(beacon):
-        session.add(beacon)
-        session.commit()
 
     try:
         gateway.run(callback=process_beacon, autoreconnect=True)

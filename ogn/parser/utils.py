@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
 import math
+from datetime import datetime, timedelta
 
-from ogn.exceptions import AmbigousTimeError
+from ogn.parser.exceptions import AmbigousTimeError
 
 
 kmh2kts = 0.539957
@@ -33,10 +33,3 @@ def createTimestamp(hhmmss, reference):
         raise AmbigousTimeError(reference, packet_time)
 
     return timestamp
-
-
-def create_aprs_login(user_name, pass_code, app_name, app_version, aprs_filter=None):
-    if not aprs_filter:
-        return "user %s pass %s vers %s %s\n" % (user_name, pass_code, app_name, app_version)
-    else:
-        return "user %s pass %s vers %s %s filter %s\n" % (user_name, pass_code, app_name, app_version, aprs_filter)

@@ -4,26 +4,29 @@ exception definitions
 from datetime import datetime
 
 
-class AprsParseError(Exception):
+class ParseError(Exception):
+    pass
+
+
+class AprsParseError(ParseError):
     """Parse error while parsing an aprs packet."""
     def __init__(self, aprs_string):
         self.aprs_string = aprs_string
 
-        self.message = "This is not a valid APRS string: {}".format(aprs_string)
+        self.message = "This is not a valid APRS packet: {}".format(aprs_string)
         super(AprsParseError, self).__init__(self.message)
 
 
-class OgnParseError(Exception):
-    """Parse error while parsing an aprs packet substring."""
-    def __init__(self, substring, expected_type):
-        self.substring = substring
-        self.expected_type = expected_type
+class OgnParseError(ParseError):
+    """Parse error while parsing an ogn message from aprs comment."""
+    def __init__(self, aprs_comment):
+        self.aprs_comment = aprs_comment
 
-        self.message = "For type {} this is not a valid token: {}".format(expected_type, substring)
+        self.message = "This is not a valid OGN message: {}".format(aprs_comment)
         super(OgnParseError, self).__init__(self.message)
 
 
-class AmbigousTimeError(Exception):
+class AmbigousTimeError(ParseError):
     """Timstamp from the past/future, can't fully reconstruct datetime from timestamp."""
     def __init__(self, reference, packet_time):
         self.reference = reference
