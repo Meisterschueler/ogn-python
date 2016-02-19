@@ -33,10 +33,10 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(aircraft_beacon['stealth'])
 
     def test_v024(self):
-        aircraft_beacon = parse_ogn_aircraft_beacon("id21400EA9 -2454fpm +0.9rot 19.5dB 0e -6.6kHz gps1x1 s6.02 h44 rDF0C56")
+        aircraft_beacon = parse_ogn_aircraft_beacon("id21400EA9 -2454fpm +0.9rot 19.5dB 0e -6.6kHz gps1x1 s6.02 h0A rDF0C56")
 
         self.assertEqual(aircraft_beacon['software_version'], 6.02)
-        self.assertEqual(aircraft_beacon['hardware_version'], 44)
+        self.assertEqual(aircraft_beacon['hardware_version'], 10)
         self.assertEqual(aircraft_beacon['real_address'], "DF0C56")
 
     def test_v024_ogn_tracker(self):
