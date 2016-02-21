@@ -53,5 +53,5 @@ def update_beacon_receiver_distance(name):
 
 @app.task
 def update_beacon_receiver_distance_all():
-    group(update_beacon_receiver_distance(receiver.name)
-          for receiver in app.session.query(distinct(ReceiverBeacon.name).label('name')))
+    group(update_beacon_receiver_distance(receiver_name)
+          for receiver_name in app.session.query(distinct(ReceiverBeacon.name)).all()).apply_async()
