@@ -1,6 +1,6 @@
 import logging
 
-from ogn.gateway.client import ognGateway
+from ogn.client import AprsClient
 from ogn.gateway.process import process_beacon
 
 from manager import Manager
@@ -30,13 +30,13 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
     logging.basicConfig(format=logging_formatstr, level=loglevel, handlers=log_handlers)
 
     print('Start ogn gateway')
-    gateway = ognGateway(aprs_user)
-    gateway.connect()
+    client = AprsClient(aprs_user)
+    client.connect()
 
     try:
-        gateway.run(callback=process_beacon, autoreconnect=True)
+        client.run(callback=process_beacon, autoreconnect=True)
     except KeyboardInterrupt:
         print('\nStop ogn gateway')
 
-    gateway.disconnect()
+    client.disconnect()
     logging.shutdown()

@@ -19,48 +19,7 @@ called each time a beacon is received.
 [Examples](https://github.com/glidernet/ogn-python/wiki/Examples)
 
 
-## Usage - python module
-Implement your own gateway by using ogn.gateway with a custom callback function.
-Each time a beacon is received, this function gets called and
-lets you process the incoming data.
-
-Example:
-```python
-#!/usr/bin/env python3
-from ogn.gateway.client import ognGateway
-from ogn.parser.parse import parse_aprs, parse_ogn_beacon
-from ogn.parser.exceptions import ParseError
-
-
-def process_beacon(raw_message):
-    if raw_message[0] == '#':
-        print('Server Status: {}'.format(raw_message))
-        return
-
-    try:
-        message = parse_aprs(raw_message)
-        message.update(parse_ogn_beacon(message['comment']))
-
-        print('Received {beacon_type} from {name}'.format(**message))
-    except ParseError as e:
-        print('Error, {}'.format(e.message))
-
-
-if __name__ == '__main__':
-    gateway = ognGateway(aprs_user='N0CALL')
-    gateway.connect()
-
-    try:
-        gateway.run(callback=process_beacon, autoreconnect=True)
-    except KeyboardInterrupt:
-        print('\nStop ogn gateway')
-
-    gateway.disconnect()
-```
-
-
-## Usage - CLI
-### Installation and Setup
+## Installation and Setup
 1. Checkout the repository
 
    ```
@@ -85,6 +44,7 @@ if __name__ == '__main__':
     ./manage.py db.init
     ```
 
+## Usage
 ### Running the aprs client and task server
 To schedule tasks like takeoff/landing-detection (`logbook.compute`),
 [Celery](http://www.celeryproject.org/) with [Redis](http://www.redis.io/) is used.
