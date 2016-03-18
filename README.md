@@ -7,14 +7,11 @@
 [![PyPi Version](https://img.shields.io/pypi/v/ogn-python.svg)]
 (https://pypi.python.org/pypi/ogn-python)
 
-A python module for the [Open Glider Network](http://wiki.glidernet.org/).
-The submodule 'ogn.gateway' is an aprs client which could be invoked via a CLI
-or used by other python projects.
-The CLI allows to save all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
-The [sqlite](https://www.sqlite.org/)-backend is sufficient for simple testing,
-but some tasks (e.g. logbook generation) require a proper backend like [postgresql](http://www.postgresql.org/).
-An external python project would instantiate ogn.gateway and register a custom callback,
-called each time a beacon is received.
+A database backend for the [Open Glider Network](http://wiki.glidernet.org/).
+The ogn-python module saves all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
+It connects to the OGN aprs servers with [python-ogn-client](https://github.com/glidernet/python-ogn-client).
+For simple tests a [sqlite](https://www.sqlite.org/)-backend is sufficient,
+but some tasks (e.g. logbook generation) require a proper database backend like [postgresql](http://www.postgresql.org/).
 
 [Examples](https://github.com/glidernet/ogn-python/wiki/Examples)
 
