@@ -1,8 +1,7 @@
 import logging
 from ogn.commands.dbutils import session
 from ogn.model import AircraftBeacon, ReceiverBeacon
-from ogn.parser.parse import parse_aprs, parse_ogn_receiver_beacon, parse_ogn_aircraft_beacon
-from ogn.parser.exceptions import AprsParseError, OgnParseError, AmbigousTimeError
+from ogn.parser import parse_aprs, parse_ogn_receiver_beacon, parse_ogn_aircraft_beacon, ParseError
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +32,6 @@ def process_beacon(raw_message):
         session.add(beacon)
         session.commit()
         logger.debug('Received message: {}'.format(raw_message))
-    except (AprsParseError, OgnParseError, AmbigousTimeError) as e:
+    except ParseError as e:
         logger.error('Received message: {}'.format(raw_message))
         logger.error('Drop packet, {}'.format(e.message))

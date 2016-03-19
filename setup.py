@@ -3,8 +3,6 @@
 from os import path
 from setuptools import setup, find_packages
 
-from ogn.gateway.settings import PACKAGE_VERSION
-
 
 here = path.abspath(path.dirname(__file__))
 
@@ -14,8 +12,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ogn-python',
-    version=PACKAGE_VERSION,
-    description='A python module for the Open Glider Network',
+    version='0.2.1',
+    description='A database backend for the Open Glider Network',
     long_description=long_description,
     url='https://github.com/glidernet/ogn-python',
     author='Konstantin Gründger aka Meisterschueler, Fabian P. Schmidt aka kerel',
@@ -38,7 +36,8 @@ setup(
         'geopy==1.11.0',
         'manage.py==0.2.10',
         'celery[redis]>=3.1,<3.2',
-        'alembic==0.8.3'
+        'alembic==0.8.3',
+        'ogn-client==0.3.0'
     ],
     extras_require={
         'dev': [

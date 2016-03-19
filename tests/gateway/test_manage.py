@@ -6,9 +6,9 @@ from ogn.gateway.manage import run
 
 class GatewayManagerTest(unittest.TestCase):
     # try simple user interrupt
-    @mock.patch('ogn.gateway.manage.ognGateway')
-    def test_run_user_interruption(self, mock_gateway):
-        instance = mock_gateway.return_value
+    @mock.patch('ogn.gateway.manage.AprsClient')
+    def test_run_user_interruption(self, mock_aprs_client):
+        instance = mock_aprs_client.return_value
         instance.run.side_effect = KeyboardInterrupt()
 
         run(aprs_user="testuser")
