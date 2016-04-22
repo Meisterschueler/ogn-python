@@ -37,6 +37,7 @@ setup(
         'manage.py==0.2.10',
         'celery[redis]>=3.1,<3.2',
         'alembic==0.8.3',
+        'aerofiles==0.3',
         'ogn-client==0.3.0'
     ],
     extras_require={

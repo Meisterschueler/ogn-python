@@ -1,6 +1,6 @@
 from ogn.commands.dbutils import engine, session
 from ogn.model import Base, AddressOrigin
-from ogn.utils import get_ddb
+from ogn.utils import get_ddb, get_airports
 from ogn.collect.database import update_devices
 
 from manager import Manager
@@ -58,5 +58,17 @@ def import_file(path='tests/custom_ddb.txt'):
     # (flushes previously manually imported entries)
 
     print("Import registered devices from '{}'...".format(path))
-    counter = update_devices(session, AddressOrigin.user_defined, get_ddb(path))
+    counter = update_devices(session, AddressOrigin.user_defined,
+                             get_ddb(path))
     print("Imported %i devices." % counter)
+
+
+@manager.command
+def import_airports(path='tests/Germany.cup'):
+    """Import airports from a ".cup" file"""
+
+    print("Import airports from '{}'...".format(path))
+    airports = get_airports(path)
+    session.bulk_save_objects(airports)
+    session.commit()
+    print("Imported {} airports.".format(len(airports)))

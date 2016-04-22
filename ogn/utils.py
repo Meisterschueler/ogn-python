@@ -2,10 +2,13 @@ import requests
 import csv
 from io import StringIO
 
-from .model import Device, AddressOrigin
+from .model import Device, AddressOrigin, Airport
 
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
+
+from aerofiles.seeyou import Reader
+from ogn.parser.utils import feet2m
 
 DDB_URL = "http://ddb.glidernet.org/download"
 
@@ -13,6 +16,9 @@ DDB_URL = "http://ddb.glidernet.org/download"
 address_prefixes = {'F': 'FLR',
                     'O': 'OGN',
                     'I': 'ICA'}
+
+nm2m = 1852
+mi2m = 1609.34
 
 
 def get_ddb(csvfile=None):
@@ -65,6 +71,38 @@ def get_country_code(latitude, longitude):
     return country_code
 
 
+def get_airports(cupfile):
+    airports = list()
+    with open(cupfile) as f:
+        for line in f:
+            try:
+                for waypoint in Reader([line]):
+                    airport = Airport()
+                    airport.name = waypoint['name']
+                    airport.code = waypoint['code']
+                    airport.country_code = waypoint['country']
+                    airport.style = waypoint['style']
+                    airport.description = waypoint['description']
+                    airport.latitude = waypoint['latitude']
+                    airport.longitude = waypoint['longitude']
+                    airport.altitude = waypoint['elevation']['value']
+                    if (waypoint['elevation']['unit'] == 'ft'):
+                        airport.altitude = airport.altitude*feet2m
+                    airport.runway_direction = waypoint['runway_direction']
+                    airport.runway_length = waypoint['runway_length']['value']
+                    if (waypoint['runway_length']['unit'] == 'nm'):
+                        airport.altitude = airport.altitude*nm2m
+                    elif (waypoint['runway_length']['unit'] == 'ml'):
+                        airport.altitude = airport.altitude*mi2m
+                    airport.frequency = waypoint['frequency']
+
+                    airports.append(airport)
+            except Exception:
+                print('Failed to parse line: {}'.format(line))
+
+    return airports
+
+
 def haversine_distance(location0, location1):
     from math import asin, sqrt, sin, cos, atan2, radians, degrees
 
@@ -77,3 +115,4 @@ def haversine_distance(location0, location1):
     phi = degrees(atan2(sin(lon0 - lon1) * cos(lat1), cos(lat0) * sin(lat1) - sin(lat0) * cos(lat1) * cos(lon0 - lon1)))
 
     return distance, phi
+

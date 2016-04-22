@@ -6,7 +6,7 @@ from sqlalchemy.sql import func, null
 from sqlalchemy import and_, or_, between
 from sqlalchemy.sql.expression import true, false, label
 
-from ogn.model import Device, TakeoffLanding
+from ogn.model import Device, TakeoffLanding, Airport
 
 from ogn.commands.dbutils import session
 from ogn.collect.logbook import compute_takeoff_and_landing
@@ -25,16 +25,23 @@ def compute():
 
 
 @manager.command
-def show(airport_name, latitude, longitude, altitude):
-    """Show a logbook for <airport_name> located at given position."""
-    latitude = float(latitude)
-    longitude = float(longitude)
-    altitude = float(altitude)
-    # get_logbook('Königsdorf', 47.83, 11.46, 601)
-    latmin = latitude - 0.15
-    latmax = latitude + 0.15
-    lonmin = longitude - 0.15
-    lonmax = longitude + 0.15
+def show(airport_name):
+    """Show a logbook for <airport_name>."""
+    airport = session.query(Airport) \
+        .filter(or_(Airport.name==airport_name)) \
+        .first()
+
+    if (airport is None):
+        print('Airport "{}" not found.'.format(airport_name))
+        return
+
+    latitude = float(airport.latitude)
+    longitude = float(airport.longitude)
+    altitude = float(airport.altitude)
+    latmin = latitude - 0.05
+    latmax = latitude + 0.05
+    lonmin = longitude - 0.05
+    lonmax = longitude + 0.05
     max_altitude = altitude + 200
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
