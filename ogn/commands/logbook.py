@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from sqlalchemy.sql import func, null
-from sqlalchemy import and_, or_, between
+from sqlalchemy import and_, or_
 from sqlalchemy.sql.expression import true, false, label
 
 from ogn.model import Device, TakeoffLanding, Airport
@@ -28,21 +28,15 @@ def compute():
 def show(airport_name):
     """Show a logbook for <airport_name>."""
     airport = session.query(Airport) \
-        .filter(or_(Airport.name==airport_name)) \
+        .filter(Airport.name == airport_name) \
         .first()
 
     if (airport is None):
         print('Airport "{}" not found.'.format(airport_name))
         return
 
-    latitude = float(airport.latitude)
-    longitude = float(airport.longitude)
-    altitude = float(airport.altitude)
-    latmin = latitude - 0.05
-    latmax = latitude + 0.05
-    lonmin = longitude - 0.05
-    lonmax = longitude + 0.05
-    max_altitude = altitude + 200
+    delta_altitude = 200
+    delta_radius = 10
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
@@ -91,9 +85,8 @@ def show(airport_name):
                                     TakeoffLanding.address,
                                     TakeoffLanding.timestamp))
                 .label('is_takeoff_next')) \
-        .filter(and_(between(TakeoffLanding.latitude, latmin, latmax),
-                     between(TakeoffLanding.longitude, lonmin, lonmax))) \
-        .filter(TakeoffLanding.altitude < max_altitude) \
+        .filter(func.ST_DFullyWithin(TakeoffLanding.location_wkt, Airport.location_wkt, delta_radius)) \
+        .filter(TakeoffLanding.altitude < Airport.altitude + delta_altitude) \
         .subquery()
 
     # find complete flights (with takeoff and landing) with duration < 1 day

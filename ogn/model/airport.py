@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, Float, SmallInteger
+from geoalchemy2.types import Geometry
 
 from .base import Base
 
@@ -8,14 +9,14 @@ class Airport(Base):
 
     id = Column(Integer, primary_key=True)
 
+    location_wkt = Column('location', Geometry('POINT', srid=4326))
+    altitude = Column(Integer)
+
     name = Column(String, index=True)
     code = Column(String(5))
     country_code = Column(String(2))
     style = Column(SmallInteger)
     description = Column(String)
-    latitude = Column(Float)
-    longitude = Column(Float)
-    altitude = Column(Integer)
     runway_direction = Column(Integer)
     runway_length = Column(Integer)
     frequency = Column(Float)

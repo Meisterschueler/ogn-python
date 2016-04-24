@@ -2,7 +2,7 @@ import requests
 import csv
 from io import StringIO
 
-from .model import Device, AddressOrigin, Airport
+from .model import Device, AddressOrigin, Airport, Location
 
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
@@ -83,22 +83,22 @@ def get_airports(cupfile):
                     airport.country_code = waypoint['country']
                     airport.style = waypoint['style']
                     airport.description = waypoint['description']
-                    airport.latitude = waypoint['latitude']
-                    airport.longitude = waypoint['longitude']
+                    location = Location(waypoint['longitude'], waypoint['latitude'])
+                    airport.location_wkt = location.to_wkt()
                     airport.altitude = waypoint['elevation']['value']
                     if (waypoint['elevation']['unit'] == 'ft'):
-                        airport.altitude = airport.altitude*feet2m
+                        airport.altitude = airport.altitude * feet2m
                     airport.runway_direction = waypoint['runway_direction']
                     airport.runway_length = waypoint['runway_length']['value']
                     if (waypoint['runway_length']['unit'] == 'nm'):
-                        airport.altitude = airport.altitude*nm2m
+                        airport.altitude = airport.altitude * nm2m
                     elif (waypoint['runway_length']['unit'] == 'ml'):
-                        airport.altitude = airport.altitude*mi2m
+                        airport.altitude = airport.altitude * mi2m
                     airport.frequency = waypoint['frequency']
 
                     airports.append(airport)
-            except Exception:
-                print('Failed to parse line: {}'.format(line))
+            except AttributeError as e:
+                print('Failed to parse line: {} {}'.format(line, e))
 
     return airports
 
@@ -115,4 +115,3 @@ def haversine_distance(location0, location1):
     phi = degrees(atan2(sin(lon0 - lon1) * cos(lat1), cos(lat0) * sin(lat1) - sin(lat0) * cos(lat1) * cos(lon0 - lon1)))
 
     return distance, phi
-

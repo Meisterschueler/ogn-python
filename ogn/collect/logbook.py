@@ -41,13 +41,9 @@ def compute_takeoff_and_landing():
         AircraftBeacon.timestamp,
         func.lag(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_prev'),
         func.lead(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_next'),
-        AircraftBeacon.latitude,
-        func.lag(AircraftBeacon.latitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('latitude_prev'),
-        func.lead(AircraftBeacon.latitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('latitude_next'),
-        AircraftBeacon.longitude,
-        func.lag(AircraftBeacon.longitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('longitude_prev'),
-        func.lead(AircraftBeacon.longitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('longitude_next'),
-        AircraftBeacon.ground_speed,
+        AircraftBeacon.location_wkt,
+        func.lag(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('location_wkt_prev'),
+        func.lead(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('location_wkt_next'),
         AircraftBeacon.track,
         func.lag(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_prev'),
         func.lead(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_next'),
@@ -65,8 +61,7 @@ def compute_takeoff_and_landing():
     takeoff_landing_query = app.session.query(
         sq.c.address,
         sq.c.timestamp,
-        sq.c.latitude,
-        sq.c.longitude,
+        sq.c.location,
         sq.c.track,
         sq.c.ground_speed,
         sq.c.altitude,
@@ -82,7 +77,7 @@ def compute_takeoff_and_landing():
         .order_by(func.date(sq.c.timestamp), sq.c.timestamp)
 
     # ... and save them
-    ins = insert(TakeoffLanding).from_select((TakeoffLanding.address, TakeoffLanding.timestamp, TakeoffLanding.latitude, TakeoffLanding.longitude, TakeoffLanding.track, TakeoffLanding.ground_speed, TakeoffLanding.altitude, TakeoffLanding.is_takeoff), takeoff_landing_query)
+    ins = insert(TakeoffLanding).from_select((TakeoffLanding.address, TakeoffLanding.timestamp, TakeoffLanding.location_wkt, TakeoffLanding.track, TakeoffLanding.ground_speed, TakeoffLanding.altitude, TakeoffLanding.is_takeoff), takeoff_landing_query)
     result = app.session.execute(ins)
     counter = result.rowcount
     app.session.commit()
