@@ -36,7 +36,7 @@ def show(airport_name):
         return
 
     delta_altitude = 200
-    delta_radius = 10
+    delta_radius = 0.01  # degree!
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
@@ -87,6 +87,7 @@ def show(airport_name):
                 .label('is_takeoff_next')) \
         .filter(func.ST_DFullyWithin(TakeoffLanding.location_wkt, Airport.location_wkt, delta_radius)) \
         .filter(TakeoffLanding.altitude < Airport.altitude + delta_altitude) \
+        .filter(Airport.name == airport.name) \
         .subquery()
 
     # find complete flights (with takeoff and landing) with duration < 1 day

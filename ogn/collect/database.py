@@ -34,5 +34,6 @@ def import_file(path='tests/custom_ddb.txt'):
     """Import registered devices from a local file."""
 
     logger.info("Import registered devices from '{}'...".format(path))
-    counter = update_devices(app.session, AddressOrigin.user_defined, get_ddb(path))
+    counter = update_devices(app.session, AddressOrigin.user_defined,
+                             get_ddb(path))
     logger.info("Imported {} devices.".format(counter))
