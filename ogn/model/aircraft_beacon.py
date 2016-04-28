@@ -24,13 +24,6 @@ class AircraftBeacon(Beacon):
 
     flightlevel = Column(Float)
 
-    # Calculated values
-    radius = Column(Float)
-    theta = Column(Float)
-    phi = Column(Float)
-
-    flight_state = Column(SmallInteger)
-
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.name,
