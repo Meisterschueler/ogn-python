@@ -90,6 +90,7 @@ available commands:
 
   [db]
     drop                   Drop all tables.
+    import_airports        Import airports from a ".cup" file
     import_ddb             Import registered devices from the DDB.
     import_file            Import registered devices from a local file.
     init                   Initialize the database.
@@ -100,7 +101,7 @@ available commands:
 
   [logbook]
     compute                Compute takeoffs and landings.
-    show                   Show a logbook for <airport_name> located at given position.
+    show                   Show a logbook for <airport_name>.
 
   [show.devices]
     stats                  Show some stats on registered devices.
