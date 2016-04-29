@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from celery.utils.log import get_task_logger
 from ogn.collect.celery import app
@@ -16,24 +16,33 @@ logger = get_task_logger(__name__)
 def compute_takeoff_and_landing():
     logger.info("Compute takeoffs and landings.")
 
-    takeoff_speed = 30
-    landing_speed = 30
+    # takeoff / landing detection is based on 3 consecutive points
+    takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
+    landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
+    duration = 100      # the points must not exceed this duration
+    radius = 0.05       # the points must not exceed this radius (degree!) around the 2nd point
 
     # calculate the time where the computation starts
     last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.timestamp))
-    last_takeoff_landing = last_takeoff_landing_query.one()[0]
-    if last_takeoff_landing is None:
+    begin_computation = last_takeoff_landing_query.one()[0]
+    if begin_computation is None:
         # if the table is empty
-        last_takeoff_landing = datetime(2015, 1, 1, 0, 0, 0)
+        last_takeoff_landing_query = app.session.query(func.min(AircraftBeacon.timestamp))
+        begin_computation = last_takeoff_landing_query.one()[0]
+        if begin_computation is None:
+            return 0
     else:
-        # we get the beacons async. to be safe we delete takeoffs/landings from last 5 minutes and recalculate from then
-        # alternative: takeoff/landing has a primary key (timestamp,address)
-        last_takeoff_landing = last_takeoff_landing - timedelta(minutes=5)
+        # we get the beacons async. to be safe we delete takeoffs/landings from last 24 hours and recalculate from then
+        begin_computation = begin_computation - timedelta(hours=24)
         app.session.query(TakeoffLanding) \
-            .filter(TakeoffLanding.timestamp > last_takeoff_landing) \
+            .filter(TakeoffLanding.timestamp >= begin_computation) \
             .delete()
+    end_computation = begin_computation + timedelta(days=30)
 
-    # make a query with current, previous and next position, so we can detect takeoffs and landings
+    logger.debug("Calculate takeoffs and landings between {} and {}"
+                 .format(begin_computation, end_computation))
+
+    # make a query with current, previous and next position
     sq = app.session.query(
         AircraftBeacon.address,
         func.lag(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_prev'),
@@ -59,11 +68,12 @@ def compute_takeoff_and_landing():
         AircraftBeacon.altitude,
         func.lag(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_prev'),
         func.lead(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_next')) \
-        .filter(AircraftBeacon.timestamp > last_takeoff_landing) \
+        .filter(AircraftBeacon.timestamp >= begin_computation) \
+        .filter(AircraftBeacon.timestamp <= end_computation) \
         .order_by(func.date(AircraftBeacon.timestamp), AircraftBeacon.address, AircraftBeacon.timestamp) \
         .subquery()
 
-    # find takeoffs and landings (look at the trigger_speed)
+    # find takeoffs and landings
     takeoff_landing_query = app.session.query(
         sq.c.address,
         sq.c.name,
@@ -82,9 +92,12 @@ def compute_takeoff_and_landing():
                     and_(sq.c.ground_speed_prev > landing_speed,    # landing
                          sq.c.ground_speed < landing_speed,
                          sq.c.ground_speed_next < landing_speed))) \
+        .filter(sq.c.timestamp_next - sq.c.timestamp_prev < timedelta(seconds=duration)) \
+        .filter(and_(func.ST_DFullyWithin(sq.c.location, sq.c.location_wkt_prev, radius),
+                     func.ST_DFullyWithin(sq.c.location, sq.c.location_wkt_next, radius))) \
         .order_by(func.date(sq.c.timestamp), sq.c.timestamp)
 
-    # ... and save the
+    # ... and save them
     ins = insert(TakeoffLanding).from_select((TakeoffLanding.address, TakeoffLanding.name, TakeoffLanding.receiver_name, TakeoffLanding.timestamp, TakeoffLanding.location_wkt, TakeoffLanding.track, TakeoffLanding.ground_speed, TakeoffLanding.altitude, TakeoffLanding.is_takeoff), takeoff_landing_query)
     result = app.session.execute(ins)
     counter = result.rowcount
