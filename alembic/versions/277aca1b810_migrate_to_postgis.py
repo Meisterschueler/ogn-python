@@ -30,7 +30,7 @@ SET
 """
 
 def upgrade():
-    #CREATE EXTENSION IF NOT EXISTS postgis
+    op.execute("CREATE EXTENSION IF NOT EXISTS postgis;");
     op.add_column('airport', sa.Column('location', ga.Geometry('POINT', srid=4326)))
     op.execute(UPGRADE_QUERY.format(table_name='airport'))
     op.drop_column('airport', 'latitude')
@@ -58,7 +58,6 @@ def upgrade():
 
 
 def downgrade():
-    #DROP EXTENSION postgis
     op.add_column('airport', sa.Column('latitude', sa.FLOAT))
     op.add_column('airport', sa.Column('longitude', sa.FLOAT))
     op.execute(DOWNGRADE_QUERY.format(table_name='airport'))
@@ -83,3 +82,5 @@ def downgrade():
     op.add_column('takeoff_landing', sa.Column('longitude', sa.FLOAT))
     op.execute(DOWNGRADE_QUERY.format(table_name='takeoff_landing'))
     op.drop_column('takeoff_landing', 'location')
+
+    op.execute("DROP EXTENSION postgis;");
