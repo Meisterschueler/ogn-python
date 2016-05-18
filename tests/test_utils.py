@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 
-from ogn.utils import get_ddb, get_trackable, get_country_code, get_airports
+from ogn.utils import get_ddb, get_trackable, get_country_code
 from ogn.model import AddressOrigin
 
 
@@ -44,10 +44,6 @@ class TestStringMethods(unittest.TestCase):
         longitude = -0.0009119
         country_code = get_country_code(latitude, longitude)
         self.assertEqual(country_code, None)
-
-    def test_get_airports(self):
-        airports = get_airports('tests/Germany.cup')
-        self.assertGreater(len(airports), 100)
 
     @mock.patch('ogn.utils.Nominatim')
     def test_gec_country_code_exception(self, nominatim_mock):
