@@ -100,8 +100,9 @@ def update_receivers():
 
     for receiver in unknown_country_query.all():
         location = receiver.location
-        receiver.country_code = get_country_code(location.latitude, location.longitude)
-        if receiver.country_code is not None:
-            logger.info("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
+        if location is not None:
+            receiver.country_code = get_country_code(location.latitude, location.longitude)
+            if receiver.country_code is not None:
+                logger.info("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
 
     app.session.commit()
