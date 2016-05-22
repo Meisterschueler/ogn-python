@@ -4,10 +4,10 @@ from celery.utils.log import get_task_logger
 from ogn.collect.celery import app
 
 from sqlalchemy.sql import func
-from sqlalchemy import and_, or_, insert
+from sqlalchemy import and_, or_, insert, between
 from sqlalchemy.sql.expression import case
 
-from ogn.model import AircraftBeacon, TakeoffLanding
+from ogn.model import AircraftBeacon, TakeoffLanding, Airport
 
 logger = get_task_logger(__name__)
 
@@ -22,7 +22,11 @@ def compute_takeoff_and_landing():
     duration = 100      # the points must not exceed this duration
     radius = 0.05       # the points must not exceed this radius (degree!) around the 2nd point
 
-    # calculate the time where the computation starts
+    # takeoff / landing has to be near an airport
+    airport_radius = 0.05   # takeoff / landing must not exceed this radius (degree!) around the airport
+    airport_delta = 200     # takeoff / landing must not exceed this altitude offset above/below the airport
+
+    # calculate the start (and stop) timestamp for the computatio
     last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.timestamp))
     begin_computation = last_takeoff_landing_query.one()[0]
     if begin_computation is None:
@@ -37,55 +41,47 @@ def compute_takeoff_and_landing():
         app.session.query(TakeoffLanding) \
             .filter(TakeoffLanding.timestamp >= begin_computation) \
             .delete()
-    end_computation = begin_computation + timedelta(days=30)
+    end_computation = begin_computation + timedelta(days=5)
 
     logger.debug("Calculate takeoffs and landings between {} and {}"
                  .format(begin_computation, end_computation))
 
     # make a query with current, previous and next position
     sq = app.session.query(
-        AircraftBeacon.address,
-        func.lag(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_prev'),
-        func.lead(AircraftBeacon.address).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('address_next'),
         AircraftBeacon.timestamp,
-        func.lag(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_prev'),
-        func.lead(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('timestamp_next'),
-        AircraftBeacon.name,
-        func.lag(AircraftBeacon.name).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('name_prev'),
-        func.lead(AircraftBeacon.name).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('name_next'),
-        AircraftBeacon.receiver_name,
-        func.lag(AircraftBeacon.receiver_name).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('receiver_name_prev'),
-        func.lead(AircraftBeacon.receiver_name).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('receiver_name_next'),
+        func.lag(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('timestamp_prev'),
+        func.lead(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('timestamp_next'),
         AircraftBeacon.location_wkt,
-        func.lag(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('location_wkt_prev'),
-        func.lead(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('location_wkt_next'),
+        func.lag(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('location_wkt_prev'),
+        func.lead(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('location_wkt_next'),
         AircraftBeacon.track,
-        func.lag(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_prev'),
-        func.lead(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('track_next'),
+        func.lag(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('track_prev'),
+        func.lead(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('track_next'),
         AircraftBeacon.ground_speed,
-        func.lag(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('ground_speed_prev'),
-        func.lead(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('ground_speed_next'),
+        func.lag(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('ground_speed_prev'),
+        func.lead(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('ground_speed_next'),
         AircraftBeacon.altitude,
-        func.lag(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_prev'),
-        func.lead(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.address, AircraftBeacon.timestamp)).label('altitude_next')) \
+        func.lag(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('altitude_prev'),
+        func.lead(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('altitude_next'),
+        AircraftBeacon.device_id,
+        func.lag(AircraftBeacon.device_id).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('device_id_prev'),
+        func.lead(AircraftBeacon.device_id).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('device_id_next')) \
         .filter(AircraftBeacon.timestamp >= begin_computation) \
         .filter(AircraftBeacon.timestamp <= end_computation) \
-        .order_by(func.date(AircraftBeacon.timestamp), AircraftBeacon.address, AircraftBeacon.timestamp) \
         .subquery()
 
-    # find takeoffs and landings
-    takeoff_landing_query = app.session.query(
-        sq.c.address,
-        sq.c.name,
-        sq.c.receiver_name,
+    # find possible takeoffs and landings
+    sq2 = app.session.query(
         sq.c.timestamp,
         sq.c.location,
-        sq.c.track,
+        case([(sq.c.ground_speed > takeoff_speed, sq.c.track),
+              (sq.c.ground_speed < landing_speed, sq.c.track_prev)]).label('track'),    # on landing we take the track from the previous fix because gliders tend to leave the runway quickly
         sq.c.ground_speed,
         sq.c.altitude,
         case([(sq.c.ground_speed > takeoff_speed, True),
-              (sq.c.ground_speed < landing_speed, False)]).label('is_takeoff')) \
-        .filter(sq.c.address_prev == sq.c.address == sq.c.address_next) \
+              (sq.c.ground_speed < landing_speed, False)]).label('is_takeoff'),
+        sq.c.device_id) \
+        .filter(sq.c.device_id_prev == sq.c.device_id == sq.c.device_id_next) \
         .filter(or_(and_(sq.c.ground_speed_prev < takeoff_speed,    # takeoff
                          sq.c.ground_speed > takeoff_speed,
                          sq.c.ground_speed_next > takeoff_speed),
@@ -95,10 +91,29 @@ def compute_takeoff_and_landing():
         .filter(sq.c.timestamp_next - sq.c.timestamp_prev < timedelta(seconds=duration)) \
         .filter(and_(func.ST_DFullyWithin(sq.c.location, sq.c.location_wkt_prev, radius),
                      func.ST_DFullyWithin(sq.c.location, sq.c.location_wkt_next, radius))) \
-        .order_by(func.date(sq.c.timestamp), sq.c.timestamp)
+        .subquery()
+
+    # consider them if they are near a airport
+    takeoff_landing_query = app.session.query(
+        sq2.c.timestamp,
+        sq2.c.track,
+        sq2.c.ground_speed,
+        sq2.c.altitude,
+        sq2.c.is_takeoff,
+        sq2.c.device_id,
+        Airport.id) \
+        .filter(and_(func.ST_DFullyWithin(sq2.c.location, Airport.location_wkt, airport_radius),
+                     between(sq2.c.altitude, Airport.altitude-airport_delta, Airport.altitude+airport_delta)))
 
     # ... and save them
-    ins = insert(TakeoffLanding).from_select((TakeoffLanding.address, TakeoffLanding.name, TakeoffLanding.receiver_name, TakeoffLanding.timestamp, TakeoffLanding.location_wkt, TakeoffLanding.track, TakeoffLanding.ground_speed, TakeoffLanding.altitude, TakeoffLanding.is_takeoff), takeoff_landing_query)
+    ins = insert(TakeoffLanding).from_select((TakeoffLanding.timestamp,
+                                              TakeoffLanding.track,
+                                              TakeoffLanding.ground_speed,
+                                              TakeoffLanding.altitude,
+                                              TakeoffLanding.is_takeoff,
+                                              TakeoffLanding.device_id,
+                                              TakeoffLanding.airport_id),
+                                             takeoff_landing_query)
     result = app.session.execute(ins)
     counter = result.rowcount
     app.session.commit()

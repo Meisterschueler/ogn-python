@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, Float, SmallInteger
+from sqlalchemy.orm import relationship
 from geoalchemy2.types import Geometry
 
 from .base import Base
@@ -20,6 +21,9 @@ class Airport(Base):
     runway_direction = Column(Integer)
     runway_length = Column(Integer)
     frequency = Column(Float)
+
+    # Relations
+    takeoff_landings = relationship('TakeoffLanding')
 
     def __repr__(self):
         return "<Airport %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (
