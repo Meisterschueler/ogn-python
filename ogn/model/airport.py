@@ -14,7 +14,7 @@ class Airport(Base):
     altitude = Column(Integer)
 
     name = Column(String, index=True)
-    code = Column(String(5))
+    code = Column(String(6))
     country_code = Column(String(2))
     style = Column(SmallInteger)
     description = Column(String)

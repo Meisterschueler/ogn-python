@@ -64,7 +64,7 @@ def import_file(path='tests/custom_ddb.txt'):
 
 
 @manager.command
-def import_airports(path='tests/Germany.cup'):
+def import_airports(path='tests/SeeYou.cup'):
     """Import airports from a ".cup" file"""
 
     print("Import airports from '{}'...".format(path))
