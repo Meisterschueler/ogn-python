@@ -10,8 +10,7 @@
 A database backend for the [Open Glider Network](http://wiki.glidernet.org/).
 The ogn-python module saves all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
 It connects to the OGN aprs servers with [python-ogn-client](https://github.com/glidernet/python-ogn-client).
-For simple tests a [sqlite](https://www.sqlite.org/)-backend is sufficient,
-but some tasks (e.g. logbook generation) require a proper database backend like [postgresql](http://www.postgresql.org/).
+It requires [PostgreSQL](http://www.postgresql.org/) and [PostGIS](http://www.postgis.net/).
 
 [Examples](https://github.com/glidernet/ogn-python/wiki/Examples)
 
@@ -119,7 +118,6 @@ Only the command `logbook.compute` requires a running task server (celery) at th
 
 - `ogn.collect.database.import_ddb` - Import registered devices from the ddb
 - `ogn.collect.database.import_file` - Import registered devices from a local file
-- `ogn.collect.heatmap.update_beacon_receiver_distance_all` - Calculate the distance between aircraft and receiver for the last aircraft beacons
 - `ogn.collect.receiver.update_receivers` - Populate/update receiver table (requires postgresql-backend)
 - `ogn.collect.logbook.compute_takeoff_and_landing` - Generate TakeoffLanding table (requires postgresql-backend)
 
