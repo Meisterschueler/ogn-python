@@ -73,7 +73,8 @@ def compute_takeoff_and_landing():
     # find possible takeoffs and landings
     sq2 = app.session.query(
         sq.c.timestamp,
-        sq.c.location,
+        case([(sq.c.ground_speed > takeoff_speed, sq.c.location_wkt_prev),  # on takeoff we take the location from the previous fix because it is nearer to the airport
+              (sq.c.ground_speed < landing_speed, sq.c.location)]).label('location'),
         case([(sq.c.ground_speed > takeoff_speed, sq.c.track),
               (sq.c.ground_speed < landing_speed, sq.c.track_prev)]).label('track'),    # on landing we take the track from the previous fix because gliders tend to leave the runway quickly
         sq.c.ground_speed,
