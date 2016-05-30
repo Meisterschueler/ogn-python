@@ -8,3 +8,6 @@ from .aircraft_beacon import AircraftBeacon
 from .receiver_beacon import ReceiverBeacon
 from .receiver import Receiver
 from .takeoff_landing import TakeoffLanding
+from .airport import Airport
+
+from .geo import Location

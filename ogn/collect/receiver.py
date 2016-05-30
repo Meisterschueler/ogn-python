@@ -1,6 +1,6 @@
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.functions import coalesce
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, not_
 
 from celery.utils.log import get_task_logger
 
@@ -26,8 +26,7 @@ def update_receivers():
                                          .subquery()
 
     receivers_to_update = app.session.query(ReceiverBeacon.name,
-                                            ReceiverBeacon.latitude,
-                                            ReceiverBeacon.longitude,
+                                            ReceiverBeacon.location_wkt,
                                             ReceiverBeacon.altitude,
                                             last_receiver_beacon_sq.columns.lastseen,
                                             ReceiverBeacon.version,
@@ -39,11 +38,10 @@ def update_receivers():
     # set country code to None if lat or lon changed
     count = app.session.query(Receiver) \
                        .filter(and_(Receiver.name == receivers_to_update.columns.name,
-                                    or_(Receiver.latitude != receivers_to_update.columns.latitude,
-                                        Receiver.longitude != receivers_to_update.columns.longitude))) \
-                       .update({"latitude": receivers_to_update.columns.latitude,
-                                "longitude": receivers_to_update.columns.longitude,
-                                "country_code": null()})
+                                    not_(func.ST_Equals(Receiver.location_wkt, receivers_to_update.columns.location)))) \
+                       .update({"location_wkt": receivers_to_update.columns.location,
+                                "country_code": null()},
+                               synchronize_session=False)
 
     logger.info("Count of receivers who changed lat or lon: {}".format(count))
 
@@ -59,8 +57,7 @@ def update_receivers():
 
     # add new receivers
     empty_sq = app.session.query(ReceiverBeacon.name,
-                                 ReceiverBeacon.latitude,
-                                 ReceiverBeacon.longitude,
+                                 ReceiverBeacon.location_wkt,
                                  ReceiverBeacon.altitude,
                                  last_receiver_beacon_sq.columns.lastseen,
                                  ReceiverBeacon.version, ReceiverBeacon.platform) \
@@ -73,8 +70,7 @@ def update_receivers():
     for receiver_beacon in empty_sq.all():
         receiver = Receiver()
         receiver.name = receiver_beacon.name
-        receiver.latitude = receiver_beacon.latitude
-        receiver.longitude = receiver_beacon.longitude
+        receiver.location_wkt = receiver_beacon.location_wkt
         receiver.altitude = receiver_beacon.altitude
         receiver.firstseen = None
         receiver.lastseen = receiver_beacon.lastseen
@@ -103,7 +99,8 @@ def update_receivers():
                                        .order_by(Receiver.name)
 
     for receiver in unknown_country_query.all():
-        receiver.country_code = get_country_code(receiver.latitude, receiver.longitude)
+        location = receiver.location
+        receiver.country_code = get_country_code(location.latitude, location.longitude)
         if receiver.country_code is not None:
             logger.info("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
 

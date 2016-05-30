@@ -3,10 +3,10 @@
 from datetime import timedelta
 
 from sqlalchemy.sql import func, null
-from sqlalchemy import and_, or_, between
+from sqlalchemy import and_, or_
 from sqlalchemy.sql.expression import true, false, label
 
-from ogn.model import Device, TakeoffLanding
+from ogn.model import Device, TakeoffLanding, Airport
 
 from ogn.commands.dbutils import session
 from ogn.collect.logbook import compute_takeoff_and_landing
@@ -25,17 +25,18 @@ def compute():
 
 
 @manager.command
-def show(airport_name, latitude, longitude, altitude):
-    """Show a logbook for <airport_name> located at given position."""
-    latitude = float(latitude)
-    longitude = float(longitude)
-    altitude = float(altitude)
-    # get_logbook('Königsdorf', 47.83, 11.46, 601)
-    latmin = latitude - 0.15
-    latmax = latitude + 0.15
-    lonmin = longitude - 0.15
-    lonmax = longitude + 0.15
-    max_altitude = altitude + 200
+def show(airport_name):
+    """Show a logbook for <airport_name>."""
+    airport = session.query(Airport) \
+        .filter(Airport.name == airport_name) \
+        .first()
+
+    if (airport is None):
+        print('Airport "{}" not found.'.format(airport_name))
+        return
+
+    delta_altitude = 200
+    delta_radius = 0.01  # degree!
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
@@ -84,9 +85,9 @@ def show(airport_name, latitude, longitude, altitude):
                                     TakeoffLanding.address,
                                     TakeoffLanding.timestamp))
                 .label('is_takeoff_next')) \
-        .filter(and_(between(TakeoffLanding.latitude, latmin, latmax),
-                     between(TakeoffLanding.longitude, lonmin, lonmax))) \
-        .filter(TakeoffLanding.altitude < max_altitude) \
+        .filter(func.ST_DFullyWithin(TakeoffLanding.location_wkt, Airport.location_wkt, delta_radius)) \
+        .filter(TakeoffLanding.altitude < Airport.altitude + delta_altitude) \
+        .filter(Airport.name == airport.name) \
         .subquery()
 
     # find complete flights (with takeoff and landing) with duration < 1 day

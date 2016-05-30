@@ -26,7 +26,6 @@ def close_db(signal, sender):
 
 app = Celery('ogn.collect',
              include=["ogn.collect.database",
-                      "ogn.collect.heatmap",
                       "ogn.collect.logbook",
                       "ogn.collect.receiver"
                       ])
