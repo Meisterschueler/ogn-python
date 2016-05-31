@@ -23,8 +23,8 @@ def compute_takeoff_and_landing():
     radius = 0.05       # the points must not exceed this radius (degree!) around the 2nd point
 
     # takeoff / landing has to be near an airport
-    airport_radius = 0.05   # takeoff / landing must not exceed this radius (degree!) around the airport
-    airport_delta = 200     # takeoff / landing must not exceed this altitude offset above/below the airport
+    airport_radius = 0.025  # takeoff / landing must not exceed this radius (degree!) around the airport
+    airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
 
     # calculate the start (and stop) timestamp for the computatio
     last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.timestamp))
