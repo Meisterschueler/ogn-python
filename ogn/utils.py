@@ -10,7 +10,7 @@ from geopy.exc import GeopyError
 from aerofiles.seeyou import Reader
 from ogn.parser.utils import feet2m
 
-DDB_URL = "http://ddb.glidernet.org/download"
+DDB_URL = "http://ddb.glidernet.org/download/?t=1"
 
 
 address_prefixes = {'F': 'FLR',
@@ -41,6 +41,7 @@ def get_ddb(csvfile=None):
         device.competition = row[4]
         device.tracked = row[5] == 'Y'
         device.identified = row[6] == 'Y'
+        device.aircraft_type = row[7]
 
         devices.append(device)
 

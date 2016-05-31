@@ -18,6 +18,7 @@ class Device(Base):
     frequency = Column(String)
     tracked = Column(Boolean)
     identified = Column(Boolean)
+    aircraft_type = Column(SmallInteger, index=True)
 
     address_origin = Column(SmallInteger)
 

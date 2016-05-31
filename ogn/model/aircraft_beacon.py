@@ -9,7 +9,7 @@ class AircraftBeacon(Beacon):
 
     # Flarm specific data
     address_type = Column(SmallInteger)
-    aircraft_type = Column(SmallInteger)
+    aircraft_type = Column(SmallInteger, index=True)
     stealth = Column(Boolean)
     address = Column(String(6))
     climb_rate = Column(Float)
