@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from sqlalchemy.sql import func, null
 from sqlalchemy import and_, or_
@@ -25,9 +25,10 @@ def compute():
     print("New/recalculated takeoffs/landings: {}".format(counter))
 
 
+@manager.arg('date', help='date (format: yyyy-mm-dd')
 @manager.arg('utc_delta_hours', help='delta hours to utc (for local time logs)')
 @manager.command
-def show(airport_name, utc_delta_hours=0):
+def show(airport_name, utc_delta_hours=0, date=None):
     """Show a logbook for <airport_name>."""
     airport = session.query(Airport) \
         .filter(Airport.name == airport_name) \
@@ -38,6 +39,11 @@ def show(airport_name, utc_delta_hours=0):
         return
 
     utc_timedelta = timedelta(hours=utc_delta_hours)
+    or_args = []
+    if date is not None:
+        date = datetime.strptime(date, "%Y-%m-%d")
+        or_args = [and_(TakeoffLanding.timestamp >= date + utc_timedelta,
+                        TakeoffLanding.timestamp < date + timedelta(hours=24) + utc_timedelta)]
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
@@ -97,6 +103,7 @@ def show(airport_name, utc_delta_hours=0):
                                     TakeoffLanding.device_id,
                                     TakeoffLanding.timestamp+utc_timedelta))
                 .label('airport_id_next')) \
+        .filter(*or_args) \
         .subquery()
 
     # find complete flights (with takeoff and landing) with duration < 1 day
