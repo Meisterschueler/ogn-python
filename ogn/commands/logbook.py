@@ -49,60 +49,59 @@ def show(airport_name, utc_delta_hours=0, date=None):
     sq = session.query(
         TakeoffLanding.device_id,
         func.lag(TakeoffLanding.device_id)
-            .over(
-                order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                              TakeoffLanding.device_id,
-                              TakeoffLanding.timestamp+utc_timedelta))
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
             .label('device_id_prev'),
         func.lead(TakeoffLanding.device_id)
-            .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
                                 TakeoffLanding.device_id,
-                                TakeoffLanding.timestamp+utc_timedelta))
+                                TakeoffLanding.timestamp + utc_timedelta))
             .label('device_id_next'),
-        (TakeoffLanding.timestamp+utc_timedelta).label('timestamp'),
+        (TakeoffLanding.timestamp + utc_timedelta).label('timestamp'),
         func.lag(TakeoffLanding.timestamp)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('timestamp_prev'),
-        func.lead(TakeoffLanding.timestamp+utc_timedelta)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('timestamp_next'),
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('timestamp_prev'),
+        func.lead(TakeoffLanding.timestamp + utc_timedelta)
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('timestamp_next'),
         TakeoffLanding.track,
         func.lag(TakeoffLanding.track)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('track_prev'),
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('track_prev'),
         func.lead(TakeoffLanding.track)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('track_next'),
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('track_next'),
         TakeoffLanding.is_takeoff,
         func.lag(TakeoffLanding.is_takeoff)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('is_takeoff_prev'),
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('is_takeoff_prev'),
         func.lead(TakeoffLanding.is_takeoff)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('is_takeoff_next'),
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('is_takeoff_next'),
         TakeoffLanding.airport_id,
         func.lag(TakeoffLanding.airport_id)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('airport_id_prev'),
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('airport_id_prev'),
         func.lead(TakeoffLanding.airport_id)
-                .over(order_by=and_(func.date(TakeoffLanding.timestamp+utc_timedelta),
-                                    TakeoffLanding.device_id,
-                                    TakeoffLanding.timestamp+utc_timedelta))
-                .label('airport_id_next')) \
+            .over(order_by=and_(func.date(TakeoffLanding.timestamp + utc_timedelta),
+                                TakeoffLanding.device_id,
+                                TakeoffLanding.timestamp + utc_timedelta))
+            .label('airport_id_next')) \
         .filter(*or_args) \
         .subquery()
 
@@ -164,26 +163,24 @@ def show(airport_name, utc_delta_hours=0, date=None):
         .filter(sq.c.airport_id == airport.id)
 
     # unite all
-    union_query = complete_flight_query.union(
-        split_start_query,
-        split_landing_query,
-        only_landings_query,
-        only_starts_query) \
+    union_query = complete_flight_query.union(split_start_query,
+                                              split_landing_query,
+                                              only_landings_query,
+                                              only_starts_query) \
         .subquery()
 
     # get aircraft and airport informations and sort all entries by the reference time
     takeoff_airport = aliased(Airport, name='takeoff_airport')
     landing_airport = aliased(Airport, name='landing_airport')
-    logbook_query = session.query(
-        union_query.c.reftime,
-        union_query.c.takeoff,
-        union_query.c.takeoff_track,
-        takeoff_airport,
-        union_query.c.landing,
-        union_query.c.landing_track,
-        landing_airport,
-        union_query.c.duration,
-        Device) \
+    logbook_query = session.query(union_query.c.reftime,
+                                  union_query.c.takeoff,
+                                  union_query.c.takeoff_track,
+                                  takeoff_airport,
+                                  union_query.c.landing,
+                                  union_query.c.landing_track,
+                                  landing_airport,
+                                  union_query.c.duration,
+                                  Device) \
         .outerjoin(Device, union_query.c.device_id == Device.id) \
         .outerjoin(takeoff_airport, union_query.c.takeoff_airport_id == takeoff_airport.id) \
         .outerjoin(landing_airport, union_query.c.landing_airport_id == landing_airport.id) \

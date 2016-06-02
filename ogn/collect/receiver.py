@@ -48,11 +48,11 @@ def update_receivers():
 
     # ... and update altitude, lastseen, version and platform
     update_count = app.session.query(Receiver) \
-                       .filter(Receiver.name == receivers_to_update.columns.name) \
-                       .update({"altitude": receivers_to_update.columns.altitude,
-                                "lastseen": receivers_to_update.columns.lastseen,
-                                "version": receivers_to_update.columns.version,
-                                "platform": receivers_to_update.columns.platform})
+                      .filter(Receiver.name == receivers_to_update.columns.name) \
+                      .update({"altitude": receivers_to_update.columns.altitude,
+                               "lastseen": receivers_to_update.columns.lastseen,
+                               "version": receivers_to_update.columns.version,
+                               "platform": receivers_to_update.columns.platform})
 
     # add new receivers
     empty_sq = app.session.query(ReceiverBeacon.name,
@@ -88,8 +88,8 @@ def update_receivers():
                                       .subquery()
 
     added_count = app.session.query(Receiver) \
-                       .filter(Receiver.name == firstseen_null_query.columns.name) \
-                       .update({'firstseen': firstseen_null_query.columns.firstseen})
+        .filter(Receiver.name == firstseen_null_query.columns.name) \
+        .update({'firstseen': firstseen_null_query.columns.firstseen})
 
     # update country code if None
     unknown_country_query = app.session.query(Receiver) \

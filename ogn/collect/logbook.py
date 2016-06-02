@@ -104,7 +104,7 @@ def compute_takeoff_and_landing():
         sq2.c.device_id,
         Airport.id) \
         .filter(and_(func.ST_DFullyWithin(sq2.c.location, Airport.location_wkt, airport_radius),
-                     between(sq2.c.altitude, Airport.altitude-airport_delta, Airport.altitude+airport_delta))) \
+                     between(sq2.c.altitude, Airport.altitude - airport_delta, Airport.altitude + airport_delta))) \
         .filter(between(Airport.style, 2, 5))
 
     # ... and save them

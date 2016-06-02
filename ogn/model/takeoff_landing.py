@@ -1,6 +1,5 @@
 from sqlalchemy import Boolean, Column, Float, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from geoalchemy2.types import Geometry
 from geoalchemy2.shape import to_shape
 
 from .base import Base
