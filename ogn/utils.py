@@ -41,7 +41,7 @@ def get_ddb(csvfile=None):
         device.competition = row[4]
         device.tracked = row[5] == 'Y'
         device.identified = row[6] == 'Y'
-        device.aircraft_type = row[7]
+        device.aircraft_type = int(row[7])
 
         devices.append(device)
 

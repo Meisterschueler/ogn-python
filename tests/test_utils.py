@@ -2,7 +2,7 @@ import unittest
 import unittest.mock as mock
 
 from ogn.utils import get_ddb, get_trackable, get_country_code
-from ogn.model import AddressOrigin
+from ogn.model import AircraftType
 
 
 class TestStringMethods(unittest.TestCase):
@@ -21,8 +21,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(device.competition, 'CU')
         self.assertTrue(device.tracked)
         self.assertTrue(device.identified)
-
-        self.assertEqual(device.address_origin, AddressOrigin.user_defined)
+        self.assertEqual(device.aircraft_type, AircraftType.glider_or_motor_glider)
 
     def test_get_trackable(self):
         devices = get_ddb('tests/custom_ddb.txt')
