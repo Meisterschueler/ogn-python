@@ -98,8 +98,6 @@ def compute_takeoff_and_landing():
     takeoff_landing_query = app.session.query(
         sq2.c.timestamp,
         sq2.c.track,
-        sq2.c.ground_speed,
-        sq2.c.altitude,
         sq2.c.is_takeoff,
         sq2.c.device_id,
         Airport.id) \
@@ -110,8 +108,6 @@ def compute_takeoff_and_landing():
     # ... and save them
     ins = insert(TakeoffLanding).from_select((TakeoffLanding.timestamp,
                                               TakeoffLanding.track,
-                                              TakeoffLanding.ground_speed,
-                                              TakeoffLanding.altitude,
                                               TakeoffLanding.is_takeoff,
                                               TakeoffLanding.device_id,
                                               TakeoffLanding.airport_id),
