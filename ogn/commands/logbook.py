@@ -105,7 +105,7 @@ def show(airport_name, utc_delta_hours=0, date=None):
         .filter(*or_args) \
         .subquery()
 
-    # find complete flights (with takeoff and landing) with duration < 1 day
+    # find complete flights (with takeoff and landing on the same day)
     complete_flight_query = session.query(sq.c.timestamp.label('reftime'),
                                           sq.c.device_id.label('device_id'),
                                           sq.c.timestamp.label('takeoff'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
@@ -113,11 +113,11 @@ def show(airport_name, utc_delta_hours=0, date=None):
                                           label('duration', sq.c.timestamp_next - sq.c.timestamp)) \
         .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
         .filter(sq.c.device_id == sq.c.device_id_next) \
-        .filter(sq.c.timestamp_next - sq.c.timestamp < timedelta(days=1)) \
+        .filter(func.date(sq.c.timestamp_next) == func.date(sq.c.timestamp)) \
         .filter(or_(sq.c.airport_id == airport.id,
                     sq.c.airport_id_next == airport.id))
 
-    # split complete flights (with takeoff and landing) with duration > 1 day into one takeoff and one landing
+    # split complete flights (with takeoff and landing on different days) into one takeoff and one landing
     split_start_query = session.query(sq.c.timestamp.label('reftime'),
                                       sq.c.device_id.label('device_id'),
                                       sq.c.timestamp.label('takeoff'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
@@ -125,7 +125,7 @@ def show(airport_name, utc_delta_hours=0, date=None):
                                       null().label('duration')) \
         .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
         .filter(sq.c.device_id == sq.c.device_id_next) \
-        .filter(sq.c.timestamp_next - sq.c.timestamp >= timedelta(days=1)) \
+        .filter(func.date(sq.c.timestamp_next) != func.date(sq.c.timestamp)) \
         .filter(and_(sq.c.airport_id == airport.id,
                      sq.c.airport_id_next == airport.id))
 
@@ -136,7 +136,7 @@ def show(airport_name, utc_delta_hours=0, date=None):
                                         null().label('duration')) \
         .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
         .filter(sq.c.device_id == sq.c.device_id_next) \
-        .filter(sq.c.timestamp_next - sq.c.timestamp >= timedelta(days=1)) \
+        .filter(func.date(sq.c.timestamp_next) != func.date(sq.c.timestamp)) \
         .filter(and_(sq.c.airport_id == airport.id,
                      sq.c.airport_id_next == airport.id))
 
