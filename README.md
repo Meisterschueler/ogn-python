@@ -102,6 +102,9 @@ available commands:
     compute                Compute takeoffs and landings.
     show                   Show a logbook for <airport_name>.
 
+  [show.airport]
+    list_all               Show a list of all airports.
+
   [show.devices]
     stats                  Show some stats on registered devices.
 
@@ -118,8 +121,8 @@ Only the command `logbook.compute` requires a running task server (celery) at th
 
 - `ogn.collect.database.import_ddb` - Import registered devices from the ddb
 - `ogn.collect.database.import_file` - Import registered devices from a local file
-- `ogn.collect.receiver.update_receivers` - Populate/update receiver table (requires postgresql-backend)
-- `ogn.collect.logbook.compute_takeoff_and_landing` - Generate TakeoffLanding table (requires postgresql-backend)
+- `ogn.collect.receiver.update_receivers` - Populate/update receiver table
+- `ogn.collect.logbook.compute_takeoff_and_landing` - Generate TakeoffLanding table
 
 If the task server is up and running, tasks could be started manually.
 
