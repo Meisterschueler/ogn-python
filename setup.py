@@ -40,16 +40,14 @@ setup(
         'aerofiles==0.3',
         'geoalchemy2==0.3.0',
         'shapely==1.5.15',
-        'ogn-client==0.3.0'
+        'ogn-client==0.3.0',
+        'psycopg2==2.6.1'
     ],
     extras_require={
         'dev': [
             'nose==1.3.7',
             'coveralls==0.4.4',
             'flake8==2.5.0'
-        ],
-        'postgresql': [
-            'psycopg2==2.6.1'
         ]
     },
     zip_safe=False
