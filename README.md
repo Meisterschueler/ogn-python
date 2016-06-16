@@ -27,14 +27,17 @@ It requires [PostgreSQL](http://www.postgresql.org/) and [PostGIS](http://www.po
     ```
     pip install -r requirements.txt
     ```
+3. Install [PostgreSQL](http://www.postgresql.org/) with [PostGIS](http://www.postgis.net/) Extension.
+   Create a database (use "ogn" as default, otherwise you have to modify the configuration, see below)
 
-3. Install redis for asynchronous tasks (like takeoff/landing-detection)
+
+4. Optional: Install redis for asynchronous tasks (like takeoff/landing-detection)
 
     ```
     apt-get install redis-server
     ```
 
-4. Create database
+5. Create database
 
     ```
     ./manage.py db.init
