@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy.orm import relationship
 from geoalchemy2.types import Geometry
 from geoalchemy2.shape import to_shape
 
@@ -20,6 +21,10 @@ class Receiver(Base):
     country_code = Column(String(2))
     version = Column(String)
     platform = Column(String)
+
+    # Relations
+    aircraft_beacons = relationship('AircraftBeacon')
+    receiver_beacons = relationship('ReceiverBeacon')
 
     @property
     def location(self):

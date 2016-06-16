@@ -2,7 +2,7 @@ import requests
 import csv
 from io import StringIO
 
-from .model import Device, AddressOrigin, Airport, Location
+from .model import Device, Airport, Location
 
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
@@ -10,7 +10,7 @@ from geopy.exc import GeopyError
 from aerofiles.seeyou import Reader
 from ogn.parser.utils import feet2m
 
-DDB_URL = "http://ddb.glidernet.org/download"
+DDB_URL = "http://ddb.glidernet.org/download/?t=1"
 
 
 address_prefixes = {'F': 'FLR',
@@ -25,28 +25,25 @@ def get_ddb(csvfile=None):
     if csvfile is None:
         r = requests.get(DDB_URL)
         rows = '\n'.join(i for i in r.text.splitlines() if i[0] != '#')
-        address_origin = AddressOrigin.ogn_ddb
     else:
         r = open(csvfile, 'r')
         rows = ''.join(i for i in r.readlines() if i[0] != '#')
-        address_origin = AddressOrigin.user_defined
 
     data = csv.reader(StringIO(rows), quotechar="'", quoting=csv.QUOTE_ALL)
 
     devices = list()
     for row in data:
-        flarm = Device()
-        flarm.address_type = row[0]
-        flarm.address = row[1]
-        flarm.aircraft = row[2]
-        flarm.registration = row[3]
-        flarm.competition = row[4]
-        flarm.tracked = row[5] == 'Y'
-        flarm.identified = row[6] == 'Y'
+        device = Device()
+        device.address_type = row[0]
+        device.address = row[1]
+        device.aircraft = row[2]
+        device.registration = row[3]
+        device.competition = row[4]
+        device.tracked = row[5] == 'Y'
+        device.identified = row[6] == 'Y'
+        device.aircraft_type = int(row[7])
 
-        flarm.address_origin = address_origin
-
-        devices.append(flarm)
+        devices.append(device)
 
     return devices
 
@@ -77,6 +74,9 @@ def get_airports(cupfile):
         for line in f:
             try:
                 for waypoint in Reader([line]):
+                    if waypoint['style'] > 5:   # reject unlandable places
+                        continue
+
                     airport = Airport()
                     airport.name = waypoint['name']
                     airport.code = waypoint['code']

@@ -16,6 +16,8 @@ def init():
     from alembic.config import Config
     from alembic import command
 
+    session.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
+    session.commit()
     Base.metadata.create_all(engine)
     alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
     command.stamp(alembic_cfg, "head")
@@ -64,7 +66,7 @@ def import_file(path='tests/custom_ddb.txt'):
 
 
 @manager.command
-def import_airports(path='tests/Germany.cup'):
+def import_airports(path='tests/SeeYou.cup'):
     """Import airports from a ".cup" file"""
 
     print("Import airports from '{}'...".format(path))

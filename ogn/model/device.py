@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, SmallInteger
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -17,8 +18,12 @@ class Device(Base):
     frequency = Column(String)
     tracked = Column(Boolean)
     identified = Column(Boolean)
+    aircraft_type = Column(SmallInteger, index=True)
 
     address_origin = Column(SmallInteger)
+
+    # Relations
+    aircraft_beacons = relationship('AircraftBeacon')
 
     def __repr__(self):
         return "<Device: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Float, String
+from sqlalchemy import Column, Float, String, Integer, ForeignKey
+from sqlalchemy.orm import relationship
 
 from .beacon import Beacon
 
@@ -19,6 +20,10 @@ class ReceiverBeacon(Beacon):
     rec_crystal_correction = 0       # obsolete since 0.2.0
     rec_crystal_correction_fine = 0  # obsolete since 0.2.0
     rec_input_noise = Column(Float)
+
+    # Relations
+    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
+    receiver = relationship('Receiver', foreign_keys=[receiver_id])
 
     def __repr__(self):
         return "<ReceiverBeacon %s: %s>" % (self.name, self.version)

@@ -1,10 +1,21 @@
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Boolean, Column, Integer, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 
-from .beacon import Beacon
+from .base import Base
 
 
-class TakeoffLanding(Beacon):
+class TakeoffLanding(Base):
     __tablename__ = 'takeoff_landing'
 
-    address = Column(String(6), index=True)
+    id = Column(Integer, primary_key=True)
+
+    timestamp = Column(DateTime, index=True)
+    track = Column(Integer)
     is_takeoff = Column(Boolean)
+
+    # Relations
+    airport_id = Column(Integer, ForeignKey('airport.id', ondelete='SET NULL'), index=True)
+    airport = relationship('Airport', foreign_keys=[airport_id])
+
+    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
+    device = relationship('Device', foreign_keys=[device_id])

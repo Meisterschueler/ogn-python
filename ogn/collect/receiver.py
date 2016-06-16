@@ -1,6 +1,6 @@
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.functions import coalesce
-from sqlalchemy import and_, not_
+from sqlalchemy import and_, not_, or_
 
 from celery.utils.log import get_task_logger
 
@@ -25,6 +25,7 @@ def update_receivers():
                                          .group_by(ReceiverBeacon.name) \
                                          .subquery()
 
+    # update receivers
     receivers_to_update = app.session.query(ReceiverBeacon.name,
                                             ReceiverBeacon.location_wkt,
                                             ReceiverBeacon.altitude,
@@ -35,25 +36,23 @@ def update_receivers():
                                                   ReceiverBeacon.timestamp == last_receiver_beacon_sq.columns.lastseen)) \
                                      .subquery()
 
-    # set country code to None if lat or lon changed
-    count = app.session.query(Receiver) \
-                       .filter(and_(Receiver.name == receivers_to_update.columns.name,
-                                    not_(func.ST_Equals(Receiver.location_wkt, receivers_to_update.columns.location)))) \
+    # ... set country code to None if lat or lon changed
+    changed_count = app.session.query(Receiver) \
+                       .filter(Receiver.name == receivers_to_update.columns.name) \
+                       .filter(or_(not_(func.ST_Equals(Receiver.location_wkt, receivers_to_update.columns.location)),
+                                   and_(Receiver.location_wkt == null(),
+                                        receivers_to_update.columns.location != null()))) \
                        .update({"location_wkt": receivers_to_update.columns.location,
                                 "country_code": null()},
                                synchronize_session=False)
 
-    logger.info("Count of receivers who changed lat or lon: {}".format(count))
-
-    # update lastseen of known receivers
-    count = app.session.query(Receiver) \
-                       .filter(Receiver.name == receivers_to_update.columns.name) \
-                       .update({"altitude": receivers_to_update.columns.altitude,
-                                "lastseen": receivers_to_update.columns.lastseen,
-                                "version": receivers_to_update.columns.version,
-                                "platform": receivers_to_update.columns.platform})
-
-    logger.info("Count of receivers who where updated: {}".format(count))
+    # ... and update altitude, lastseen, version and platform
+    update_count = app.session.query(Receiver) \
+                      .filter(Receiver.name == receivers_to_update.columns.name) \
+                      .update({"altitude": receivers_to_update.columns.altitude,
+                               "lastseen": receivers_to_update.columns.lastseen,
+                               "version": receivers_to_update.columns.version,
+                               "platform": receivers_to_update.columns.platform})
 
     # add new receivers
     empty_sq = app.session.query(ReceiverBeacon.name,
@@ -88,20 +87,25 @@ def update_receivers():
                                       .group_by(Receiver.name) \
                                       .subquery()
 
-    count = app.session.query(Receiver) \
-                       .filter(Receiver.name == firstseen_null_query.columns.name) \
-                       .update({'firstseen': firstseen_null_query.columns.firstseen})
-    logger.info("Total: {} receivers added".format(count))
+    added_count = app.session.query(Receiver) \
+        .filter(Receiver.name == firstseen_null_query.columns.name) \
+        .update({'firstseen': firstseen_null_query.columns.firstseen})
 
     # update country code if None
     unknown_country_query = app.session.query(Receiver) \
                                        .filter(Receiver.country_code == null()) \
+                                       .filter(Receiver.location_wkt != null()) \
                                        .order_by(Receiver.name)
 
     for receiver in unknown_country_query.all():
         location = receiver.location
-        receiver.country_code = get_country_code(location.latitude, location.longitude)
-        if receiver.country_code is not None:
+        country_code = get_country_code(location.latitude, location.longitude)
+        if country_code is not None:
+            receiver.country_code = country_code
             logger.info("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
 
+    logger.info("Added: {}, location changed: {}".format(added_count, changed_count))
+
     app.session.commit()
+
+    return update_count
