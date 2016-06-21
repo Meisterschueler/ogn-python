@@ -54,16 +54,24 @@ def process_beacon(raw_message):
             beacon = AircraftBeacon(**message)
 
             # connect beacon with device
-            device = session.query(Device.id) \
+            device = session.query(Device) \
                 .filter(Device.address == beacon.address) \
-                .order_by(Device.address_origin) \
                 .first()
             if device is None:
                 device = Device()
                 device.address = beacon.address
-                device.address_origin = AddressOrigin.seen
                 session.add(device)
             beacon.device_id = device.id
+
+            # update device
+            device.aircraft_type = beacon.aircraft_type
+            device.stealth = beacon.stealth
+            if beacon.hardware_version is not None:
+                device.hardware_version = beacon.hardware_version
+            if beacon.software_version is not None:
+                device.software_version = beacon.software_version
+            if beacon.real_address is not None:
+                device.real_address = beacon.real_address
 
             # connect beacon with receiver
             receiver = session.query(Receiver.id) \
