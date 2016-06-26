@@ -2,7 +2,6 @@ import logging
 from ogn.commands.dbutils import session
 from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver, Location
 from ogn.parser import parse_aprs, parse_ogn_receiver_beacon, parse_ogn_aircraft_beacon, ParseError
-from ogn.model.address_origin import AddressOrigin
 
 logger = logging.getLogger(__name__)
 
