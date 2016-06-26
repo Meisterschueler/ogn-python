@@ -26,25 +26,23 @@ def compute_takeoff_and_landing():
     airport_radius = 0.025  # takeoff / landing must not exceed this radius (degree!) around the airport
     airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
 
-    # calculate the start (and stop) timestamp for the computatio
-    last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.timestamp))
-    begin_computation = last_takeoff_landing_query.one()[0]
-    if begin_computation is None:
-        # if the table is empty
-        last_takeoff_landing_query = app.session.query(func.min(AircraftBeacon.timestamp))
-        begin_computation = last_takeoff_landing_query.one()[0]
-        if begin_computation is None:
-            return 0
-    else:
-        # we get the beacons async. to be safe we delete takeoffs/landings from last 24 hours and recalculate from then
-        begin_computation = begin_computation - timedelta(hours=24)
-        app.session.query(TakeoffLanding) \
-            .filter(TakeoffLanding.timestamp >= begin_computation) \
-            .delete()
-    end_computation = begin_computation + timedelta(days=5)
+    # max AircraftBeacon id offset computed per function call
+    max_id_offset = 500000
 
-    logger.debug("Calculate takeoffs and landings between {} and {}"
-                 .format(begin_computation, end_computation))
+    # get the last AircraftBeacon used for TakeoffLanding and start from there
+    last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.id).label('max_id')) \
+        .subquery()
+
+    last_used_aircraft_beacon_query = app.session.query(AircraftBeacon.id) \
+        .filter(TakeoffLanding.id == last_takeoff_landing_query.c.max_id) \
+        .filter(and_(AircraftBeacon.timestamp == TakeoffLanding.timestamp,
+                     AircraftBeacon.device_id == TakeoffLanding.device_id))
+
+    last_used_aircraft_beacon_id = last_used_aircraft_beacon_query.first()
+    if last_used_aircraft_beacon_id is None:
+        aircraft_beacon_id_start = 0
+    else:
+        aircraft_beacon_id_start = last_used_aircraft_beacon_id[0] + 1
 
     # make a query with current, previous and next position
     sq = app.session.query(
@@ -66,8 +64,7 @@ def compute_takeoff_and_landing():
         AircraftBeacon.device_id,
         func.lag(AircraftBeacon.device_id).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('device_id_prev'),
         func.lead(AircraftBeacon.device_id).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('device_id_next')) \
-        .filter(AircraftBeacon.timestamp >= begin_computation) \
-        .filter(AircraftBeacon.timestamp <= end_computation) \
+        .filter(between(AircraftBeacon.id, aircraft_beacon_id_start, aircraft_beacon_id_start + max_id_offset)) \
         .subquery()
 
     # find possible takeoffs and landings
@@ -115,6 +112,6 @@ def compute_takeoff_and_landing():
     result = app.session.execute(ins)
     counter = result.rowcount
     app.session.commit()
-    logger.debug("New/recalculated takeoffs and landings: {}".format(counter))
+    logger.debug("New takeoffs and landings: {}".format(counter))
 
     return counter
