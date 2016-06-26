@@ -2,7 +2,7 @@ import requests
 import csv
 from io import StringIO
 
-from .model import Device, Airport, Location
+from .model import AddressOrigin, DeviceInfo, Airport, Location
 
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
@@ -21,7 +21,7 @@ nm2m = 1852
 mi2m = 1609.34
 
 
-def get_ddb(csvfile=None):
+def get_ddb(csvfile=None, address_origin=AddressOrigin.unknown):
     if csvfile is None:
         r = requests.get(DDB_URL)
         rows = '\n'.join(i for i in r.text.splitlines() if i[0] != '#')
@@ -31,21 +31,22 @@ def get_ddb(csvfile=None):
 
     data = csv.reader(StringIO(rows), quotechar="'", quoting=csv.QUOTE_ALL)
 
-    devices = list()
+    device_infos = list()
     for row in data:
-        device = Device()
-        device.address_type = row[0]
-        device.address = row[1]
-        device.aircraft = row[2]
-        device.registration = row[3]
-        device.competition = row[4]
-        device.tracked = row[5] == 'Y'
-        device.identified = row[6] == 'Y'
-        device.aircraft_type = int(row[7])
+        device_info = DeviceInfo()
+        device_info.address_type = row[0]
+        device_info.address = row[1]
+        device_info.aircraft = row[2]
+        device_info.registration = row[3]
+        device_info.competition = row[4]
+        device_info.tracked = row[5] == 'Y'
+        device_info.identified = row[6] == 'Y'
+        device_info.aircraft_type = int(row[7])
+        device_info.address_origin = address_origin
 
-        devices.append(device)
+        device_infos.append(device_info)
 
-    return devices
+    return device_infos
 
 
 def get_trackable(ddb):

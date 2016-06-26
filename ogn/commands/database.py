@@ -1,7 +1,7 @@
 from ogn.commands.dbutils import engine, session
 from ogn.model import Base, AddressOrigin
 from ogn.utils import get_ddb, get_airports
-from ogn.collect.database import update_devices
+from ogn.collect.database import update_device_infos
 
 from manager import Manager
 manager = Manager()
@@ -50,7 +50,9 @@ def import_ddb():
     """Import registered devices from the DDB."""
 
     print("Import registered devices fom the DDB...")
-    counter = update_devices(session, AddressOrigin.ogn_ddb, get_ddb())
+    address_origin = AddressOrigin.ogn_ddb
+    counter = update_device_infos(session, address_origin,
+                                  get_ddb(address_origin=address_origin))
     print("Imported %i devices." % counter)
 
 
@@ -60,8 +62,9 @@ def import_file(path='tests/custom_ddb.txt'):
     # (flushes previously manually imported entries)
 
     print("Import registered devices from '{}'...".format(path))
-    counter = update_devices(session, AddressOrigin.user_defined,
-                             get_ddb(path))
+    address_origin = AddressOrigin.user_defined
+    counter = update_device_infos(session, address_origin,
+                                  get_ddb(csvfile=path, address_origin=address_origin))
     print("Imported %i devices." % counter)
 
 

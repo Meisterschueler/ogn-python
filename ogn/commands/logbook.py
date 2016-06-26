@@ -7,7 +7,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.sql.expression import true, false, label
 from sqlalchemy.orm import aliased
 
-from ogn.model import Device, TakeoffLanding, Airport
+from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport
 
 from ogn.commands.dbutils import session
 from ogn.collect.logbook import compute_takeoff_and_landing
@@ -25,7 +25,7 @@ def compute():
     print("New/recalculated takeoffs/landings: {}".format(counter))
 
 
-@manager.arg('date', help='date (format: yyyy-mm-dd')
+@manager.arg('date', help='date (format: yyyy-mm-dd)')
 @manager.arg('utc_delta_hours', help='delta hours to utc (for local time logs)')
 @manager.command
 def show(airport_name, utc_delta_hours=0, date=None):
@@ -170,6 +170,14 @@ def show(airport_name, utc_delta_hours=0, date=None):
         .subquery()
 
     # get aircraft and airport informations and sort all entries by the reference time
+    sq2 = session.query(DeviceInfo.address, func.max(DeviceInfo.address_origin).label('address_origin')) \
+        .group_by(DeviceInfo.address) \
+        .subquery()
+
+    sq3 = session.query(DeviceInfo.address, DeviceInfo.registration, DeviceInfo.aircraft) \
+        .filter(and_(DeviceInfo.address == sq2.c.address, DeviceInfo.address_origin == sq2.c.address_origin)) \
+        .subquery()
+
     takeoff_airport = aliased(Airport, name='takeoff_airport')
     landing_airport = aliased(Airport, name='landing_airport')
     logbook_query = session.query(union_query.c.reftime,
@@ -180,12 +188,16 @@ def show(airport_name, utc_delta_hours=0, date=None):
                                   union_query.c.landing_track,
                                   landing_airport,
                                   union_query.c.duration,
-                                  Device) \
-        .outerjoin(Device, union_query.c.device_id == Device.id) \
+                                  Device,
+                                  sq3.c.registration,
+                                  sq3.c.aircraft) \
         .outerjoin(takeoff_airport, union_query.c.takeoff_airport_id == takeoff_airport.id) \
         .outerjoin(landing_airport, union_query.c.landing_airport_id == landing_airport.id) \
+        .outerjoin(Device, union_query.c.device_id == Device.id) \
+        .outerjoin(sq3, sq3.c.address == Device.address) \
         .order_by(union_query.c.reftime)
 
+    # ... and finally print out the logbook
     print('--- Logbook ({}) ---'.format(airport_name))
 
     def none_datetime_replacer(datetime_object):
@@ -197,11 +209,11 @@ def show(airport_name, utc_delta_hours=0, date=None):
     def none_timedelta_replacer(timedelta_object):
         return '--:--:--' if timedelta_object is None else timedelta_object
 
-    def none_registration_replacer(device_object):
-        return '[' + device_object.address + ']' if device_object.registration is None else device_object.registration
+    def none_registration_replacer(device_object, registration_object):
+        return '[' + device_object.address + ']' if registration_object is None else registration_object
 
-    def none_aircraft_replacer(device_object):
-        return '(unknown)' if device_object.aircraft is None else device_object.aircraft
+    def none_aircraft_replacer(device_object, aircraft_object):
+        return '(unknown)' if aircraft_object is None else aircraft_object
 
     def airport_marker(takeoff_airport_object, landing_airport_object):
         if takeoff_airport_object is not None and takeoff_airport_object.name is not airport.name:
@@ -211,7 +223,7 @@ def show(airport_name, utc_delta_hours=0, date=None):
         else:
             return ('')
 
-    for [reftime, takeoff, takeoff_track, takeoff_airport, landing, landing_track, landing_airport, duration, device] in logbook_query.all():
+    for [reftime, takeoff, takeoff_track, takeoff_airport, landing, landing_track, landing_airport, duration, device, registration, aircraft] in logbook_query.all():
         print('%10s   %8s (%2s)   %8s (%2s)   %8s   %8s   %17s %20s' % (
             reftime.date(),
             none_datetime_replacer(takeoff),
@@ -219,6 +231,6 @@ def show(airport_name, utc_delta_hours=0, date=None):
             none_datetime_replacer(landing),
             none_track_replacer(landing_track),
             none_timedelta_replacer(duration),
-            none_registration_replacer(device),
-            none_aircraft_replacer(device),
+            none_registration_replacer(device, registration),
+            none_aircraft_replacer(device, aircraft),
             airport_marker(takeoff_airport, landing_airport)))

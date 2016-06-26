@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Unicode, Boolean, SmallInteger
+from sqlalchemy import Column, Integer, String, Float, Boolean, SmallInteger
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -8,32 +8,21 @@ class Device(Base):
     __tablename__ = 'device'
 
     id = Column(Integer, primary_key=True)
-    address_type = None
     address = Column(String(6), index=True)
-    name = Column(Unicode)
-    airport = Column(String)
-    aircraft = Column(String)
-    registration = Column(String(7), index=True)
-    competition = Column(String(3))
-    frequency = Column(String)
-    tracked = Column(Boolean)
-    identified = Column(Boolean)
     aircraft_type = Column(SmallInteger, index=True)
-
-    address_origin = Column(SmallInteger)
+    stealth = Column(Boolean)
+    software_version = Column(Float)
+    hardware_version = Column(SmallInteger)
+    real_address = Column(String(6))
 
     # Relations
     aircraft_beacons = relationship('AircraftBeacon')
 
     def __repr__(self):
-        return "<Device: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
-            self.address_type,
+        return "<Device: %s,%s,%s,%s,%s,%s>" % (
             self.address,
-            self.name,
-            self.airport,
-            self.aircraft,
-            self.registration,
-            self.competition,
-            self.frequency,
-            self.tracked,
-            self.identified)
+            self.aircraft_type,
+            self.stealth,
+            self.software_version,
+            self.hardware_version,
+            self.real_address)
