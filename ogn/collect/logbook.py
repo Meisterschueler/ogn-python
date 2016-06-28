@@ -40,12 +40,17 @@ def compute_takeoff_and_landing():
 
     last_used_aircraft_beacon_id = last_used_aircraft_beacon_query.first()
     if last_used_aircraft_beacon_id is None:
-        aircraft_beacon_id_start = 0
+        min_aircraft_beacon_id = app.session.query(func.min(AircraftBeacon.id)).first()
+        if min_aircraft_beacon_id is None:
+            return 0
+        else:
+            aircraft_beacon_id_start = min_aircraft_beacon_id[0]
     else:
         aircraft_beacon_id_start = last_used_aircraft_beacon_id[0] + 1
 
     # make a query with current, previous and next position
     sq = app.session.query(
+        AircraftBeacon.id,
         AircraftBeacon.timestamp,
         func.lag(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('timestamp_prev'),
         func.lead(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('timestamp_next'),
@@ -69,6 +74,7 @@ def compute_takeoff_and_landing():
 
     # find possible takeoffs and landings
     sq2 = app.session.query(
+        sq.c.id,
         sq.c.timestamp,
         case([(sq.c.ground_speed > takeoff_speed, sq.c.location_wkt_prev),  # on takeoff we take the location from the previous fix because it is nearer to the airport
               (sq.c.ground_speed < landing_speed, sq.c.location)]).label('location'),
@@ -100,7 +106,8 @@ def compute_takeoff_and_landing():
         Airport.id) \
         .filter(and_(func.ST_DFullyWithin(sq2.c.location, Airport.location_wkt, airport_radius),
                      between(sq2.c.altitude, Airport.altitude - airport_delta, Airport.altitude + airport_delta))) \
-        .filter(between(Airport.style, 2, 5))
+        .filter(between(Airport.style, 2, 5)) \
+        .order_by(sq2.c.id)
 
     # ... and save them
     ins = insert(TakeoffLanding).from_select((TakeoffLanding.timestamp,
