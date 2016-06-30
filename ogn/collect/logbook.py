@@ -12,24 +12,8 @@ from ogn.model import AircraftBeacon, TakeoffLanding, Airport, Logbook
 logger = get_task_logger(__name__)
 
 
-@app.task
-def compute_takeoff_and_landing():
-    logger.info("Compute takeoffs and landings.")
-
-    # takeoff / landing detection is based on 3 consecutive points
-    takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
-    landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
-    duration = 100      # the points must not exceed this duration
-    radius = 0.05       # the points must not exceed this radius (degree!) around the 2nd point
-
-    # takeoff / landing has to be near an airport
-    airport_radius = 0.025  # takeoff / landing must not exceed this radius (degree!) around the airport
-    airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
-
-    # max AircraftBeacon id offset computed per function call
-    max_id_offset = 500000
-
-    # get the last AircraftBeacon used for TakeoffLanding and start from there
+def get_aircraft_beacon_start_id():
+    # returns the last AircraftBeacon used for TakeoffLanding
     last_takeoff_landing_query = app.session.query(func.max(TakeoffLanding.id).label('max_id')) \
         .subquery()
 
@@ -44,9 +28,30 @@ def compute_takeoff_and_landing():
         if min_aircraft_beacon_id is None:
             return 0
         else:
-            aircraft_beacon_id_start = min_aircraft_beacon_id[0]
+            start_id = min_aircraft_beacon_id[0]
     else:
-        aircraft_beacon_id_start = last_used_aircraft_beacon_id[0] + 1
+        start_id = last_used_aircraft_beacon_id[0] + 1
+
+    return start_id
+
+
+@app.task
+def compute_takeoff_and_landing():
+    logger.info("Compute takeoffs and landings.")
+
+    # takeoff / landing detection is based on 3 consecutive points
+    takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
+    landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
+    duration = 100      # the points must not exceed this duration
+    radius = 0.05       # the points must not exceed this radius (degree!) around the 2nd point
+
+    # takeoff / landing has to be near an airport
+    airport_radius = 0.025  # takeoff / landing must not exceed this radius (degree!) around the airport
+    airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
+
+    # AircraftBeacon start id and max id offset
+    aircraft_beacon_start_id = get_aircraft_beacon_start_id()
+    max_id_offset = 500000
 
     # 'wo' is the window order for the sql window function
     wo = and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)
@@ -72,7 +77,7 @@ def compute_takeoff_and_landing():
         AircraftBeacon.device_id,
         func.lag(AircraftBeacon.device_id).over(order_by=wo).label('device_id_prev'),
         func.lead(AircraftBeacon.device_id).over(order_by=wo).label('device_id_next')) \
-        .filter(between(AircraftBeacon.id, aircraft_beacon_id_start, aircraft_beacon_id_start + max_id_offset)) \
+        .filter(between(AircraftBeacon.id, aircraft_beacon_start_id, aircraft_beacon_start_id + max_id_offset)) \
         .subquery()
 
     # find possible takeoffs and landings
@@ -141,31 +146,21 @@ def compute_logbook():
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = app.session.query(
-            TakeoffLanding.device_id,
-            func.lag(TakeoffLanding.device_id)
-                .over(order_by=wo).label('device_id_prev'),
-            func.lead(TakeoffLanding.device_id)
-                .over(order_by=wo).label('device_id_next'),
-            TakeoffLanding.timestamp,
-            func.lag(TakeoffLanding.timestamp)
-                .over(order_by=wo).label('timestamp_prev'),
-            func.lead(TakeoffLanding.timestamp)
-                .over(order_by=wo).label('timestamp_next'),
-            TakeoffLanding.track,
-            func.lag(TakeoffLanding.track)
-                .over(order_by=wo).label('track_prev'),
-            func.lead(TakeoffLanding.track)
-                .over(order_by=wo).label('track_next'),
-            TakeoffLanding.is_takeoff,
-            func.lag(TakeoffLanding.is_takeoff)
-                .over(order_by=wo).label('is_takeoff_prev'),
-            func.lead(TakeoffLanding.is_takeoff)
-                .over(order_by=wo).label('is_takeoff_next'),
-            TakeoffLanding.airport_id,
-            func.lag(TakeoffLanding.airport_id)
-                .over(order_by=wo).label('airport_id_prev'),
-            func.lead(TakeoffLanding.airport_id)
-                .over(order_by=wo).label('airport_id_next')) \
+        TakeoffLanding.device_id,
+        func.lag(TakeoffLanding.device_id).over(order_by=wo).label('device_id_prev'),
+        func.lead(TakeoffLanding.device_id).over(order_by=wo).label('device_id_next'),
+        TakeoffLanding.timestamp,
+        func.lag(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_prev'),
+        func.lead(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_next'),
+        TakeoffLanding.track,
+        func.lag(TakeoffLanding.track).over(order_by=wo).label('track_prev'),
+        func.lead(TakeoffLanding.track).over(order_by=wo).label('track_next'),
+        TakeoffLanding.is_takeoff,
+        func.lag(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_prev'),
+        func.lead(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_next'),
+        TakeoffLanding.airport_id,
+        func.lag(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_prev'),
+        func.lead(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_next')) \
         .filter(*or_args) \
         .subquery()
 
