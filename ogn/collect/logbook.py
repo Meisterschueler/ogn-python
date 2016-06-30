@@ -264,16 +264,21 @@ def compute_logbook():
 def compute_altitudes():
     logger.info("Compute maximum altitudes.")
 
-    altitude_query = app.session.query(Logbook.id, func.max(AircraftBeacon.altitude).label('max_altitude')) \
+    logbook_query = app.session.query(Logbook.id, Logbook.device_id, Logbook.takeoff_timestamp, Logbook.landing_timestamp) \
         .filter(and_(Logbook.takeoff_airport_id != null(),
                      Logbook.landing_airport_id != null())) \
-        .filter(and_(between(AircraftBeacon.timestamp, Logbook.takeoff_timestamp, Logbook.landing_timestamp))) \
-        .group_by(Logbook.id) \
+        .limit(100) \
+        .subquery()
+
+    max_altitude_query = app.session.query(logbook_query.c.id, func.max(AircraftBeacon.altitude).label('max_altitude')) \
+        .filter(and_(between(AircraftBeacon.timestamp, logbook_query.c.takeoff_timestamp, logbook_query.c.landing_timestamp),
+                     AircraftBeacon.device_id == logbook_query.c.device_id)) \
+        .group_by(logbook_query.c.id) \
         .subquery()
 
     upd = update(Logbook) \
-        .values({'max_altitude': altitude_query.c.max_altitude}) \
-        .where(Logbook.id == altitude_query.c.id)
+        .values({'max_altitude': max_altitude_query.c.max_altitude}) \
+        .where(Logbook.id == max_altitude_query.c.id)
 
     result = app.session.execute(upd)
     counter = result.rowcount
