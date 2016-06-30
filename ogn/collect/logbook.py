@@ -168,8 +168,8 @@ def compute_logbook():
     complete_flight_query = app.session.query(
             sq.c.timestamp.label('reftime'),
             sq.c.device_id.label('device_id'),
-            sq.c.timestamp.label('takeoff'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
-            sq.c.timestamp_next.label('landing'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id'),
+            sq.c.timestamp.label('takeoff_timestamp'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
+            sq.c.timestamp_next.label('landing_timestamp'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id'),
             label('duration', sq.c.timestamp_next - sq.c.timestamp)) \
         .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
         .filter(sq.c.device_id == sq.c.device_id_next) \
@@ -179,8 +179,8 @@ def compute_logbook():
     split_start_query = app.session.query(
             sq.c.timestamp.label('reftime'),
             sq.c.device_id.label('device_id'),
-            sq.c.timestamp.label('takeoff'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
-            null().label('landing'), null().label('landing_track'), null().label('landing_airport_id'),
+            sq.c.timestamp.label('takeoff_timestamp'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
+            null().label('landing_timestamp'), null().label('landing_track'), null().label('landing_airport_id'),
             null().label('duration')) \
         .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
         .filter(sq.c.device_id == sq.c.device_id_next) \
@@ -189,8 +189,8 @@ def compute_logbook():
     split_landing_query = app.session.query(
             sq.c.timestamp_next.label('reftime'),
             sq.c.device_id.label('device_id'),
-            null().label('takeoff'), null().label('takeoff_track'), null().label('takeoff_airport_id'),
-            sq.c.timestamp_next.label('landing'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id'),
+            null().label('takeoff_timestamp'), null().label('takeoff_track'), null().label('takeoff_airport_id'),
+            sq.c.timestamp_next.label('landing_timestamp'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id'),
             null().label('duration')) \
         .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
         .filter(sq.c.device_id == sq.c.device_id_next) \
@@ -200,8 +200,8 @@ def compute_logbook():
     only_landings_query = app.session.query(
             sq.c.timestamp.label('reftime'),
             sq.c.device_id.label('device_id'),
-            null().label('takeoff'), null().label('takeoff_track'), null().label('takeoff_airport_id'),
-            sq.c.timestamp.label('landing'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id'),
+            null().label('takeoff_timestamp'), null().label('takeoff_track'), null().label('takeoff_airport_id'),
+            sq.c.timestamp.label('landing_timestamp'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id'),
             null().label('duration')) \
         .filter(sq.c.is_takeoff == false()) \
         .filter(or_(sq.c.device_id != sq.c.device_id_prev,
@@ -211,12 +211,36 @@ def compute_logbook():
     only_starts_query = app.session.query(
             sq.c.timestamp.label('reftime'),
             sq.c.device_id.label('device_id'),
-            sq.c.timestamp.label('takeoff'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
-            null().label('landing'), null().label('landing_track'), null().label('landing_airport_id'),
+            sq.c.timestamp.label('takeoff_timestamp'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
+            null().label('landing_timestamp'), null().label('landing_track'), null().label('landing_airport_id'),
             null().label('duration')) \
         .filter(sq.c.is_takeoff == true()) \
         .filter(or_(sq.c.device_id != sq.c.device_id_next,
                     sq.c.is_takeoff_next == true()))
+
+    complete_flights = complete_flight_query.subquery()
+
+    upd = update(Logbook) \
+        .where(and_(Logbook.reftime == complete_flights.c.reftime,
+                    Logbook.device_id == complete_flights.c.device_id,
+                    or_(Logbook.takeoff_airport_id == complete_flights.c.takeoff_airport_id,
+                        and_(Logbook.takeoff_airport_id == null(),
+                             complete_flights.c.takeoff_airport_id == null())),
+                    or_(Logbook.landing_airport_id == complete_flights.c.landing_airport_id,
+                        and_(Logbook.landing_airport_id == null(),
+                             complete_flights.c.landing_airport_id == null())))) \
+        .values({"takeoff_timestamp": complete_flights.c.takeoff_timestamp,
+                 "takeoff_track": complete_flights.c.takeoff_track,
+                 "takeoff_airport_id": complete_flights.c.takeoff_airport_id,
+                 "landing_timestamp": complete_flights.c.landing_timestamp,
+                 "landing_track": complete_flights.c.landing_track,
+                 "landing_airport_id": complete_flights.c.landing_airport_id,
+                 "duration": complete_flights.c.duration})
+
+    result = app.session.execute(upd)
+    counter = result.rowcount
+    app.session.commit()
+    logger.debug("Updated logbook entries: {}".format(counter))
 
     # unite all
     union_query = complete_flight_query.union(
