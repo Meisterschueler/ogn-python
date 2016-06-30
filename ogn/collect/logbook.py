@@ -48,27 +48,30 @@ def compute_takeoff_and_landing():
     else:
         aircraft_beacon_id_start = last_used_aircraft_beacon_id[0] + 1
 
+    # 'wo' is the window order for the sql window function
+    wo = and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)
+
     # make a query with current, previous and next position
     sq = app.session.query(
         AircraftBeacon.id,
         AircraftBeacon.timestamp,
-        func.lag(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('timestamp_prev'),
-        func.lead(AircraftBeacon.timestamp).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('timestamp_next'),
+        func.lag(AircraftBeacon.timestamp).over(order_by=wo).label('timestamp_prev'),
+        func.lead(AircraftBeacon.timestamp).over(order_by=wo).label('timestamp_next'),
         AircraftBeacon.location_wkt,
-        func.lag(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('location_wkt_prev'),
-        func.lead(AircraftBeacon.location_wkt).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('location_wkt_next'),
+        func.lag(AircraftBeacon.location_wkt).over(order_by=wo).label('location_wkt_prev'),
+        func.lead(AircraftBeacon.location_wkt).over(order_by=wo).label('location_wkt_next'),
         AircraftBeacon.track,
-        func.lag(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('track_prev'),
-        func.lead(AircraftBeacon.track).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('track_next'),
+        func.lag(AircraftBeacon.track).over(order_by=wo).label('track_prev'),
+        func.lead(AircraftBeacon.track).over(order_by=wo).label('track_next'),
         AircraftBeacon.ground_speed,
-        func.lag(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('ground_speed_prev'),
-        func.lead(AircraftBeacon.ground_speed).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('ground_speed_next'),
+        func.lag(AircraftBeacon.ground_speed).over(order_by=wo).label('ground_speed_prev'),
+        func.lead(AircraftBeacon.ground_speed).over(order_by=wo).label('ground_speed_next'),
         AircraftBeacon.altitude,
-        func.lag(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('altitude_prev'),
-        func.lead(AircraftBeacon.altitude).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('altitude_next'),
+        func.lag(AircraftBeacon.altitude).over(order_by=wo).label('altitude_prev'),
+        func.lead(AircraftBeacon.altitude).over(order_by=wo).label('altitude_next'),
         AircraftBeacon.device_id,
-        func.lag(AircraftBeacon.device_id).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('device_id_prev'),
-        func.lead(AircraftBeacon.device_id).over(order_by=and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)).label('device_id_next')) \
+        func.lag(AircraftBeacon.device_id).over(order_by=wo).label('device_id_prev'),
+        func.lead(AircraftBeacon.device_id).over(order_by=wo).label('device_id_next')) \
         .filter(between(AircraftBeacon.id, aircraft_beacon_id_start, aircraft_beacon_id_start + max_id_offset)) \
         .subquery()
 
