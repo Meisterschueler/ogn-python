@@ -9,7 +9,7 @@ from sqlalchemy.orm import aliased
 from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
 
 from ogn.commands.dbutils import session
-from ogn.collect.logbook import compute_takeoff_and_landing, compute_logbook, compute_altitudes
+from ogn.collect.logbook import compute_takeoff_and_landing, compute_logbook_entries
 
 from manager import Manager
 manager = Manager()
@@ -28,18 +28,9 @@ def compute_takeoff_landing():
 def compute_logbook():
     """Compute logbook."""
     print("Compute logbook...")
-    result = compute_logbook.delay()
+    result = compute_logbook_entries.delay()
     counter = result.get()
     print("New logbook entries: {}".format(counter))
-
-
-@manager.command
-def compute_altitudes():
-    """Compute maximum altitudes."""
-    print("Compute maximum altitudes...")
-    result = compute_altitudes.delay()
-    counter = result.get()
-    print("Updated logbook entries: {}".format(counter))
 
 
 @manager.arg('date', help='date (format: yyyy-mm-dd)')

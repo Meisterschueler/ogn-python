@@ -133,7 +133,7 @@ def compute_takeoff_and_landing():
 
 
 @app.task
-def compute_logbook():
+def compute_logbook_entries():
     logger.info("Compute logbook.")
 
     or_args = [between(TakeoffLanding.timestamp, '2016-06-28 00:00:00', '2016-06-28 23:59:59')]
@@ -146,21 +146,21 @@ def compute_logbook():
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = app.session.query(
-        TakeoffLanding.device_id,
-        func.lag(TakeoffLanding.device_id).over(order_by=wo).label('device_id_prev'),
-        func.lead(TakeoffLanding.device_id).over(order_by=wo).label('device_id_next'),
-        TakeoffLanding.timestamp,
-        func.lag(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_prev'),
-        func.lead(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_next'),
-        TakeoffLanding.track,
-        func.lag(TakeoffLanding.track).over(order_by=wo).label('track_prev'),
-        func.lead(TakeoffLanding.track).over(order_by=wo).label('track_next'),
-        TakeoffLanding.is_takeoff,
-        func.lag(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_prev'),
-        func.lead(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_next'),
-        TakeoffLanding.airport_id,
-        func.lag(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_prev'),
-        func.lead(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_next')) \
+            TakeoffLanding.device_id,
+            func.lag(TakeoffLanding.device_id).over(order_by=wo).label('device_id_prev'),
+            func.lead(TakeoffLanding.device_id).over(order_by=wo).label('device_id_next'),
+            TakeoffLanding.timestamp,
+            func.lag(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_prev'),
+            func.lead(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_next'),
+            TakeoffLanding.track,
+            func.lag(TakeoffLanding.track).over(order_by=wo).label('track_prev'),
+            func.lead(TakeoffLanding.track).over(order_by=wo).label('track_next'),
+            TakeoffLanding.is_takeoff,
+            func.lag(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_prev'),
+            func.lead(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_next'),
+            TakeoffLanding.airport_id,
+            func.lag(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_prev'),
+            func.lead(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_next')) \
         .filter(*or_args) \
         .subquery()
 
@@ -218,6 +218,7 @@ def compute_logbook():
         .filter(or_(sq.c.device_id != sq.c.device_id_next,
                     sq.c.is_takeoff_next == true()))
 
+    # update 'incomplete' logbook entries with 'complete flights'
     complete_flights = complete_flight_query.subquery()
 
     upd = update(Logbook) \
@@ -242,7 +243,7 @@ def compute_logbook():
     app.session.commit()
     logger.debug("Updated logbook entries: {}".format(counter))
 
-    # unite all
+    # unite all computated flights ('incomplete' and 'complete')
     union_query = complete_flight_query.union(
             split_start_query,
             split_landing_query,
@@ -278,33 +279,5 @@ def compute_logbook():
     counter = result.rowcount
     app.session.commit()
     logger.debug("New logbook entries: {}".format(counter))
-
-    return counter
-
-
-@app.task
-def compute_altitudes():
-    logger.info("Compute maximum altitudes.")
-
-    logbook_query = app.session.query(Logbook.id, Logbook.device_id, Logbook.takeoff_timestamp, Logbook.landing_timestamp) \
-        .filter(and_(Logbook.takeoff_airport_id != null(),
-                     Logbook.landing_airport_id != null())) \
-        .limit(100) \
-        .subquery()
-
-    max_altitude_query = app.session.query(logbook_query.c.id, func.max(AircraftBeacon.altitude).label('max_altitude')) \
-        .filter(and_(between(AircraftBeacon.timestamp, logbook_query.c.takeoff_timestamp, logbook_query.c.landing_timestamp),
-                     AircraftBeacon.device_id == logbook_query.c.device_id)) \
-        .group_by(logbook_query.c.id) \
-        .subquery()
-
-    upd = update(Logbook) \
-        .values({'max_altitude': max_altitude_query.c.max_altitude}) \
-        .where(Logbook.id == max_altitude_query.c.id)
-
-    result = app.session.execute(upd)
-    counter = result.rowcount
-    app.session.commit()
-    logger.debug("Updated logbook entries: {}".format(counter))
 
     return counter
