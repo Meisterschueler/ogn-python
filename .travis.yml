@@ -1,5 +1,8 @@
 language: python
 
+env:
+  - OGN_CONFIG_MODULE='config.test'
+
 python:
   - 3.4
 
