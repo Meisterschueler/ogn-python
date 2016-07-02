@@ -9,7 +9,8 @@ from sqlalchemy.orm import aliased
 from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
 
 from ogn.commands.dbutils import session
-from ogn.collect.logbook import compute_takeoff_and_landing, compute_logbook_entries
+from ogn.collect.takeoff_landing import compute_takeoff_and_landing
+from ogn.collect.logbook import compute_logbook_entries
 
 from manager import Manager
 manager = Manager()
