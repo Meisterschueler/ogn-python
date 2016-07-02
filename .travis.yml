@@ -3,8 +3,13 @@ language: python
 python:
   - 3.4
 
+services:
+  - postgresql
+
 before_script:
   - flake8 tests ogn
+  - psql -c 'CREATE DATABASE ogn_test;' -U postgres
+  - psql -c 'CREATE EXTENSION postgis;' -U postgres -d travis_postgis
 
 script:
   - nosetests --with-coverage --cover-package=ogn
