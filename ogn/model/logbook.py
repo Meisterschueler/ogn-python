@@ -2,16 +2,10 @@ from sqlalchemy import Integer, DateTime, Interval, Column, ForeignKey
 from sqlalchemy.orm import relationship
 
 from .base import Base
-from sqlalchemy.sql.schema import UniqueConstraint
 
 
 class Logbook(Base):
     __tablename__ = 'logbook'
-    __table_args__ = (UniqueConstraint('reftime',
-                                       'takeoff_airport_id',
-                                       'landing_airport_id',
-                                       'device_id'),
-                      )
 
     id = Column(Integer, primary_key=True)
 
