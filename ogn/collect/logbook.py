@@ -26,7 +26,7 @@ def get_aircraft_beacon_start_id():
     if last_used_aircraft_beacon_id is None:
         min_aircraft_beacon_id = app.session.query(func.min(AircraftBeacon.id)).first()
         if min_aircraft_beacon_id is None:
-            return 0
+            start_id = 0
         else:
             start_id = min_aircraft_beacon_id[0]
     else:
@@ -201,11 +201,12 @@ def compute_logbook_entries():
             sq.c.timestamp.label('reftime'),
             sq.c.device_id.label('device_id'),
             null().label('takeoff_timestamp'), null().label('takeoff_track'), null().label('takeoff_airport_id'),
-            sq.c.timestamp.label('landing_timestamp'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id'),
+            sq.c.timestamp.label('landing_timestamp'), sq.c.track.label('landing_track'), sq.c.airport_id.label('landing_airport_id'),
             null().label('duration')) \
         .filter(sq.c.is_takeoff == false()) \
         .filter(or_(sq.c.device_id != sq.c.device_id_prev,
-                    sq.c.is_takeoff_prev == false()))
+                    sq.c.is_takeoff_prev == false(),
+                    sq.c.is_takeoff_prev == null()))
 
     # find starts without landing
     only_starts_query = app.session.query(
@@ -216,20 +217,20 @@ def compute_logbook_entries():
             null().label('duration')) \
         .filter(sq.c.is_takeoff == true()) \
         .filter(or_(sq.c.device_id != sq.c.device_id_next,
-                    sq.c.is_takeoff_next == true()))
+                    sq.c.is_takeoff_next == true(),
+                    sq.c.is_takeoff_next == null()))
 
     # update 'incomplete' logbook entries with 'complete flights'
     complete_flights = complete_flight_query.subquery()
 
     upd = update(Logbook) \
-        .where(and_(Logbook.reftime == complete_flights.c.reftime,
-                    Logbook.device_id == complete_flights.c.device_id,
-                    or_(Logbook.takeoff_airport_id == complete_flights.c.takeoff_airport_id,
-                        and_(Logbook.takeoff_airport_id == null(),
-                             complete_flights.c.takeoff_airport_id == null())),
-                    or_(Logbook.landing_airport_id == complete_flights.c.landing_airport_id,
-                        and_(Logbook.landing_airport_id == null(),
-                             complete_flights.c.landing_airport_id == null())))) \
+        .where(and_(Logbook.device_id == complete_flights.c.device_id,
+                    or_(and_(Logbook.takeoff_airport_id == complete_flights.c.takeoff_airport_id,
+                             Logbook.takeoff_timestamp == complete_flights.c.takeoff_timestamp),
+                        Logbook.takeoff_airport_id == null()),
+                    or_(and_(Logbook.landing_airport_id == complete_flights.c.landing_airport_id,
+                             Logbook.landing_timestamp == complete_flights.c.landing_timestamp),
+                        Logbook.landing_airport_id == null()))) \
         .values({"takeoff_timestamp": complete_flights.c.takeoff_timestamp,
                  "takeoff_track": complete_flights.c.takeoff_track,
                  "takeoff_airport_id": complete_flights.c.takeoff_airport_id,
