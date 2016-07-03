@@ -52,9 +52,9 @@ def compute_takeoff_and_landing(session=None):
     airport_radius = 0.025  # takeoff / landing must not exceed this radius (degree!) around the airport
     airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
 
-    # AircraftBeacon start id and max id offset
+    # AircraftBeacon start id and end id
     aircraft_beacon_start_id = get_aircraft_beacon_start_id(session)
-    max_id_offset = 500000
+    aircraft_beacon_end_id = aircraft_beacon_start_id + 500000
 
     # 'wo' is the window order for the sql window function
     wo = and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)
@@ -80,7 +80,7 @@ def compute_takeoff_and_landing(session=None):
         AircraftBeacon.device_id,
         func.lag(AircraftBeacon.device_id).over(order_by=wo).label('device_id_prev'),
         func.lead(AircraftBeacon.device_id).over(order_by=wo).label('device_id_next')) \
-        .filter(between(AircraftBeacon.id, aircraft_beacon_start_id, aircraft_beacon_start_id + max_id_offset)) \
+        .filter(between(AircraftBeacon.id, aircraft_beacon_start_id, aircraft_beacon_end_id)) \
         .subquery()
 
     # find possible takeoffs and landings
