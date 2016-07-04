@@ -107,23 +107,24 @@ def compute_logbook_entries(session=None):
     upd = update(Logbook) \
         .where(and_(Logbook.device_id == complete_flights.c.device_id,
                     or_(and_(Logbook.takeoff_airport_id == complete_flights.c.takeoff_airport_id,
-                             Logbook.takeoff_timestamp == complete_flights.c.takeoff_timestamp),
-                        Logbook.takeoff_airport_id == null()),
-                    or_(and_(Logbook.landing_airport_id == complete_flights.c.landing_airport_id,
-                             Logbook.landing_timestamp == complete_flights.c.landing_timestamp),
-                        Logbook.landing_airport_id == null()))) \
+                             Logbook.takeoff_timestamp == complete_flights.c.takeoff_timestamp,
+                             Logbook.landing_airport_id == null()),
+                        and_(Logbook.takeoff_airport_id == null(),
+                             Logbook.landing_airport_id == complete_flights.c.landing_airport_id,
+                             Logbook.landing_timestamp == complete_flights.c.landing_timestamp)))) \
         .values({"takeoff_timestamp": complete_flights.c.takeoff_timestamp,
                  "takeoff_track": complete_flights.c.takeoff_track,
                  "takeoff_airport_id": complete_flights.c.takeoff_airport_id,
                  "landing_timestamp": complete_flights.c.landing_timestamp,
                  "landing_track": complete_flights.c.landing_track,
                  "landing_airport_id": complete_flights.c.landing_airport_id,
-                 "duration": complete_flights.c.duration})
+                 "duration": complete_flights.c.duration,
+                 "max_altitude": 1})
 
     result = session.execute(upd)
-    counter = result.rowcount
+    update_counter = result.rowcount
     session.commit()
-    logger.debug("Updated logbook entries: {}".format(counter))
+    logger.debug("Updated logbook entries: {}".format(update_counter))
 
     # unite all computated flights ('incomplete' and 'complete')
     union_query = complete_flight_query.union(
@@ -136,12 +137,13 @@ def compute_logbook_entries(session=None):
     # consider only if not already stored
     new_logbook_entries = session.query(union_query) \
         .filter(~exists().where(
-            and_(Logbook.reftime == union_query.c.reftime,
-                 Logbook.device_id == union_query.c.device_id,
-                 or_(Logbook.takeoff_airport_id == union_query.c.takeoff_airport_id,
+            and_(Logbook.device_id == union_query.c.device_id,
+                 or_(and_(Logbook.takeoff_airport_id == union_query.c.takeoff_airport_id,
+                          Logbook.takeoff_timestamp == union_query.c.takeoff_timestamp),
                      and_(Logbook.takeoff_airport_id == null(),
                           union_query.c.takeoff_airport_id == null())),
-                 or_(Logbook.landing_airport_id == union_query.c.landing_airport_id,
+                 or_(and_(Logbook.landing_airport_id == union_query.c.landing_airport_id,
+                          Logbook.landing_timestamp == union_query.c.landing_timestamp),
                      and_(Logbook.landing_airport_id == null(),
                           union_query.c.landing_airport_id == null())))))
 
@@ -158,8 +160,8 @@ def compute_logbook_entries(session=None):
                                       new_logbook_entries)
 
     result = session.execute(ins)
-    counter = result.rowcount
+    insert_counter = result.rowcount
     session.commit()
-    logger.debug("New logbook entries: {}".format(counter))
+    logger.debug("New logbook entries: {}".format(insert_counter))
 
-    return counter
+    return "{}/{}".format(update_counter, insert_counter)
