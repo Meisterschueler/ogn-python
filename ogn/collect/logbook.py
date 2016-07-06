@@ -101,32 +101,7 @@ def compute_logbook_entries(session=None):
                     sq.c.is_takeoff_next == true(),
                     sq.c.is_takeoff_next == null()))
 
-    # update 'incomplete' logbook entries with 'complete flights'
-    complete_flights = complete_flight_query.subquery()
-
-    upd = update(Logbook) \
-        .where(and_(Logbook.device_id == complete_flights.c.device_id,
-                    or_(and_(Logbook.takeoff_airport_id == complete_flights.c.takeoff_airport_id,
-                             Logbook.takeoff_timestamp == complete_flights.c.takeoff_timestamp,
-                             Logbook.landing_airport_id == null()),
-                        and_(Logbook.takeoff_airport_id == null(),
-                             Logbook.landing_airport_id == complete_flights.c.landing_airport_id,
-                             Logbook.landing_timestamp == complete_flights.c.landing_timestamp)))) \
-        .values({"takeoff_timestamp": complete_flights.c.takeoff_timestamp,
-                 "takeoff_track": complete_flights.c.takeoff_track,
-                 "takeoff_airport_id": complete_flights.c.takeoff_airport_id,
-                 "landing_timestamp": complete_flights.c.landing_timestamp,
-                 "landing_track": complete_flights.c.landing_track,
-                 "landing_airport_id": complete_flights.c.landing_airport_id,
-                 "duration": complete_flights.c.duration,
-                 "max_altitude": 1})
-
-    result = session.execute(upd)
-    update_counter = result.rowcount
-    session.commit()
-    logger.debug("Updated logbook entries: {}".format(update_counter))
-
-    # unite all computated flights ('incomplete' and 'complete')
+    # unite all computated flights
     union_query = complete_flight_query.union(
             split_start_query,
             split_landing_query,
@@ -134,7 +109,31 @@ def compute_logbook_entries(session=None):
             only_starts_query) \
         .subquery()
 
-    # consider only if not already stored
+    # if a logbook entry exist --> update it
+    upd = update(Logbook) \
+        .where(and_(Logbook.device_id == union_query.c.device_id,
+                    union_query.c.takeoff_airport_id != null(),
+                    union_query.c.landing_airport_id != null(),
+                    or_(and_(Logbook.takeoff_airport_id == union_query.c.takeoff_airport_id,
+                             Logbook.takeoff_timestamp == union_query.c.takeoff_timestamp,
+                             Logbook.landing_airport_id == null()),
+                        and_(Logbook.takeoff_airport_id == null(),
+                             Logbook.landing_airport_id == union_query.c.landing_airport_id,
+                             Logbook.landing_timestamp == union_query.c.landing_timestamp)))) \
+        .values({"takeoff_timestamp": union_query.c.takeoff_timestamp,
+                 "takeoff_track": union_query.c.takeoff_track,
+                 "takeoff_airport_id": union_query.c.takeoff_airport_id,
+                 "landing_timestamp": union_query.c.landing_timestamp,
+                 "landing_track": union_query.c.landing_track,
+                 "landing_airport_id": union_query.c.landing_airport_id,
+                 "duration": union_query.c.duration})
+
+    result = session.execute(upd)
+    update_counter = result.rowcount
+    session.commit()
+    logger.debug("Updated logbook entries: {}".format(update_counter))
+
+    # if a logbook entry doesnt exist --> insert it
     new_logbook_entries = session.query(union_query) \
         .filter(~exists().where(
             and_(Logbook.device_id == union_query.c.device_id,
@@ -147,7 +146,6 @@ def compute_logbook_entries(session=None):
                      and_(Logbook.landing_airport_id == null(),
                           union_query.c.landing_airport_id == null())))))
 
-    # ... and save them
     ins = insert(Logbook).from_select((Logbook.reftime,
                                        Logbook.device_id,
                                        Logbook.takeoff_timestamp,

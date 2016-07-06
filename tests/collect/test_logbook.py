@@ -46,6 +46,9 @@ class TestDB(unittest.TestCase):
         entries_changed = compute_logbook_entries(session)
         self.assertEqual(entries_changed, '0/1')
 
+        entries_changed = compute_logbook_entries(session)
+        self.assertEqual(entries_changed, '0/0')
+
     def test_single_landing(self):
         session = self.session
 
@@ -54,6 +57,9 @@ class TestDB(unittest.TestCase):
 
         entries_changed = compute_logbook_entries(session)
         self.assertEqual(entries_changed, '0/1')
+
+        entries_changed = compute_logbook_entries(session)
+        self.assertEqual(entries_changed, '0/0')
 
     def test_different_takeoffs(self):
         session = self.session
@@ -65,6 +71,9 @@ class TestDB(unittest.TestCase):
         entries_changed = compute_logbook_entries(session)
         self.assertEqual(entries_changed, '0/2')
 
+        entries_changed = compute_logbook_entries(session)
+        self.assertEqual(entries_changed, '0/0')
+
     def test_takeoff_and_landing(self):
         session = self.session
 
@@ -75,6 +84,9 @@ class TestDB(unittest.TestCase):
         entries_changed = compute_logbook_entries(session)
         self.assertEqual(entries_changed, '0/1')
 
+        entries_changed = compute_logbook_entries(session)
+        self.assertEqual(entries_changed, '0/0')
+
     def test_takeoff_and_landing_on_different_days(self):
         session = self.session
 
@@ -84,6 +96,9 @@ class TestDB(unittest.TestCase):
 
         entries_changed = compute_logbook_entries(session)
         self.assertEqual(entries_changed, '0/2')
+
+        entries_changed = compute_logbook_entries(session)
+        self.assertEqual(entries_changed, '0/0')
 
     def test_update(self):
         session = self.session
@@ -105,6 +120,9 @@ class TestDB(unittest.TestCase):
 
         entries_changed = compute_logbook_entries(session)
         self.assertEqual(entries_changed, '0/1')
+
+        entries_changed = compute_logbook_entries(session)
+        self.assertEqual(entries_changed, '0/0')
 
     def test_update_wrong_order(self):
         session = self.session
