@@ -102,14 +102,21 @@ available commands:
     run                    Run the aprs client.
 
   [logbook]
-    compute                Compute takeoffs and landings.
+    compute_logbook        Compute logbook.
+    compute_takeoff_landingCompute takeoffs and landings.
     show                   Show a logbook for <airport_name>.
 
   [show.airport]
     list_all               Show a list of all airports.
 
-  [show.devices]
+  [show.deviceinfos]
     stats                  Show some stats on registered devices.
+
+  [show.devices]
+    aircraft_type_stats    Show stats about aircraft types used by devices.
+    hardware_stats         Show stats about hardware version used by devices.
+    software_stats         Show stats about software version used by devices.
+    stealth_stats          Show stats about stealth flag set by devices.
 
   [show.receiver]
     hardware_stats         Show some statistics of receiver hardware.
