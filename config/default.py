@@ -11,9 +11,17 @@ CELERYBEAT_SCHEDULE = {
         'task': 'ogn.collect.database.import_ddb',
         'schedule': timedelta(minutes=15),
     },
-    'update-logbook': {
+    'update-takeoff-and-landing': {
         'task': 'ogn.collect.logbook.compute_takeoff_and_landing',
         'schedule': timedelta(minutes=15),
+    },
+    'update-logbook': {
+        'task': 'ogn.collect.logbook.compute_logbook',
+        'schedule': timedelta(minutes=1),
+    },
+    'update-altitudes': {
+        'task': 'ogn.collect.logbook.compute_altitudes',
+        'schedule': timedelta(minutes=1),
     },
     'update-receiver-table': {
         'task': 'ogn.collect.receiver.update_receivers',

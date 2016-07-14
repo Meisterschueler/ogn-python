@@ -1,10 +1,18 @@
 language: python
 
+env:
+  - OGN_CONFIG_MODULE='config.test'
+
 python:
   - 3.4
 
+services:
+  - postgresql
+
 before_script:
   - flake8 tests ogn
+  - psql -c 'CREATE DATABASE ogn_test;' -U postgres
+  - psql -c 'CREATE EXTENSION postgis;' -U postgres -d ogn_test
 
 script:
   - nosetests --with-coverage --cover-package=ogn
