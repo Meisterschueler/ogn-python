@@ -1,8 +1,6 @@
 import unittest
 import os
 
-from ogn.model import Logbook
-
 from ogn.collect.logbook import compute_logbook_entries
 
 
@@ -11,10 +9,10 @@ class TestDB(unittest.TestCase):
     engine = None
     app = None
 
-    TAKEOFF_KOENIGSDF_DD0815       = "INSERT INTO takeoff_landing(device_id, airport_id, timestamp, is_takeoff) SELECT d.id, a.id, '2016-06-01 10:00:00', TRUE FROM airport a, device d WHERE a.name='Koenigsdorf' and d.address = 'DD0815'"
-    LANDING_KOENIGSDF_DD0815       = "INSERT INTO takeoff_landing(device_id, airport_id, timestamp, is_takeoff) SELECT d.id, a.id, '2016-06-01 10:05:00', FALSE FROM airport a, device d WHERE a.name='Koenigsdorf' and d.address = 'DD0815'"
+    TAKEOFF_KOENIGSDF_DD0815 = "INSERT INTO takeoff_landing(device_id, airport_id, timestamp, is_takeoff) SELECT d.id, a.id, '2016-06-01 10:00:00', TRUE FROM airport a, device d WHERE a.name='Koenigsdorf' and d.address = 'DD0815'"
+    LANDING_KOENIGSDF_DD0815 = "INSERT INTO takeoff_landing(device_id, airport_id, timestamp, is_takeoff) SELECT d.id, a.id, '2016-06-01 10:05:00', FALSE FROM airport a, device d WHERE a.name='Koenigsdorf' and d.address = 'DD0815'"
     LANDING_KOENIGSDF_DD0815_LATER = "INSERT INTO takeoff_landing(device_id, airport_id, timestamp, is_takeoff) SELECT d.id, a.id, '2016-06-02 10:05:00', FALSE FROM airport a, device d WHERE a.name='Koenigsdorf' and d.address = 'DD0815'"
-    TAKEOFF_OHLSTADT_DD4711        = "INSERT INTO takeoff_landing(device_id, airport_id, timestamp, is_takeoff) SELECT d.id, a.id, '2016-06-01 10:00:00', TRUE FROM airport a, device d WHERE a.name='Ohlstadt' and d.address = 'DD4711'"
+    TAKEOFF_OHLSTADT_DD4711 = "INSERT INTO takeoff_landing(device_id, airport_id, timestamp, is_takeoff) SELECT d.id, a.id, '2016-06-01 10:00:00', TRUE FROM airport a, device d WHERE a.name='Ohlstadt' and d.address = 'DD4711'"
 
     def setUp(self):
         os.environ['OGN_CONFIG_MODULE'] = 'config.test'
