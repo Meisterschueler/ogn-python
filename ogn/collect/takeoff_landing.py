@@ -57,7 +57,9 @@ def compute_takeoff_and_landing(session=None):
     aircraft_beacon_end_id = aircraft_beacon_start_id + 500000
 
     # 'wo' is the window order for the sql window function
-    wo = and_(AircraftBeacon.device_id, AircraftBeacon.timestamp)
+    wo = and_(AircraftBeacon.device_id,
+              AircraftBeacon.timestamp,
+              AircraftBeacon.receiver_id)
 
     # make a query with current, previous and next position
     sq = session.query(

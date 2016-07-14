@@ -23,7 +23,8 @@ def compute_logbook_entries(session=None):
     # 'wo' is the window order for the sql window function
     wo = and_(func.date(TakeoffLanding.timestamp),
               TakeoffLanding.device_id,
-              TakeoffLanding.timestamp)
+              TakeoffLanding.timestamp,
+              TakeoffLanding.airport_id)
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
