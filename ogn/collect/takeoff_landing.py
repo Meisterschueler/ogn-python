@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from celery.utils.log import get_task_logger
 
-from sqlalchemy import and_, or_, insert, between
+from sqlalchemy import and_, or_, insert, between, exists
 from sqlalchemy.sql import func
 from sqlalchemy.sql.expression import case
 
@@ -111,16 +111,24 @@ def compute_takeoff_and_landing(session=None):
         .subquery()
 
     # consider them if they are near a airport
-    takeoff_landing_query = session.query(
+    sq3 = session.query(
         sq2.c.timestamp,
         sq2.c.track,
         sq2.c.is_takeoff,
         sq2.c.device_id,
-        Airport.id) \
+        Airport.id.label('airport_id')) \
         .filter(and_(func.ST_DFullyWithin(sq2.c.location, Airport.location_wkt, airport_radius),
                      between(sq2.c.altitude, Airport.altitude - airport_delta, Airport.altitude + airport_delta))) \
         .filter(between(Airport.style, 2, 5)) \
-        .order_by(sq2.c.id)
+        .order_by(sq2.c.id) \
+        .subquery()
+
+    # consider them only if they are not already existing in db
+    takeoff_landing_query = session.query(sq3) \
+        .filter(~exists().where(
+            and_(TakeoffLanding.timestamp == sq3.c.timestamp,
+                 TakeoffLanding.device_id == sq3.c.device_id,
+                 TakeoffLanding.airport_id == sq3.c.airport_id)))
 
     # ... and save them
     ins = insert(TakeoffLanding).from_select((TakeoffLanding.timestamp,
