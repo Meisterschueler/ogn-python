@@ -43,7 +43,7 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
 
 
 @manager.command
-def import_logfiles(ogn_logfile, logfile='main.log', loglevel='INFO'):
+def import_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
     """Import OGN-data from ogn-log-files <arg: ogn-logfile>."""
 
     # Check if filename exists
