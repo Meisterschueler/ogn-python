@@ -4,6 +4,7 @@ import unittest.mock as mock
 from ogn.gateway.manage import run
 from ogn.gateway.manage import import_logfile
 
+
 class GatewayManagerTest(unittest.TestCase):
     # try simple user interrupt
     @mock.patch('ogn.gateway.manage.AprsClient')
@@ -24,7 +25,7 @@ class GatewayManagerTest(unittest.TestCase):
     def test_run_import_logfile(self, mock_import_logfile)
         instance = mock_import_logfile.return_value
 
-        import_logfile(ogn_logfile = "OGN_log.txt_2016-09-21")
+        import_logfile(ogn_logfile="OGN_log.txt_2016-09-21")
 
         instance.connect.assert_called_once_with()
         self.assertEqual(instance.run.call_count, 1)
