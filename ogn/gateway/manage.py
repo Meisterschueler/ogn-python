@@ -41,6 +41,7 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
     client.disconnect()
     logging.shutdown()
 
+
 @manager.command
 def import_logfiles(ogn_logfile, logfile='main.log', loglevel='INFO'):
     """Import OGN-data from ogn-log-files <arg: ogn-logfile>."""
@@ -49,7 +50,7 @@ def import_logfiles(ogn_logfile, logfile='main.log', loglevel='INFO'):
     try:
         f = open(ogn_logfile, 'r')
     except:
-        print('\nError reading ogn-logfile:',ogn_logfile)
+        print('\nError reading ogn-logfile:', ogn_logfile)
         return
 
     # Enable logging
@@ -60,9 +61,8 @@ def import_logfiles(ogn_logfile, logfile='main.log', loglevel='INFO'):
 
     print('Start importing ogn-logfile')
     for line in f:
-       process_beacon(line)
-   
+        process_beacon(line)
+
     f.close()
     logging.shutdown()
-
 
