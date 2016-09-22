@@ -65,4 +65,3 @@ def import_logfiles(ogn_logfile, logfile='main.log', loglevel='INFO'):
 
     f.close()
     logging.shutdown()
-
