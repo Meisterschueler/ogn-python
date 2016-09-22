@@ -40,3 +40,28 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
 
     client.disconnect()
     logging.shutdown()
+
+
+@manager.command
+def import_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
+    """Import OGN-data from ogn-log-files <arg: ogn-logfile>."""
+
+    # Check if filename exists
+    try:
+        f = open(ogn_logfile, 'r')
+    except:
+        print('\nError reading ogn-logfile:', ogn_logfile)
+        return
+
+    # Enable logging
+    log_handlers = [logging.StreamHandler()]
+    if logfile:
+        log_handlers.append(logging.FileHandler(logfile))
+    logging.basicConfig(format=logging_formatstr, level=loglevel, handlers=log_handlers)
+
+    print('Start importing ogn-logfile')
+    for line in f:
+        process_beacon(line)
+
+    f.close()
+    logging.shutdown()
