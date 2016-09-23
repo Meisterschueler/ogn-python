@@ -2,7 +2,7 @@ import logging
 
 from ogn.client import AprsClient
 from ogn.gateway.process import process_beacon
-
+from datetime import datetime
 from manager import Manager
 
 manager = Manager()
@@ -53,6 +53,12 @@ def import_logfile(ogn_logfile, reference_date, logfile='main.log', loglevel='IN
         print('\nError reading ogn-logfile:', ogn_logfile)
         return
 
+    try:
+        datetime.strptime(reference_date, "%Y-%m-%d")
+    except:
+        print('\nError in reference_date argument', reference_date)
+        return
+
     # Enable logging
     log_handlers = [logging.StreamHandler()]
     if logfile:
@@ -61,7 +67,7 @@ def import_logfile(ogn_logfile, reference_date, logfile='main.log', loglevel='IN
 
     print('Start importing ogn-logfile')
     for line in f:
-        process_beacon(line, reference_date)
+        process_beacon(line, datetime.combine(datetime.strptime(reference_date, "%Y-%m-%d").date(), datetime.utcnow().time()))
 
     f.close()
     logging.shutdown()
