@@ -43,6 +43,10 @@ It requires [PostgreSQL](http://www.postgresql.org/) and [PostGIS](http://www.po
     ./manage.py db.init
     ```
 
+There is also a [Vagrant](https://www.vagrantup.com/) environment for the development of ogn-python.
+You can create and start this virtual machine with `vagrant up` and login with `vagrant ssh`.
+The code of ogn-python will be available in the shared folder `/vagrant`.
+
 ## Usage
 ### Running the aprs client and task server
 To schedule tasks like takeoff/landing-detection (`logbook.compute`),

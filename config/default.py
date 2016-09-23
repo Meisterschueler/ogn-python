@@ -1,4 +1,4 @@
-SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost:5432/ogn'
+SQLALCHEMY_DATABASE_URI = 'postgresql:///ogn'
 
 BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
