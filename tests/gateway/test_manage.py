@@ -19,13 +19,12 @@ class GatewayManagerTest(unittest.TestCase):
         instance.disconnect.assert_called_once_with()
 
 
-class GatewayManagerTest(unittest.TestCase):
     # try to import stored OGN logfile
     @mock.patch('ogn.gateway.manage.import_logfile')
     def test_run_import_logfile(self, mock_import_logfile):
         instance = mock_import_logfile.return_value
 
-        import_logfile(ogn_logfile="OGN_log.txt_2016-09-21")
+        import_logfile(ogn_logfile="tests/OGN_log.txt_2016-09-21", reference_date="2016-09-21")
 
         instance.connect.assert_called_once_with()
         self.assertEqual(instance.run.call_count, 1)
