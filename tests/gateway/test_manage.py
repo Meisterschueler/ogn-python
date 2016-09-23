@@ -22,7 +22,7 @@ class GatewayManagerTest(unittest.TestCase):
 class GatewayManagerTest(unittest.TestCase):
     # try to import stored OGN logfile
     @mock.patch('ogn.gateway.manage.import_logfile')
-    def test_run_import_logfile(self, mock_import_logfile)
+    def test_run_import_logfile(self, mock_import_logfile):
         instance = mock_import_logfile.return_value
 
         import_logfile(ogn_logfile="OGN_log.txt_2016-09-21")
