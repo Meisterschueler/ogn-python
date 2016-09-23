@@ -2,7 +2,7 @@ import unittest
 import unittest.mock as mock
 
 from ogn.gateway.manage import run
-from ogn.gateway.manage import import_logfile
+# from ogn.gateway.manage import import_logfile
 
 
 class GatewayManagerTest(unittest.TestCase):
