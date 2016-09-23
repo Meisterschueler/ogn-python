@@ -43,8 +43,8 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
 
 
 @manager.command
-def import_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
-    """Import OGN-data from ogn-log-files <arg: ogn-logfile>."""
+def import_logfile(ogn_logfile, reference_date, logfile='main.log', loglevel='INFO'):
+    """Import OGN-data from ogn-log-files <arg: ogn-logfile, reference_date>. Reference date must be given in YYYY-MM-DD."""
 
     # Check if filename exists
     try:
@@ -61,7 +61,7 @@ def import_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
 
     print('Start importing ogn-logfile')
     for line in f:
-        process_beacon(line)
+        process_beacon(line, reference_date)
 
     f.close()
     logging.shutdown()
