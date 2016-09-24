@@ -14,12 +14,11 @@ def replace_lonlat_with_wkt(message):
     return message
 
 
-def process_beacon(raw_message, reference_date=None):
+def process_beacon(raw_message, reference_date=None, reference_time=None):
     if raw_message[0] == '#':
         return
     try:
-        message = parse_aprs(raw_message, reference_date)
-
+        message = parse_aprs(raw_message, reference_date, reference_time)
         # symboltable / symbolcodes used by OGN:
         # I&: used as receiver
         # /X: helicopter_rotorcraft

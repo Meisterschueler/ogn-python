@@ -54,7 +54,7 @@ def import_logfile(ogn_logfile, reference_date, logfile='main.log', loglevel='IN
         return
 
     try:
-        datetime.strptime(reference_date, "%Y-%m-%d")
+        reference_date = datetime.strptime(reference_date, "%Y-%m-%d")
     except:
         print('\nError in reference_date argument', reference_date)
         return
@@ -67,7 +67,7 @@ def import_logfile(ogn_logfile, reference_date, logfile='main.log', loglevel='IN
 
     print('Start importing ogn-logfile')
     for line in f:
-        process_beacon(line, datetime.combine(datetime.strptime(reference_date, "%Y-%m-%d").date(), datetime.utcnow().time()))
+        process_beacon(line, reference_date=reference_date)
 
     f.close()
     logging.shutdown()
