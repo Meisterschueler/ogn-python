@@ -2,7 +2,7 @@ import logging
 
 from ogn.client import AprsClient
 from ogn.gateway.process import process_beacon
-
+from datetime import datetime
 from manager import Manager
 
 manager = Manager()
@@ -39,4 +39,35 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
         print('\nStop ogn gateway')
 
     client.disconnect()
+    logging.shutdown()
+
+
+@manager.command
+def import_logfile(ogn_logfile, reference_date, logfile='main.log', loglevel='INFO'):
+    """Import OGN-data from ogn-log-files <arg: ogn-logfile, reference_date>. Reference date must be given in YYYY-MM-DD."""
+
+    # Check if filename exists
+    try:
+        f = open(ogn_logfile, 'r')
+    except:
+        print('\nError reading ogn-logfile:', ogn_logfile)
+        return
+
+    try:
+        reference_date = datetime.strptime(reference_date, "%Y-%m-%d")
+    except:
+        print('\nError in reference_date argument', reference_date)
+        return
+
+    # Enable logging
+    log_handlers = [logging.StreamHandler()]
+    if logfile:
+        log_handlers.append(logging.FileHandler(logfile))
+    logging.basicConfig(format=logging_formatstr, level=loglevel, handlers=log_handlers)
+
+    print('Start importing ogn-logfile')
+    for line in f:
+        process_beacon(line, reference_date=reference_date)
+
+    f.close()
     logging.shutdown()

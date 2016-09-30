@@ -104,6 +104,7 @@ available commands:
 
   [gateway]
     run                    Run the aprs client.
+    import_logfiles        Import OGN-data from ogn-log-files <arg: ogn-logfile>.
 
   [logbook]
     compute_logbook        Compute logbook.
