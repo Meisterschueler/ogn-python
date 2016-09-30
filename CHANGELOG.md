@@ -2,19 +2,20 @@
 
 ## Unreleased
 - Moved to PostGIS, PostgreSQL is now mandantory
-- Changed database schema (added airport, added relations, added aircraft_type, removed unused fields)
+- Changed database schema (added airport, added relations, added `aircraft_type`, removed unused fields)
 - Added Airport manager with command line option `db.import_airports`,
   default is WELT2000
 - Logbook: instead of lat, lon and name of the airport just pass the name
 - Logbook: optional utc offset, optional single day selection
 - Logbook: remark if different airport is used for takeoff or landing
 - Logbook: several accuracy and speed improvements
-- DDB: consider aircraft_type
+- DDB: consider `aircraft_type`
 - Moved exceptions from `ogn.exceptions` to `ogn.parser.exceptions`
 - Moved parsing from `ogn.model.*` to `ogn.parser`
+- Moved the APRS- & OGN-Parser, the APRS-client and the DDB-client to [python-ogn-client](https://github.com/glidernet/python-ogn-client)
 
 ## 0.2.1 - 2016-02-17
-First release via PyPi.
+First and last release via PyPI.
 - Added CHANGELOG.
 
 ## 0.2

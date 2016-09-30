@@ -40,7 +40,7 @@ setup(
         'aerofiles==0.3',
         'geoalchemy2==0.3.0',
         'shapely==1.5.15',
-        'ogn-client==0.3.0',
+        'ogn-client==0.5.0',
         'psycopg2==2.6.1'
     ],
     extras_require={
