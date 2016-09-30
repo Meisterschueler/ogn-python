@@ -4,8 +4,6 @@
 (https://travis-ci.org/glidernet/ogn-python)
 [![Coverage Status](https://img.shields.io/coveralls/glidernet/ogn-python.svg)]
 (https://coveralls.io/r/glidernet/ogn-python)
-[![PyPi Version](https://img.shields.io/pypi/v/ogn-python.svg)]
-(https://pypi.python.org/pypi/ogn-python)
 
 A database backend for the [Open Glider Network](http://wiki.glidernet.org/).
 The ogn-python module saves all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).

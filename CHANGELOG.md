@@ -12,9 +12,10 @@
 - DDB: consider `aircraft_type`
 - Moved exceptions from `ogn.exceptions` to `ogn.parser.exceptions`
 - Moved parsing from `ogn.model.*` to `ogn.parser`
+- Moved the APRS- & OGN-Parser, the APRS-client and the DDB-client to [python-ogn-client](https://github.com/glidernet/python-ogn-client)
 
 ## 0.2.1 - 2016-02-17
-First release via PyPi.
+First and last release via PyPI.
 - Added CHANGELOG.
 
 ## 0.2
