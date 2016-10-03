@@ -30,7 +30,21 @@ def process_beacon(raw_message, reference_date=None, reference_time=None):
         # \n: ?
         # /z: ?
         # /o: ?
-        if message['symboltable'] == "I" and message['symbolcode'] == '&':
+        if 'symboltable' not in message and 'symbolcode' not in message:
+            # we have a receiver_beacon (status message)
+            message.update(parse_ogn_receiver_beacon(message['comment']))
+            beacon = ReceiverBeacon(**message)
+
+            # connect beacon with receiver
+            receiver = session.query(Receiver.id) \
+                .filter(Receiver.name == beacon.name) \
+                .first()
+            if receiver is None:
+                receiver = Receiver()
+                receiver.name = beacon.name
+                session.add(receiver)
+            beacon.receiver_id = receiver.id
+        elif message['symboltable'] == "I" and message['symbolcode'] == '&':
             # ... we have a receiver_beacon
             message.update(parse_ogn_receiver_beacon(message['comment']))
             message = replace_lonlat_with_wkt(message)
