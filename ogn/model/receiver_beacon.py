@@ -21,11 +21,16 @@ class ReceiverBeacon(Beacon):
     rec_crystal_correction_fine = 0  # obsolete since 0.2.0
     rec_input_noise = Column(Float)
 
-    snr_total_average = None
-    snr_total_fixes = None
-    snr_filtered_average_daily = None
-    snr_devices_daily_selection = None
-    snr_devices_daily = None
+    senders_visible = Column(Integer)
+    senders_total = Column(Integer)
+    senders_signal = Column(Float)
+    senders_messages = Column(Integer)
+    good_senders_signal = Column(Float)
+    good_senders = Column(Integer)
+    good_and_bad_senders = Column(Integer)
+
+    voltage = Column(Float)
+    amperage = Column(Float)
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
