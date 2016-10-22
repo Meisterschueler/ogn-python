@@ -12,7 +12,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ogn-python',
-    version='0.2.1',
+    version='0.3.0',
     description='A database backend for the Open Glider Network',
     long_description=long_description,
     url='https://github.com/glidernet/ogn-python',
@@ -40,7 +40,7 @@ setup(
         'aerofiles==0.3',
         'geoalchemy2==0.3.0',
         'shapely==1.5.15',
-        #'ogn-client==0.5.0',
+        'ogn-client==0.6.0',
         'psycopg2==2.6.1'
     ],
     extras_require={
