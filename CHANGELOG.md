@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## Unreleased
+
+## 0.3.0 - 2016-10-22
+- Changed database for OGN v0.2.5 receiver beacons
 - Moved to PostGIS, PostgreSQL is now mandantory
 - Changed database schema (added airport, added relations, added `aircraft_type`, removed unused fields)
 - Added Airport manager with command line option `db.import_airports`,
