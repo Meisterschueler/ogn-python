@@ -1,7 +1,8 @@
 import logging
 
 from ogn.client import AprsClient
-from ogn.gateway.process import process_beacon
+from ogn.gateway.process import process_beacon, message_to_beacon
+from ogn.commands.dbutils import session
 from datetime import datetime
 from manager import Manager
 
@@ -65,9 +66,15 @@ def import_logfile(ogn_logfile, reference_date, logfile='main.log', loglevel='IN
         log_handlers.append(logging.FileHandler(logfile))
     logging.basicConfig(format=logging_formatstr, level=loglevel, handlers=log_handlers)
 
+    beacons = list()
+
     print('Start importing ogn-logfile')
     for line in f:
-        process_beacon(line, reference_date=reference_date)
+        beacon = message_to_beacon(line, reference_date=reference_date)
+        if beacon is not None:
+            beacons.append(beacon)
+
+    session.bulk_save_objects(beacons)
 
     f.close()
     logging.shutdown()
