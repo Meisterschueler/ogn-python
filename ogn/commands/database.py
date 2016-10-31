@@ -1,7 +1,10 @@
 from ogn.commands.dbutils import engine, session
-from ogn.model import Base, AddressOrigin
+from ogn.model import Base, AddressOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
 from ogn.utils import get_airports
 from ogn.collect.database import update_device_infos
+
+from sqlalchemy import insert, distinct
+from sqlalchemy.sql import null
 
 from manager import Manager
 manager = Manager()
@@ -78,3 +81,50 @@ def import_airports(path='tests/SeeYou.cup'):
     session.bulk_save_objects(airports)
     session.commit()
     print("Imported {} airports.".format(len(airports)))
+
+
+@manager.command
+def update_relations():
+    """Update AircraftBeacon and ReceiverBeacon relations"""
+
+    # Create missing Receiver from ReceiverBeacon
+    available_receivers = session.query(Receiver.name) \
+        .subquery()
+
+    missing_receiver_query = session.query(distinct(ReceiverBeacon.name)) \
+        .filter(ReceiverBeacon.receiver_id == null()) \
+        .filter(~ReceiverBeacon.name.in_(available_receivers))
+
+    ins = insert(Receiver).from_select([Receiver.name], missing_receiver_query)
+    session.execute(ins)
+
+    # Create missing Device from AircraftBeacon
+    available_addresses = session.query(Device.address) \
+        .subquery()
+
+    missing_addresses_query = session.query(distinct(AircraftBeacon.address)) \
+        .filter(AircraftBeacon.device_id == null()) \
+        .filter(~AircraftBeacon.address.in_(available_addresses))
+
+    ins2 = insert(Device).from_select([Device.address], missing_addresses_query)
+    session.execute(ins2)
+
+    # Update AircraftBeacons
+    upd = session.query(AircraftBeacon) \
+        .filter(AircraftBeacon.device_id == null()) \
+        .filter(AircraftBeacon.receiver_id == null()) \
+        .filter(AircraftBeacon.address == Device.address) \
+        .filter(AircraftBeacon.receiver_name == Receiver.name) \
+        .update({AircraftBeacon.device_id: Device.id,
+                 AircraftBeacon.receiver_id: Receiver.id},
+                synchronize_session='fetch')
+
+    upd2 = session.query(ReceiverBeacon) \
+        .filter(ReceiverBeacon.receiver_id == null()) \
+        .filter(ReceiverBeacon.receiver_name == Receiver.name) \
+        .update({Receiver.name: ReceiverBeacon.receiver_name},
+                synchronize_session='fetch')
+
+    session.commit()
+    print("Updated {} AircraftBeacons and {} ReceiverBeacons".
+          format(upd, upd2))
