@@ -1,7 +1,8 @@
-from sqlalchemy import Integer, DateTime, Interval, Column, ForeignKey
+from sqlalchemy import Integer, DateTime, Interval, Column, ForeignKey, case, null
 from sqlalchemy.orm import relationship
 
 from .base import Base
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Logbook(Base):
@@ -14,7 +15,6 @@ class Logbook(Base):
     takeoff_track = Column(Integer)
     landing_timestamp = Column(DateTime)
     landing_track = Column(Integer)
-    duration = Column(Interval)
     max_altitude = Column(Integer)
 
     # Relations
@@ -26,3 +26,11 @@ class Logbook(Base):
 
     device_id = Column(Integer, ForeignKey('device.id', ondelete='CASCADE'), index=True)
     device = relationship('Device', foreign_keys=[device_id])
+
+    @hybrid_property
+    def duration(self):
+        return None if (self.landing_timestamp is None or self.takeoff_timestamp is None) else self.landing_timestamp - self.takeoff_timestamp
+
+    @duration.expression
+    def duration(cls):
+        return case({False: None, True: cls.landing_timestamp - cls.takeoff_timestamp}, cls.landing_timestamp != null() and cls.takeoff_timestamp != null())

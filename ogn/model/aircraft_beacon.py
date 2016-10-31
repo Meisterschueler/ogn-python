@@ -22,10 +22,10 @@ class AircraftBeacon(Beacon):
     software_version = Column(Float)
     hardware_version = Column(SmallInteger)
     real_address = Column(String(6))
-
     flightlevel = Column(Float)
-
     signal_power = Column(Float)
+
+    status = Column(SmallInteger)
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
@@ -46,7 +46,7 @@ class AircraftBeacon(Beacon):
             self.address,
             self.climb_rate,
             self.turn_rate,
-            self.signal_strength,
+            self.signal_power,
             self.error_count,
             self.frequency_offset,
             self.gps_status)
