@@ -2,7 +2,7 @@ from celery.utils.log import get_task_logger
 
 from sqlalchemy import and_, or_, insert, update, between, exists
 from sqlalchemy.sql import func, null
-from sqlalchemy.sql.expression import true, false, label
+from sqlalchemy.sql.expression import true, false
 
 from ogn.collect.celery import app
 from ogn.model import TakeoffLanding, Logbook
