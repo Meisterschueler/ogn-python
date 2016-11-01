@@ -19,9 +19,9 @@ import sqlalchemy as sa
 def upgrade():
     op.add_column('aircraft_beacon', sa.Column('status', sa.SmallInteger))
     op.create_index('ix_aircraft_beacon_status', 'aircraft_beacon', ['status'])
-    op.drop_column('takeoff_landing', 'duration')
+    op.drop_column('logbook', 'duration')
 
 
 def downgrade():
     op.drop_column('aircraft_beacon', 'status')
-    op.add_column('takeoff_landing', sa.Column('duration', sa.Interval))
+    op.add_column('logbook', sa.Column('duration', sa.Interval))
