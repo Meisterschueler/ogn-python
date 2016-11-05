@@ -3,7 +3,7 @@ import os
 
 from ogn.model import TakeoffLanding
 
-from ogn.collect.takeoff_landing import get_aircraft_beacon_start_id, compute_takeoff_and_landing
+from ogn.collect.takeoff_landing import compute_takeoff_and_landing
 
 
 class TestDB(unittest.TestCase):
@@ -94,8 +94,6 @@ class TestDB(unittest.TestCase):
         session.execute("INSERT INTO aircraft_beacon(address, location, altitude, timestamp, track, ground_speed, climb_rate, turn_rate) VALUES('DDEFF7','0101000020E610000013AB192CAFEF264074029A081BEA4740',603,'2016-07-02 10:50:16',0,0,-0.096520193,0)")
         session.execute("UPDATE aircraft_beacon SET device_id = d.id FROM device d WHERE d.address='DDEFF7'")
         session.commit()
-
-        print(get_aircraft_beacon_start_id(session))
 
         compute_takeoff_and_landing(session)
         self.assertEqual(self.count_takeoff_and_landings(), 2)
