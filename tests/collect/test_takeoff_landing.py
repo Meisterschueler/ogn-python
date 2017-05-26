@@ -98,5 +98,6 @@ class TestDB(unittest.TestCase):
         compute_takeoff_and_landing(session)
         self.assertEqual(self.count_takeoff_and_landings(), 2)
 
+
 if __name__ == '__main__':
     unittest.main()

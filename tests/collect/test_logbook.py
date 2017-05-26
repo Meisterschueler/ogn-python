@@ -137,5 +137,6 @@ class TestDB(unittest.TestCase):
         entries_changed = compute_logbook_entries(session)
         self.assertEqual(entries_changed, '1/0')
 
+
 if __name__ == '__main__':
     unittest.main()

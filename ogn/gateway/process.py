@@ -1,6 +1,6 @@
 import logging
 from ogn.commands.dbutils import session
-from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver, Location
+from ogn.model import AircraftBeacon, ReceiverBeacon, Location
 from ogn.parser import parse_aprs, parse_ogn_receiver_beacon, parse_ogn_aircraft_beacon, ParseError
 
 logger = logging.getLogger(__name__)
@@ -54,54 +54,9 @@ def message_to_beacon(raw_message, reference_date):
     return beacon
 
 
-def add_beacon_to_db(beacon):
-    if type(beacon == ReceiverBeacon):
-        # connect beacon with receiver
-        receiver = session.query(Receiver.id) \
-            .filter(Receiver.name == beacon.name) \
-            .first()
-        if receiver is None:
-            receiver = Receiver()
-            receiver.name = beacon.name
-            session.add(receiver)
-        beacon.receiver_id = receiver.id
-    elif type(beacon == AircraftBeacon):
-        # connect beacon with device
-        device = session.query(Device) \
-            .filter(Device.address == beacon.address) \
-            .first()
-        if device is None:
-            device = Device()
-            device.address = beacon.address
-            session.add(device)
-        beacon.device_id = device.id
-
-        # update device
-        device.aircraft_type = beacon.aircraft_type
-        device.stealth = beacon.stealth
-        if beacon.hardware_version is not None:
-            device.hardware_version = beacon.hardware_version
-        if beacon.software_version is not None:
-            device.software_version = beacon.software_version
-        if beacon.real_address is not None:
-            device.real_address = beacon.real_address
-
-        # connect beacon with receiver
-        receiver = session.query(Receiver.id) \
-            .filter(Receiver.name == beacon.receiver_name) \
-            .first()
-        if receiver is None:
-            receiver = Receiver()
-            receiver.name = beacon.receiver_name
-            session.add(receiver)
-        beacon.receiver_id = receiver.id
-
-    session.add(beacon)
-    session.commit()
-
-
 def process_beacon(raw_message, reference_date=None):
     beacon = message_to_beacon(raw_message, reference_date)
     if beacon is not None:
-        add_beacon_to_db(beacon)
+        session.add(beacon)
+        session.commit()
         logger.debug('Received message: {}'.format(raw_message))
