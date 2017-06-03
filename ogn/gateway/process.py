@@ -37,7 +37,8 @@ def message_to_beacon(raw_message, reference_date):
                 beacon = ReceiverBeacon(**message)
             elif message['symboltable'] == "I" and message['symbolcode'] == '&':
                 # ... we have a receiver_beacon
-                message.update(parse_ogn_receiver_beacon(message['comment']))
+                if message['comment']:
+                    message.update(parse_ogn_receiver_beacon(message['comment']))
                 message = replace_lonlat_with_wkt(message)
                 beacon = ReceiverBeacon(**message)
             else:
