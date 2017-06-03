@@ -29,7 +29,7 @@ class ReceiverBeacon(Beacon):
     good_senders = Column(Integer)
     good_and_bad_senders = Column(Integer)
 
-    status = Column(SmallInteger)
+    status = Column(SmallInteger, index=True)
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)

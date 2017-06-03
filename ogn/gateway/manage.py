@@ -2,7 +2,6 @@ import logging
 
 from ogn.client import AprsClient
 from ogn.gateway.process import process_beacon, message_to_beacon
-from ogn.commands.dbutils import session
 from datetime import datetime
 from manager import Manager
 from ogn.model import AircraftBeacon, ReceiverBeacon
@@ -42,47 +41,6 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
 
     client.disconnect()
     logging.shutdown()
-
-
-@manager.command
-def import_beacon_logfile(csv_logfile, logfile='main.log', loglevel='INFO'):
-    """Import csv logfile <arg: csv logfile>."""
-
-    # Enable logging
-    log_handlers = [logging.StreamHandler()]
-    if logfile:
-        log_handlers.append(logging.FileHandler(logfile))
-    logging.basicConfig(format=logging_formatstr, level=loglevel, handlers=log_handlers)
-
-    logger = logging.getLogger(__name__)
-
-    SQL_STATEMENT = """
-    COPY %s(%s) FROM STDIN WITH
-        CSV
-        HEADER
-        DELIMITER AS ','
-    """
-
-    file = open(csv_logfile, 'r')
-    first_line = file.readline().strip()
-    aircraft_beacon_columns = ','.join(AircraftBeacon.get_csv_columns())
-    receiver_beacon_columns = ','.join(ReceiverBeacon.get_csv_columns())
-    if first_line == aircraft_beacon_columns:
-        sql = SQL_STATEMENT % ('aircraft_beacon', aircraft_beacon_columns)
-    elif first_line == receiver_beacon_columns:
-        sql = SQL_STATEMENT % ('receiver_beacon', receiver_beacon_columns)
-    else:
-        print("Not a valid logfile: {}".format(csv_logfile))
-        return
-
-    logger.info("Reading logfile")
-
-    conn = session.connection().connection
-    cursor = conn.cursor()
-    cursor.copy_expert(sql=sql, file=file)
-    conn.commit()
-    cursor.close()
-    logger.info("Import finished")
 
 
 # get total lines of the input file
@@ -130,7 +88,6 @@ def convert_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
     progress = -1
     num_lines = 0
 
-    from ogn.model import AircraftBeacon, ReceiverBeacon
     import csv
     wr_ab = csv.writer(fout_ab, delimiter=',')
     wr_ab.writerow(AircraftBeacon.get_csv_columns())
