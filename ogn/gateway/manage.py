@@ -5,6 +5,8 @@ from ogn.gateway.process import process_beacon, message_to_beacon
 from datetime import datetime
 from manager import Manager
 from ogn.model import AircraftBeacon, ReceiverBeacon
+import gzip
+import os
 
 manager = Manager()
 
@@ -43,17 +45,9 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
     logging.shutdown()
 
 
-# get total lines of the input file
-def file_len(fname):
-    with open(fname) as f:
-        for i, l in enumerate(f):
-            pass
-    return i + 1
-
-
 @manager.command
-def convert_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
-    """Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: ogn-logfile>. Logfile name: blablabla.txt_YYYY-MM-DD."""
+def convert_logfile(path, logfile='main.log', loglevel='INFO'):
+    """Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD."""
 
     # Enable logging
     log_handlers = [logging.StreamHandler()]
@@ -63,17 +57,53 @@ def convert_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
 
     logger = logging.getLogger(__name__)
 
+    import os
+    if os.path.isfile(path):
+        logger.info("Reading file: {}".format(path))
+        convert(path)
+        logger.info("Finished")
+    elif os.path.isdir(path):
+        for filename in os.listdir(path):
+            logger.info("Reading file: {}".format(filename))
+            convert(filename, path=path)
+        logger.info("Finished")
+    else:
+        print("Not a file nor a path: {}".format(path))
+
+    logging.shutdown()
+
+
+def opener(filename):
+    f = open(filename,'rb')
+    a = f.read(2)
+    f.close()
+    if (a == b'\x1f\x8b'):
+        f = gzip.open(filename, 'rt')
+        return f
+    else:
+        f = open(filename, 'rt')
+        return f
+
+
+def convert(sourcefile, path=''):
     import re
-    match = re.search('^.+\.txt\_(\d{4}\-\d{2}\-\d{2})', ogn_logfile)
+    match = re.search('^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$', sourcefile)
     if match:
         reference_date = match.group(1)
     else:
-        print("filename does not match pattern")
+        print("filename '{}' does not match pattern".format(sourcefile))
         return
 
-    fin = open(ogn_logfile, 'r')
-    fout_ab = open('aircraft_beacons.csv_' + reference_date, 'w')
-    fout_rb = open('receiver_beacons.csv_' + reference_date, 'w')
+    fin = opener(os.path.join(path, sourcefile))
+
+    # get total lines of the input file
+    total = 0
+    for line in fin:
+        total += 1
+    fin.seek(0)
+
+    fout_ab = open(os.path.join(path, 'aircraft_beacons.csv_' + reference_date), 'w')
+    fout_rb = open(os.path.join(path, 'receiver_beacons.csv_' + reference_date), 'w')
 
     try:
         reference_date = datetime.strptime(reference_date, "%Y-%m-%d")
@@ -84,7 +114,6 @@ def convert_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
     aircraft_beacons = list()
     receiver_beacons = list()
 
-    total = file_len(ogn_logfile)
     progress = -1
     num_lines = 0
 
@@ -100,7 +129,7 @@ def convert_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
         num_lines += 1
         if int(100 * num_lines / total) != progress:
             progress = round(100 * num_lines / total)
-            logger.info("Reading line {} ({}%)".format(num_lines, progress))
+            print("\rReading line {} ({}%)".format(num_lines, progress), end='')
             if len(aircraft_beacons) > 0:
                 for beacon in aircraft_beacons:
                     wr_ab.writerow(beacon.get_csv_values())
@@ -110,7 +139,7 @@ def convert_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
                     wr_rb.writerow(beacon.get_csv_values())
                 receiver_beacons = list()
 
-        beacon = message_to_beacon(line, reference_date=reference_date)
+        beacon = message_to_beacon(line.strip(), reference_date=reference_date)
         if beacon is not None:
             if isinstance(beacon, AircraftBeacon):
                 aircraft_beacons.append(beacon)
@@ -127,5 +156,3 @@ def convert_logfile(ogn_logfile, logfile='main.log', loglevel='INFO'):
     fin.close()
     fout_ab.close()
     fout_rb.close()
-
-    logging.shutdown()
