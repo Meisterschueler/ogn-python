@@ -10,6 +10,8 @@ from geopy.exc import GeopyError
 from aerofiles.seeyou import Reader
 from ogn.parser.utils import feet2m
 
+import gzip
+
 DDB_URL = "http://ddb.glidernet.org/download/?t=1"
 
 
@@ -102,3 +104,16 @@ def get_airports(cupfile):
                 print('Failed to parse line: {} {}'.format(line, e))
 
     return airports
+
+
+def open_file(filename):
+    """Opens a regular or unzipped textfile for reading."""
+    f = open(filename,'rb')
+    a = f.read(2)
+    f.close()
+    if (a == b'\x1f\x8b'):
+        f = gzip.open(filename, 'rt')
+        return f
+    else:
+        f = open(filename, 'rt')
+        return f

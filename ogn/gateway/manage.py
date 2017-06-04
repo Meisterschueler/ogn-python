@@ -5,7 +5,8 @@ from ogn.gateway.process import process_beacon, message_to_beacon
 from datetime import datetime
 from manager import Manager
 from ogn.model import AircraftBeacon, ReceiverBeacon
-import gzip
+
+from ogn.utils import open_file
 import os
 
 manager = Manager()
@@ -57,7 +58,6 @@ def convert_logfile(path, logfile='main.log', loglevel='INFO'):
 
     logger = logging.getLogger(__name__)
 
-    import os
     if os.path.isfile(path):
         logger.info("Reading file: {}".format(path))
         convert(path)
@@ -73,20 +73,10 @@ def convert_logfile(path, logfile='main.log', loglevel='INFO'):
     logging.shutdown()
 
 
-def opener(filename):
-    f = open(filename,'rb')
-    a = f.read(2)
-    f.close()
-    if (a == b'\x1f\x8b'):
-        f = gzip.open(filename, 'rt')
-        return f
-    else:
-        f = open(filename, 'rt')
-        return f
-
-
 def convert(sourcefile, path=''):
     import re
+    import csv
+
     match = re.search('^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$', sourcefile)
     if match:
         reference_date = match.group(1)
@@ -94,7 +84,7 @@ def convert(sourcefile, path=''):
         print("filename '{}' does not match pattern".format(sourcefile))
         return
 
-    fin = opener(os.path.join(path, sourcefile))
+    fin = open_file(os.path.join(path, sourcefile))
 
     # get total lines of the input file
     total = 0
@@ -117,7 +107,6 @@ def convert(sourcefile, path=''):
     progress = -1
     num_lines = 0
 
-    import csv
     wr_ab = csv.writer(fout_ab, delimiter=',')
     wr_ab.writerow(AircraftBeacon.get_csv_columns())
 

@@ -134,9 +134,48 @@ def update_relations():
 
 
 @manager.command
-def import_aircraft_beacon_logfile(csv_logfile, logfile='main.log', loglevel='INFO'):
+def import_csv_logfile(path, logfile='main.log', loglevel='INFO'):
     """Import csv logfile <arg: csv logfile>."""
 
+    import datetime
+
+    import os
+    if os.path.isfile(path):
+        print("{}: Importing file: {}".format(datetime.datetime.now(), path))
+        import_logfile(path)
+    elif os.path.isdir(path):
+        print("{}: Scanning path: {}".format(datetime.datetime.now(), path))
+        for filename in os.listdir(path):
+            print("{}: Importing file: {}".format(datetime.datetime.now(), filename))
+            import_logfile(os.path.join(path, filename))
+    else:
+        print("{}: Path {} not found.".format(datetime.datetime.now(), path))
+
+    print("{}: Finished.".format(datetime.datetime.now()))
+
+
+def import_logfile(path):
+    f = open(path, 'r')
+    try:
+        header = f.readline().strip()
+    except UnicodeDecodeError as e:
+        print("Not a text file: {}".format(path))
+        f.close()
+        return
+    f.close()
+
+    aircraft_beacon_header = ','.join(AircraftBeacon.get_csv_columns())
+    receiver_beacon_header = ','.join(ReceiverBeacon.get_csv_columns())
+
+    if header == aircraft_beacon_header:
+        import_aircraft_beacon_logfile(path)
+    elif header == receiver_beacon_header:
+        import_receiver_beacon_logfile(path)
+    else:
+        print("Unknown file type: {}".format())
+
+
+def import_aircraft_beacon_logfile(csv_logfile):
     SQL_TEMPTABLE_STATEMENT = """
     CREATE TABLE aircraft_beacon_temp(
         location geometry,
@@ -178,7 +217,7 @@ def import_aircraft_beacon_logfile(csv_logfile, logfile='main.log', loglevel='IN
     column_names = ','.join(AircraftBeacon.get_csv_columns())
     sql = SQL_COPY_STATEMENT % column_names
 
-    print("Start importing logfile")
+    print("Start importing logfile: {}".format(csv_logfile))
 
     conn = session.connection().connection
     cursor = conn.cursor()
@@ -224,8 +263,7 @@ def import_aircraft_beacon_logfile(csv_logfile, logfile='main.log', loglevel='IN
     print("Finished")
 
 
-@manager.command
-def import_receiver_beacon_logfile(csv_logfile, logfile='main.log', loglevel='INFO'):
+def import_receiver_beacon_logfile(csv_logfile):
     """Import csv logfile <arg: csv logfile>."""
 
     SQL_TEMPTABLE_STATEMENT = """
@@ -272,7 +310,7 @@ def import_receiver_beacon_logfile(csv_logfile, logfile='main.log', loglevel='IN
     column_names = ','.join(ReceiverBeacon.get_csv_columns())
     sql = SQL_COPY_STATEMENT % column_names
 
-    print("Start importing logfile")
+    print("Start importing logfile: {}".format(csv_logfile))
 
     conn = session.connection().connection
     cursor = conn.cursor()
