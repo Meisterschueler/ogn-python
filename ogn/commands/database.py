@@ -177,6 +177,7 @@ def import_logfile(path):
 
 def import_aircraft_beacon_logfile(csv_logfile):
     SQL_TEMPTABLE_STATEMENT = """
+    DROP TABLE IF EXISTS aircraft_beacon_temp;
     CREATE TABLE aircraft_beacon_temp(
         location geometry,
         altitude integer,
@@ -201,7 +202,7 @@ def import_aircraft_beacon_logfile(csv_logfile):
         hardware_version smallint,
         real_address character varying(6),
         signal_power double precision
-        )
+        );
     """
 
     session.execute(SQL_TEMPTABLE_STATEMENT)
@@ -267,6 +268,7 @@ def import_receiver_beacon_logfile(csv_logfile):
     """Import csv logfile <arg: csv logfile>."""
 
     SQL_TEMPTABLE_STATEMENT = """
+    DROP TABLE IF EXISTS receiver_beacon_temp;
     CREATE TABLE receiver_beacon_temp(
         location geometry,
         altitude integer,
@@ -294,7 +296,7 @@ def import_receiver_beacon_logfile(csv_logfile):
         good_senders_signal double precision,
         good_senders integer,
         good_and_bad_senders integer
-        )
+        );
     """
 
     session.execute(SQL_TEMPTABLE_STATEMENT)
