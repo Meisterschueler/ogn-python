@@ -95,14 +95,16 @@ available commands:
   [db]
     drop                   Drop all tables.
     import_airports        Import airports from a ".cup" file
+    import_csv_logfile     Import csv logfile <arg: csv logfile>.
     import_ddb             Import registered devices from the DDB.
     import_file            Import registered devices from a local file.
     init                   Initialize the database.
+    update_relations       Update AircraftBeacon and ReceiverBeacon relations
     upgrade                Upgrade database to the latest version.
 
   [gateway]
+    convert_logfile        Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD.
     run                    Run the aprs client.
-    import_logfiles        Import OGN-data from ogn-log-files <arg: ogn-logfile>.
 
   [logbook]
     compute_logbook        Compute logbook.
