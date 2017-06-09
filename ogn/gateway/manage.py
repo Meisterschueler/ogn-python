@@ -137,7 +137,7 @@ def convert(sourcefile, path=''):
 
     if len(aircraft_beacons) > 0:
         for beacon in aircraft_beacons:
-            wr_ab.writerow([beacon.get_csv_values()])
+            wr_ab.writerow(beacon.get_csv_values())
     if len(receiver_beacons) > 0:
         for beacon in receiver_beacons:
             wr_rb.writerow(beacon.get_csv_values())
