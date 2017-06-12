@@ -155,6 +155,17 @@ def import_csv_logfile(path, logfile='main.log', loglevel='INFO'):
 
 
 def import_logfile(path):
+    import os
+    import re
+
+    head, tail = os.path.split(path)
+    match = re.search('^.+\.csv\_(\d{4}\-\d{2}\-\d{2}).+?$', tail)
+    if match:
+        reference_date_string = match.group(1)
+    else:
+        print("filename '{}' does not match pattern. Skipping".format(path))
+        return
+
     f = open_file(path)
     header = f.readline().strip()
     f.close()
@@ -163,12 +174,24 @@ def import_logfile(path):
     receiver_beacon_header = ','.join(ReceiverBeacon.get_csv_columns())
 
     if header == aircraft_beacon_header:
-        import_aircraft_beacon_logfile(path)
+        if check_no_beacons('aircraft_beacon', reference_date_string):
+            import_aircraft_beacon_logfile(path)
+        else:
+            print("For {} beacons already exist. Skipping".format(reference_date_string))
     elif header == receiver_beacon_header:
-        import_receiver_beacon_logfile(path)
+        if check_no_beacons('receiver_beacon', reference_date_string):
+            import_receiver_beacon_logfile(path)
+        else:
+            print("For {} beacons already exist. Skipping".format(reference_date_string))
     else:
         print("Unknown file type: {}".format())
 
+def check_no_beacons(tablename, reference_date_string):
+    result = session.execute("""SELECT * FROM {} WHERE timestamp BETWEEN '{} 00:00:00' AND '{} 23:59:59' LIMIT 1""".format(tablename, reference_date_string, reference_date_string))
+    if result.fetchall():
+        return False
+    else:
+        return True
 
 def import_aircraft_beacon_logfile(csv_logfile):
     SQL_TEMPTABLE_STATEMENT = """
