@@ -76,12 +76,14 @@ def convert_logfile(path, logfile='main.log', loglevel='INFO'):
 def convert(sourcefile, path=''):
     import re
     import csv
+    import gzip
 
     match = re.search('^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$', sourcefile)
     if match:
-        reference_date = match.group(1)
+        reference_date_string = match.group(1)
+        reference_date = datetime.strptime(reference_date_string, "%Y-%m-%d")
     else:
-        print("filename '{}' does not match pattern".format(sourcefile))
+        print("filename '{}' does not match pattern. Skipping".format(sourcefile))
         return
 
     fin = open_file(os.path.join(path, sourcefile))
@@ -92,13 +94,14 @@ def convert(sourcefile, path=''):
         total += 1
     fin.seek(0)
 
-    fout_ab = open(os.path.join(path, 'aircraft_beacons.csv_' + reference_date), 'w')
-    fout_rb = open(os.path.join(path, 'receiver_beacons.csv_' + reference_date), 'w')
+    aircraft_beacon_filename = os.path.join(path, 'aircraft_beacons.csv_' + reference_date_string + '.gz')
+    receiver_beacon_filename = os.path.join(path, 'receiver_beacons.csv_' + reference_date_string + '.gz')
 
-    try:
-        reference_date = datetime.strptime(reference_date, "%Y-%m-%d")
-    except:
-        print('\nError in reference_date argument', reference_date)
+    if not os.path.exists(aircraft_beacon_filename) and not os.path.exists(receiver_beacon_filename):
+        fout_ab = gzip.open(aircraft_beacon_filename, 'wt')
+        fout_rb = gzip.open(receiver_beacon_filename, 'wt')
+    else:
+        print("Output files already exists. Skipping")
         return
 
     aircraft_beacons = list()

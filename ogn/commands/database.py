@@ -1,6 +1,6 @@
 from ogn.commands.dbutils import engine, session
 from ogn.model import Base, AddressOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
-from ogn.utils import get_airports
+from ogn.utils import get_airports, open_file
 from ogn.collect.database import update_device_infos
 
 from sqlalchemy import insert, distinct
@@ -155,13 +155,8 @@ def import_csv_logfile(path, logfile='main.log', loglevel='INFO'):
 
 
 def import_logfile(path):
-    f = open(path, 'r')
-    try:
-        header = f.readline().strip()
-    except UnicodeDecodeError as e:
-        print("Not a text file: {}".format(path))
-        f.close()
-        return
+    f = open_file(path)
+    header = f.readline().strip()
     f.close()
 
     aircraft_beacon_header = ','.join(AircraftBeacon.get_csv_columns())
@@ -214,7 +209,7 @@ def import_aircraft_beacon_logfile(csv_logfile):
         DELIMITER AS ','
     """
 
-    file = open(csv_logfile, 'r')
+    file = open_file(csv_logfile)
     column_names = ','.join(AircraftBeacon.get_csv_columns())
     sql = SQL_COPY_STATEMENT % column_names
 
@@ -225,6 +220,7 @@ def import_aircraft_beacon_logfile(csv_logfile):
     cursor.copy_expert(sql=sql, file=file)
     conn.commit()
     cursor.close()
+    file.close()
     print("Read logfile into temporary table")
 
     # create device if not exist
@@ -308,7 +304,7 @@ def import_receiver_beacon_logfile(csv_logfile):
         DELIMITER AS ','
     """
 
-    file = open(csv_logfile, 'r')
+    file = open_file(csv_logfile)
     column_names = ','.join(ReceiverBeacon.get_csv_columns())
     sql = SQL_COPY_STATEMENT % column_names
 
@@ -319,6 +315,7 @@ def import_receiver_beacon_logfile(csv_logfile):
     cursor.copy_expert(sql=sql, file=file)
     conn.commit()
     cursor.close()
+    file.close()
     print("Read logfile into temporary table")
 
     # create receiver if not exist
