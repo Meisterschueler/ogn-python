@@ -2,12 +2,111 @@ from ogn.commands.dbutils import engine, session
 from ogn.model import Base, AddressOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
 from ogn.utils import get_airports, open_file
 from ogn.collect.database import update_device_infos
+from ogn.gateway.process import message_to_beacon
 
 from sqlalchemy import insert, distinct
 from sqlalchemy.sql import null
 
+import os
+
+
 from manager import Manager
 manager = Manager()
+
+
+@manager.command
+def convert_logfile(path, logfile='main.log', loglevel='INFO'):
+    """Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD."""
+
+    if os.path.isfile(path):
+        print("Reading file: {}".format(path))
+        convert(path)
+        print("Finished")
+    elif os.path.isdir(path):
+        for filename in os.listdir(path):
+            print("Reading file: {}".format(filename))
+            convert(filename, path=path)
+        print("Finished")
+    else:
+        print("Not a file nor a path: {}".format(path))
+
+
+def convert(sourcefile, path=''):
+    import re
+    import csv
+    import gzip
+    import datetime
+
+    match = re.search('^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$', sourcefile)
+    if match:
+        reference_date_string = match.group(1)
+        reference_date = datetime.strptime(reference_date_string, "%Y-%m-%d")
+    else:
+        print("filename '{}' does not match pattern. Skipping".format(sourcefile))
+        return
+
+    fin = open_file(os.path.join(path, sourcefile))
+
+    # get total lines of the input file
+    total = 0
+    for line in fin:
+        total += 1
+    fin.seek(0)
+
+    aircraft_beacon_filename = os.path.join(path, 'aircraft_beacons.csv_' + reference_date_string + '.gz')
+    receiver_beacon_filename = os.path.join(path, 'receiver_beacons.csv_' + reference_date_string + '.gz')
+
+    if not os.path.exists(aircraft_beacon_filename) and not os.path.exists(receiver_beacon_filename):
+        fout_ab = gzip.open(aircraft_beacon_filename, 'wt')
+        fout_rb = gzip.open(receiver_beacon_filename, 'wt')
+    else:
+        print("Output files already exists. Skipping")
+        return
+
+    aircraft_beacons = list()
+    receiver_beacons = list()
+
+    progress = -1
+    num_lines = 0
+
+    wr_ab = csv.writer(fout_ab, delimiter=',')
+    wr_ab.writerow(AircraftBeacon.get_csv_columns())
+
+    wr_rb = csv.writer(fout_rb, delimiter=',')
+    wr_rb.writerow(ReceiverBeacon.get_csv_columns())
+
+    print('Start importing ogn-logfile')
+    for line in fin:
+        num_lines += 1
+        if int(100 * num_lines / total) != progress:
+            progress = round(100 * num_lines / total)
+            print("\rReading line {} ({}%)".format(num_lines, progress), end='')
+            if len(aircraft_beacons) > 0:
+                for beacon in aircraft_beacons:
+                    wr_ab.writerow(beacon.get_csv_values())
+                aircraft_beacons = list()
+            if len(receiver_beacons) > 0:
+                for beacon in receiver_beacons:
+                    wr_rb.writerow(beacon.get_csv_values())
+                receiver_beacons = list()
+
+        beacon = message_to_beacon(line.strip(), reference_date=reference_date)
+        if beacon is not None:
+            if isinstance(beacon, AircraftBeacon):
+                aircraft_beacons.append(beacon)
+            elif isinstance(beacon, ReceiverBeacon):
+                receiver_beacons.append(beacon)
+
+    if len(aircraft_beacons) > 0:
+        for beacon in aircraft_beacons:
+            wr_ab.writerow(beacon.get_csv_values())
+    if len(receiver_beacons) > 0:
+        for beacon in receiver_beacons:
+            wr_rb.writerow(beacon.get_csv_values())
+
+    fin.close()
+    fout_ab.close()
+    fout_rb.close()
 
 
 @manager.command
