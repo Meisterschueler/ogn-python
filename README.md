@@ -82,7 +82,7 @@ export OGN_CONFIG_MODULE="myconfig"
 
 ### manage.py - CLI options
 ```
-usage: manage.py [<namespace>.]<command> [<args>]
+usage: manage [<namespace>.]<command> [<args>]
 
 positional arguments:
   command     the command to run
@@ -91,38 +91,45 @@ optional arguments:
   -h, --help  show this help message and exit
 
 available commands:
-
+  
+  [bulkimport]
+    convert_logfile        Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD.
+    create_indices         Create indices for AircraftBeacon.
+    drop_indices           Drop indices of AircraftBeacon.
+    import_csv_logfile     Import csv logfile <arg: csv logfile>.
+  
   [db]
     drop                   Drop all tables.
     import_airports        Import airports from a ".cup" file
-    import_csv_logfile     Import csv logfile <arg: csv logfile>.
     import_ddb             Import registered devices from the DDB.
     import_file            Import registered devices from a local file.
     init                   Initialize the database.
     update_relations       Update AircraftBeacon and ReceiverBeacon relations
     upgrade                Upgrade database to the latest version.
-
+  
   [gateway]
-    convert_logfile        Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD.
     run                    Run the aprs client.
-
+  
+  [igcexport]
+    write                  Export igc file for <address> at <date>.
+  
   [logbook]
     compute_logbook        Compute logbook.
     compute_takeoff_landingCompute takeoffs and landings.
     show                   Show a logbook for <airport_name>.
-
+  
   [show.airport]
     list_all               Show a list of all airports.
-
+  
   [show.deviceinfos]
     stats                  Show some stats on registered devices.
-
+  
   [show.devices]
     aircraft_type_stats    Show stats about aircraft types used by devices.
     hardware_stats         Show stats about hardware version used by devices.
     software_stats         Show stats about software version used by devices.
     stealth_stats          Show stats about stealth flag set by devices.
-
+  
   [show.receiver]
     hardware_stats         Show some statistics of receiver hardware.
     list_all               Show a list of all receivers.
