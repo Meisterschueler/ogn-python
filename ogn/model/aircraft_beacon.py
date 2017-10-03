@@ -34,7 +34,7 @@ class AircraftBeacon(Beacon):
     device = relationship('Device', foreign_keys=[device_id])
 
     def __repr__(self):
-        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,
             self.aircraft_type,
             self.stealth,

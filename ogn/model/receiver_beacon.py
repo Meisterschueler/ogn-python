@@ -36,7 +36,7 @@ class ReceiverBeacon(Beacon):
     receiver = relationship('Receiver', foreign_keys=[receiver_id])
 
     def __repr__(self):
-        return "<ReceiverBeacon %s: %s>" % (
+        return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.version,
             self.platform,
             self.cpu_load,
