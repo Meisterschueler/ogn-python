@@ -1,8 +1,9 @@
+import os
 import unittest
-import unittest.mock as mock
 
-from ogn.utils import get_ddb, get_trackable, get_country_code
 from ogn.model import AircraftType
+from ogn.utils import get_ddb, get_trackable, get_country_code
+import unittest.mock as mock
 
 
 class TestStringMethods(unittest.TestCase):
@@ -11,7 +12,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertGreater(len(devices), 1000)
 
     def test_get_ddb_from_file(self):
-        devices = get_ddb('tests/custom_ddb.txt')
+        devices = get_ddb(os.path.dirname(__file__) + '/custom_ddb.txt')
         self.assertEqual(len(devices), 6)
         device = devices[0]
 
@@ -24,7 +25,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(device.aircraft_type, AircraftType.glider_or_motor_glider)
 
     def test_get_trackable(self):
-        devices = get_ddb('tests/custom_ddb.txt')
+        devices = get_ddb(os.path.dirname(__file__) + '/custom_ddb.txt')
         trackable = get_trackable(devices)
         self.assertEqual(len(trackable), 4)
         self.assertIn('FLRDD4711', trackable)
