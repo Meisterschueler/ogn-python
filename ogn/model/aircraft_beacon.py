@@ -94,7 +94,7 @@ class AircraftBeacon(Beacon):
     def get_csv_values(self):
         return [
             self.location_wkt,
-            int(self.altitude),
+            int(self.altitude) if self.altitude else None,
             self.name,
             self.receiver_name,
             self.timestamp,

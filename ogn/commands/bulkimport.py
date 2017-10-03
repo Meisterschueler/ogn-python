@@ -36,7 +36,7 @@ def convert(sourcefile, path=''):
     match = re.search('^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$', sourcefile)
     if match:
         reference_date_string = match.group(1)
-        reference_date = datetime.strptime(reference_date_string, "%Y-%m-%d")
+        reference_date = datetime.datetime.strptime(reference_date_string, "%Y-%m-%d")
     else:
         print("filename '{}' does not match pattern. Skipping".format(sourcefile))
         return
