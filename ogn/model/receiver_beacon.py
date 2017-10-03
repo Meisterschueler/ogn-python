@@ -29,6 +29,8 @@ class ReceiverBeacon(Beacon):
     good_senders = Column(Integer)
     good_and_bad_senders = Column(Integer)
 
+    user_comment = None
+
     status = Column(SmallInteger, index=True)
 
     # Relations

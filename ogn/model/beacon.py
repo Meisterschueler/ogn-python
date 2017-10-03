@@ -24,6 +24,10 @@ class Beacon(AbstractConcreteBase, Base):
     ground_speed = Column(Float)
     comment = None
 
+    relay = None
+    beacon_type = None
+    aprs_type = None
+
     @property
     def location(self):
         if self.location_wkt is None:

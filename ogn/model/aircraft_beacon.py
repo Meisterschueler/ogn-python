@@ -24,6 +24,18 @@ class AircraftBeacon(Beacon):
     real_address = Column(String(6))
     signal_power = Column(Float)
 
+    proximity = None
+    gps_satellites = None
+    gps_quality = None
+    gps_altitude = None
+    pressure = None
+    temperature = None
+    humidity = None
+    voltage = None
+    transmitter_power = None
+    noise_level = None
+    relays = None
+
     status = Column(SmallInteger, index=True)
 
     # Relations
