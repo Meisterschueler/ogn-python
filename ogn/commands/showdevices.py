@@ -1,8 +1,9 @@
+from manager import Manager
 from ogn.commands.dbutils import session
 from ogn.model import Device, AircraftType
 from sqlalchemy import func
 
-from manager import Manager
+
 manager = Manager()
 
 

@@ -1,8 +1,9 @@
-from ogn.model import Airport
-from ogn.commands.dbutils import session
-
 from manager import Manager
+from ogn.commands.dbutils import session
+from ogn.model import Airport
 from sqlalchemy import and_, between
+
+
 manager = Manager()
 
 

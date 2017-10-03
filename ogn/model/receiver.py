@@ -1,7 +1,7 @@
+from geoalchemy2.shape import to_shape
+from geoalchemy2.types import Geometry
 from sqlalchemy import Column, String, Integer, DateTime
 from sqlalchemy.orm import relationship
-from geoalchemy2.types import Geometry
-from geoalchemy2.shape import to_shape
 
 from .base import Base
 from .geo import Location

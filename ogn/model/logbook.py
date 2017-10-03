@@ -1,8 +1,8 @@
 from sqlalchemy import Integer, DateTime, Column, ForeignKey, case, null
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from .base import Base
-from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Logbook(Base):

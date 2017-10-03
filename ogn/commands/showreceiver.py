@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from sqlalchemy.sql import func
-from sqlalchemy import distinct, and_
-
-from ogn.model import ReceiverBeacon, Receiver
-from ogn.commands.dbutils import session
-
 from manager import Manager
+from ogn.commands.dbutils import session
+from ogn.model import ReceiverBeacon, Receiver
+from sqlalchemy import distinct, and_
+from sqlalchemy.sql import func
+
+
 manager = Manager()
 
 receiver_beacons_per_day = 24 * 60 / 5

@@ -1,16 +1,12 @@
-from ogn.commands.dbutils import engine, session
-from ogn.model import Base, AddressOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
-from ogn.utils import get_airports, open_file
-from ogn.collect.database import update_device_infos
-from ogn.gateway.process import message_to_beacon
-
-from sqlalchemy import insert, distinct
-from sqlalchemy.sql import null
-
 import os
 
-
 from manager import Manager
+from ogn.commands.dbutils import session
+from ogn.gateway.process import message_to_beacon
+from ogn.model import AircraftBeacon, ReceiverBeacon
+from ogn.utils import open_file
+
+
 manager = Manager()
 
 

@@ -2,17 +2,16 @@
 
 from datetime import timedelta, datetime
 
-from sqlalchemy.sql import func
+from manager import Manager
+from ogn.collect.logbook import compute_logbook_entries
+from ogn.collect.takeoff_landing import compute_takeoff_and_landing
+from ogn.commands.dbutils import session
+from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql import func
 
-from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
 
-from ogn.commands.dbutils import session
-from ogn.collect.takeoff_landing import compute_takeoff_and_landing
-from ogn.collect.logbook import compute_logbook_entries
-
-from manager import Manager
 manager = Manager()
 
 

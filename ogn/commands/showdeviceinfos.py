@@ -1,9 +1,10 @@
+from manager import Manager
 from ogn.commands.dbutils import session
 from ogn.model import AddressOrigin
+from ogn.model.device_info import DeviceInfo
 from sqlalchemy import func, and_, true, false
 
-from manager import Manager
-from ogn.model.device_info import DeviceInfo
+
 manager = Manager()
 
 

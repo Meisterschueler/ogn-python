@@ -1,13 +1,9 @@
 import logging
 
-from ogn.client import AprsClient
-from ogn.gateway.process import process_beacon, message_to_beacon
-from datetime import datetime
 from manager import Manager
-from ogn.model import AircraftBeacon, ReceiverBeacon
+from ogn.client import AprsClient
+from ogn.gateway.process import process_beacon
 
-from ogn.utils import open_file
-import os
 
 manager = Manager()
 

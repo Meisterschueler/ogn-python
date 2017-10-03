@@ -1,7 +1,9 @@
 import logging
+
 from ogn.commands.dbutils import session
 from ogn.model import AircraftBeacon, ReceiverBeacon, Location
-from ogn.parser import parse_aprs, parse_ogn_receiver_beacon, parse_ogn_aircraft_beacon, ParseError
+from ogn.parser import parse, ParseError
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,33 +21,16 @@ def message_to_beacon(raw_message, reference_date):
 
     if raw_message[0] != '#':
         try:
-            message = parse_aprs(raw_message, reference_date)
-            # symboltable / symbolcodes used by OGN:
-            # I&: used as receiver
-            # /X: helicopter_rotorcraft
-            # /': glider_or_motorglider
-            # \^: powered_aircraft
-            # /g: para_glider
-            # /O: ?
-            # /^: ?
-            # \n: ?
-            # /z: ?
-            # /o: ?
-            if 'symboltable' not in message and 'symbolcode' not in message:
-                # we have a receiver_beacon (status message)
-                message.update(parse_ogn_receiver_beacon(message['comment']))
-                beacon = ReceiverBeacon(**message)
-            elif message['symboltable'] == "I" and message['symbolcode'] == '&':
-                # ... we have a receiver_beacon
-                if message['comment']:
-                    message.update(parse_ogn_receiver_beacon(message['comment']))
+            message = parse(raw_message, reference_date)
+            if message['aprs_type'] == 'position':
                 message = replace_lonlat_with_wkt(message)
+
+            if message['beacon_type'] == 'aircraft_beacon':
+                beacon = AircraftBeacon(**message)
+            elif message['beacon_type'] == 'receiver_beacon':
                 beacon = ReceiverBeacon(**message)
             else:
-                # ... we have a aircraft_beacon
-                message.update(parse_ogn_aircraft_beacon(message['comment']))
-                message = replace_lonlat_with_wkt(message)
-                beacon = AircraftBeacon(**message)
+                print("Whoops: what is this: {}".format(message))
         except ParseError as e:
             logger.error('Received message: {}'.format(raw_message))
             logger.error('Drop packet, {}'.format(e.message))

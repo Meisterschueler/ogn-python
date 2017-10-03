@@ -1,12 +1,12 @@
+from manager import Manager
+from ogn.collect.database import update_device_infos
 from ogn.commands.dbutils import engine, session
 from ogn.model import Base, AddressOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
-from ogn.utils import get_airports, open_file
-from ogn.collect.database import update_device_infos
-
+from ogn.utils import get_airports
 from sqlalchemy import insert, distinct
 from sqlalchemy.sql import null
 
-from manager import Manager
+
 manager = Manager()
 
 ALEMBIC_CONFIG_FILE = "alembic.ini"

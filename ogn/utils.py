@@ -1,16 +1,15 @@
-import requests
 import csv
+import gzip
 from io import StringIO
+
+from aerofiles.seeyou import Reader
+from geopy.exc import GeopyError
+from geopy.geocoders import Nominatim
+from ogn.parser.utils import feet2m
+import requests
 
 from .model import AddressOrigin, DeviceInfo, Airport, Location
 
-from geopy.geocoders import Nominatim
-from geopy.exc import GeopyError
-
-from aerofiles.seeyou import Reader
-from ogn.parser.utils import feet2m
-
-import gzip
 
 DDB_URL = "http://ddb.glidernet.org/download/?t=1"
 
@@ -108,7 +107,7 @@ def get_airports(cupfile):
 
 def open_file(filename):
     """Opens a regular or unzipped textfile for reading."""
-    f = open(filename,'rb')
+    f = open(filename, 'rb')
     a = f.read(2)
     f.close()
     if (a == b'\x1f\x8b'):

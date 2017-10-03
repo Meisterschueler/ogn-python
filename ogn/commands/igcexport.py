@@ -1,18 +1,12 @@
-from sqlalchemy.sql import func
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import aliased
-
-from ogn.model import AircraftBeacon, Device
-
-from ogn.commands.dbutils import session
-
-from aerofiles.igc import Writer
-
 import datetime
 import re
 
-
+from aerofiles.igc import Writer
 from manager import Manager
+from ogn.commands.dbutils import session
+from ogn.model import AircraftBeacon, Device
+
+
 manager = Manager()
 
 
@@ -34,7 +28,7 @@ def write(address, date):
         .first()
 
     if (device_id is None):
-        print ("Device with address '{}' not found.".format(address))
+        print("Device with address '{}' not found.".format(address))
         return
 
     with open('sample.igc', 'wb') as fp:
