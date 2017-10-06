@@ -1,4 +1,5 @@
 import os
+import re
 
 from manager import Manager
 from ogn.commands.dbutils import session
@@ -9,18 +10,19 @@ from ogn.utils import open_file
 
 manager = Manager()
 
+PATTERN = '^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$'
+
 
 @manager.command
 def convert_logfile(path, logfile='main.log', loglevel='INFO'):
     """Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD."""
 
     if os.path.isfile(path):
-        print("Reading file: {}".format(path))
-        convert(path)
+        head, tail = os.path.split(path)
+        convert(tail, path=head)
         print("Finished")
     elif os.path.isdir(path):
         for filename in os.listdir(path):
-            print("Reading file: {}".format(filename))
             convert(filename, path=path)
         print("Finished")
     else:
@@ -28,15 +30,25 @@ def convert_logfile(path, logfile='main.log', loglevel='INFO'):
 
 
 def convert(sourcefile, path=''):
-    import re
     import csv
     import gzip
     import datetime
 
-    match = re.search('^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$', sourcefile)
+    match = re.search(PATTERN, sourcefile)
     if match:
         reference_date_string = match.group(1)
         reference_date = datetime.datetime.strptime(reference_date_string, "%Y-%m-%d")
+
+        aircraft_beacon_filename = os.path.join(path, 'aircraft_beacons.csv_' + reference_date_string + '.gz')
+        receiver_beacon_filename = os.path.join(path, 'receiver_beacons.csv_' + reference_date_string + '.gz')
+
+        if not os.path.exists(aircraft_beacon_filename) and not os.path.exists(receiver_beacon_filename):
+            print("Reading file: {}".format(sourcefile))
+            fout_ab = gzip.open(aircraft_beacon_filename, 'wt')
+            fout_rb = gzip.open(receiver_beacon_filename, 'wt')
+        else:
+            print("Output files for file {} already exists. Skipping".format(sourcefile))
+            return
     else:
         print("filename '{}' does not match pattern. Skipping".format(sourcefile))
         return
@@ -48,16 +60,6 @@ def convert(sourcefile, path=''):
     for line in fin:
         total += 1
     fin.seek(0)
-
-    aircraft_beacon_filename = os.path.join(path, 'aircraft_beacons.csv_' + reference_date_string + '.gz')
-    receiver_beacon_filename = os.path.join(path, 'receiver_beacons.csv_' + reference_date_string + '.gz')
-
-    if not os.path.exists(aircraft_beacon_filename) and not os.path.exists(receiver_beacon_filename):
-        fout_ab = gzip.open(aircraft_beacon_filename, 'wt')
-        fout_rb = gzip.open(receiver_beacon_filename, 'wt')
-    else:
-        print("Output files already exists. Skipping")
-        return
 
     aircraft_beacons = list()
     receiver_beacons = list()
