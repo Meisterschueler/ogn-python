@@ -31,6 +31,9 @@ def message_to_beacon(raw_message, reference_date):
                 beacon = ReceiverBeacon(**message)
             else:
                 print("Whoops: what is this: {}".format(message))
+        except NotImplementedError as e:
+            logger.error('Received message: {}'.format(raw_message))
+            logger.error(e)
         except ParseError as e:
             logger.error('Received message: {}'.format(raw_message))
             logger.error('Drop packet, {}'.format(e.message))
