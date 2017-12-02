@@ -4,7 +4,7 @@ from ogn.commands.dbutils import engine, session
 from ogn.model import Base, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
 from ogn.utils import get_airports
 from sqlalchemy import insert, distinct
-from sqlalchemy.sql import null
+from sqlalchemy.sql import null, and_, or_, func, not_
 
 
 manager = Manager()
@@ -131,3 +131,77 @@ def update_relations():
     session.commit()
     print("Updated {} AircraftBeacons and {} ReceiverBeacons".
           format(upd, upd2))
+
+
+@manager.command
+def update_receivers():
+    """Add/update entries in receiver table and update foreign keys in aircraft beacons and receiver beacons."""
+    # Create missing Receiver from ReceiverBeacon
+    available_receivers = session.query(Receiver.name) \
+        .subquery()
+
+    missing_receiver_query = session.query(distinct(ReceiverBeacon.name)) \
+        .filter(ReceiverBeacon.receiver_id == null()) \
+        .filter(~ReceiverBeacon.name.in_(available_receivers))
+
+    ins = insert(Receiver).from_select([Receiver.name], missing_receiver_query)
+    res = session.execute(ins)
+    insert_count = res.rowcount
+
+    # Update missing or changed location, update it and set country code to None
+    last_beacon_update = session.query(ReceiverBeacon.name, func.max(ReceiverBeacon.timestamp).label("timestamp")) \
+        .filter(ReceiverBeacon.receiver_id == null()) \
+        .group_by(ReceiverBeacon.name) \
+        .subquery()
+
+    last_position = session.query(ReceiverBeacon) \
+        .filter(and_(ReceiverBeacon.name == last_beacon_update.c.name, ReceiverBeacon.timestamp == last_beacon_update.c.timestamp,
+                     ReceiverBeacon.location_wkt != null(), ReceiverBeacon.altitude != null())) \
+        .subquery()
+
+    location_changed = session.query(last_position) \
+        .filter(and_(last_position.c.name == Receiver.name)) \
+        .filter(or_(Receiver.location_wkt == null(), not_(func.ST_Equals(Receiver.location_wkt, last_position.columns.location)), last_position.c.altitude != Receiver.altitude)) \
+        .subquery()
+
+    upd = session.query(Receiver) \
+        .filter(Receiver.name == location_changed.c.name) \
+        .update({Receiver.location_wkt: location_changed.c.location,
+                 Receiver.altitude: location_changed.c.altitude,
+                 Receiver.country_code: None},
+                synchronize_session='fetch')
+
+    # Update missing or changed status
+    last_status = session.query(ReceiverBeacon) \
+        .filter(and_(ReceiverBeacon.name == last_beacon_update.columns.name, ReceiverBeacon.timestamp == last_beacon_update.c.timestamp,
+                     ReceiverBeacon.version != null(), ReceiverBeacon.platform != null())) \
+        .subquery()
+
+    status_changed = session.query(last_status) \
+        .filter(and_(last_status.columns.name == Receiver.name)) \
+        .filter(or_(Receiver.version == null(), Receiver.platform == null(), Receiver.version != last_status.columns.version)) \
+        .subquery()
+
+    upd2 = session.query(Receiver) \
+        .filter(Receiver.name == status_changed.columns.name) \
+        .update({Receiver.version: status_changed.c.version,
+                 Receiver.platform: status_changed.c.platform},
+                synchronize_session='fetch')
+    # Update relations to aircraft beacons
+    upd3 = session.query(AircraftBeacon) \
+        .filter(and_(AircraftBeacon.receiver_id == null(), AircraftBeacon.receiver_name == Receiver.name)) \
+        .update({AircraftBeacon.receiver_id: Receiver.id},
+                synchronize_session='fetch')
+
+    # Update relations to receiver beacons
+    upd4 = session.query(ReceiverBeacon) \
+        .filter(and_(ReceiverBeacon.receiver_id == null(), ReceiverBeacon.name == Receiver.name)) \
+        .update({ReceiverBeacon.receiver_id: Receiver.id},
+                synchronize_session='fetch')
+
+    session.commit()
+
+    print("Inserted {} Receivers".format(insert_count))
+    print("Updated Receivers: {} positions, {} status".format(upd, upd2))
+    print("Updated Relations: {} aircraft beacons, {} receiver beacons".format(upd3, upd4))
+    return
