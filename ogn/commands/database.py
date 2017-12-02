@@ -84,53 +84,31 @@ def import_airports(path='tests/SeeYou.cup'):
 
 
 @manager.command
-def update_relations():
-    """Update AircraftBeacon and ReceiverBeacon relations"""
-
-    # Create missing Receiver from ReceiverBeacon
-    available_receivers = session.query(Receiver.name) \
-        .subquery()
-
-    missing_receiver_query = session.query(distinct(ReceiverBeacon.name)) \
-        .filter(ReceiverBeacon.receiver_id == null()) \
-        .filter(~ReceiverBeacon.name.in_(available_receivers))
-
-    ins = insert(Receiver).from_select([Receiver.name], missing_receiver_query)
-    session.execute(ins)
+def update_devices():
+    """Add/update entries in devices table and update foreign keys in aircraft beacons."""
 
     # Create missing Device from AircraftBeacon
-    available_addresses = session.query(Device.address) \
+    available_devices = session.query(Device.address) \
         .subquery()
 
-    missing_addresses_query = session.query(distinct(AircraftBeacon.address)) \
+    missing_devices_query = session.query(distinct(AircraftBeacon.address)) \
         .filter(AircraftBeacon.device_id == null()) \
-        .filter(~AircraftBeacon.address.in_(available_addresses))
+        .filter(~AircraftBeacon.address.in_(available_devices))
 
-    ins2 = insert(Device).from_select([Device.address], missing_addresses_query)
-    session.execute(ins2)
-    session.commit()
-    print("Inserted {} Receivers and {} Devices".format(ins, ins2))
-    return
+    ins = insert(Device).from_select([Device.address], missing_devices_query)
+    res = session.execute(ins)
+    insert_count = res.rowcount
 
-    # Update AircraftBeacons
+    # Update relations to aircraft beacons
     upd = session.query(AircraftBeacon) \
         .filter(AircraftBeacon.device_id == null()) \
-        .filter(AircraftBeacon.receiver_id == null()) \
         .filter(AircraftBeacon.address == Device.address) \
-        .filter(AircraftBeacon.receiver_name == Receiver.name) \
-        .update({AircraftBeacon.device_id: Device.id,
-                 AircraftBeacon.receiver_id: Receiver.id},
-                synchronize_session='fetch')
-
-    upd2 = session.query(ReceiverBeacon) \
-        .filter(ReceiverBeacon.receiver_id == null()) \
-        .filter(ReceiverBeacon.receiver_name == Receiver.name) \
-        .update({Receiver.name: ReceiverBeacon.receiver_name},
+        .update({AircraftBeacon.device_id: Device.id},
                 synchronize_session='fetch')
 
     session.commit()
-    print("Updated {} AircraftBeacons and {} ReceiverBeacons".
-          format(upd, upd2))
+    print("Inserted {} Devices".format(insert_count))
+    print("Updated {} AircraftBeacons".format(upd))
 
 
 @manager.command
@@ -187,6 +165,7 @@ def update_receivers():
         .update({Receiver.version: status_changed.c.version,
                  Receiver.platform: status_changed.c.platform},
                 synchronize_session='fetch')
+
     # Update relations to aircraft beacons
     upd3 = session.query(AircraftBeacon) \
         .filter(and_(AircraftBeacon.receiver_id == null(), AircraftBeacon.receiver_name == Receiver.name)) \
