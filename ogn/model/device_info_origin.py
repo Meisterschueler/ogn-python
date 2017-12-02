@@ -1,4 +1,4 @@
-class AddressOrigin:
+class DeviceInfoOrigin:
     unknown = 0
     ogn_ddb = 1
     flarmnet = 2

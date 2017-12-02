@@ -1,6 +1,6 @@
 from manager import Manager
 from ogn.commands.dbutils import session
-from ogn.model import AddressOrigin
+from ogn.model import DeviceInfoOrigin
 from ogn.model.device_info import DeviceInfo
 from sqlalchemy import func, and_, true, false
 
@@ -39,7 +39,7 @@ def get_devices_stats(session):
 
     stats = {}
     for [address_origin, device_count, default_count, nt_count, ni_count, ntni_count] in query.all():
-        origin = AddressOrigin(address_origin).name()
+        origin = DeviceInfoOrigin(address_origin).name()
         stats[origin] = {'device_count': device_count,
                          'default_count': default_count,
                          'nt_count': nt_count,

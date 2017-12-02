@@ -184,7 +184,7 @@ def import_logfile(path):
         else:
             print("For {} beacons already exist. Skipping".format(reference_date_string))
     else:
-        print("Unknown file type: {}".format())
+        print("Unknown file type: {}".format(tail))
 
 
 def check_no_beacons(tablename, reference_date_string):
