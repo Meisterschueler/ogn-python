@@ -95,7 +95,7 @@ def update_devices():
         .subquery()
 
     missing_devices_query = session.query(distinct(AircraftBeacon.address)) \
-        .filter(AircraftBeacon.device_id == null()) \
+        .filter(and_(AircraftBeacon.device_id == null(), AircraftBeacon.error_count == 0)) \
         .filter(~AircraftBeacon.address.in_(available_devices))
 
     ins = insert(Device).from_select([Device.address], missing_devices_query)
@@ -129,7 +129,7 @@ def update_receivers():
     res = session.execute(ins)
     insert_count = res.rowcount
 
-    # Update missing or changed values, update_receivers them and set country code to None if location changed
+    # Update missing or changed values, update them and set country code to None if location changed
     new_values_range = session.query(ReceiverBeacon.name,
                                      func.min(ReceiverBeacon.timestamp).label('firstseen'),
                                      func.max(ReceiverBeacon.timestamp).label('lastseen')) \
