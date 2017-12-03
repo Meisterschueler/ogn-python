@@ -5,6 +5,9 @@ from ogn.model import Base, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon, De
 from ogn.utils import get_airports
 from sqlalchemy import insert, distinct
 from sqlalchemy.sql import null, and_, or_, func, not_
+from sqlalchemy.sql.expression import case
+
+from ogn.utils import get_country_code
 
 
 manager = Manager()
@@ -113,7 +116,7 @@ def update_devices():
 
 @manager.command
 def update_receivers():
-    """Add/update entries in receiver table and update foreign keys in aircraft beacons and receiver beacons."""
+    """Add/update_receivers entries in receiver table and update_receivers foreign keys in aircraft beacons and receiver beacons."""
     # Create missing Receiver from ReceiverBeacon
     available_receivers = session.query(Receiver.name) \
         .subquery()
@@ -126,61 +129,95 @@ def update_receivers():
     res = session.execute(ins)
     insert_count = res.rowcount
 
-    # Update missing or changed location, update it and set country code to None
-    last_beacon_update = session.query(ReceiverBeacon.name, func.max(ReceiverBeacon.timestamp).label("timestamp")) \
-        .filter(ReceiverBeacon.receiver_id == null()) \
-        .group_by(ReceiverBeacon.name) \
-        .subquery()
+    # Update missing or changed values, update_receivers them and set country code to None if location changed
+    new_values_range = session.query(ReceiverBeacon.name,
+                                     func.min(ReceiverBeacon.timestamp).label('firstseen'),
+                                     func.max(ReceiverBeacon.timestamp).label('lastseen')) \
+                              .filter(ReceiverBeacon.receiver_id == null()) \
+                              .group_by(ReceiverBeacon.name) \
+                              .subquery()
 
-    last_position = session.query(ReceiverBeacon) \
-        .filter(and_(ReceiverBeacon.name == last_beacon_update.c.name, ReceiverBeacon.timestamp == last_beacon_update.c.timestamp,
-                     ReceiverBeacon.location_wkt != null(), ReceiverBeacon.altitude != null())) \
-        .subquery()
+    last_values = session.query(ReceiverBeacon.name,
+                                func.max(new_values_range.c.firstseen).label('firstseen'),
+                                func.max(new_values_range.c.lastseen).label('lastseen'),
+                                func.max(ReceiverBeacon.location_wkt).label('location_wkt'),
+                                func.max(ReceiverBeacon.altitude).label('altitude'),
+                                func.max(ReceiverBeacon.version).label('version'),
+                                func.max(ReceiverBeacon.platform).label('platform')) \
+                         .filter(and_(ReceiverBeacon.name == new_values_range.c.name,
+                                      ReceiverBeacon.timestamp == new_values_range.c.lastseen)) \
+                         .group_by(ReceiverBeacon.name) \
+                         .subquery()
 
-    location_changed = session.query(last_position) \
-        .filter(and_(last_position.c.name == Receiver.name)) \
-        .filter(or_(Receiver.location_wkt == null(), not_(func.ST_Equals(Receiver.location_wkt, last_position.columns.location)), last_position.c.altitude != Receiver.altitude)) \
-        .subquery()
+    last_valid_values = session.query(last_values) \
+                               .filter(and_(last_values.c.firstseen != null(),
+                                            last_values.c.lastseen != null(),
+                                            last_values.c.location_wkt != null(),
+                                            last_values.c.altitude != null(),
+                                            last_values.c.version != null(),
+                                            last_values.c.platform != null())) \
+                               .subquery()
 
-    upd = session.query(Receiver) \
-        .filter(Receiver.name == location_changed.c.name) \
-        .update({Receiver.location_wkt: location_changed.c.location,
-                 Receiver.altitude: location_changed.c.altitude,
-                 Receiver.country_code: None},
-                synchronize_session='fetch')
+    update_values = session.query(Receiver.name,
+                                  case([(or_(Receiver.firstseen == null(), Receiver.firstseen > last_valid_values.c.firstseen), last_valid_values.c.firstseen),
+                                        (Receiver.firstseen <= last_valid_values.c.firstseen, Receiver.firstseen)]).label('firstseen'),
+                                  case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.lastseen),
+                                        (Receiver.firstseen >= last_valid_values.c.firstseen, Receiver.firstseen)]).label('lastseen'),
+                                  case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), func.ST_Transform(last_valid_values.c.location_wkt, 4326)),
+                                        (Receiver.lastseen >= last_valid_values.c.lastseen, func.ST_Transform(Receiver.location_wkt, 4326))]).label('location_wkt'),
+                                  case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.altitude),
+                                        (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.altitude)]).label('altitude'),
+                                  case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.version),
+                                        (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.version)]).label('version'),
+                                  case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.platform),
+                                        (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.platform)]).label('platform'),
+                                  case([(or_(Receiver.location_wkt == null(), not_(func.ST_Equals(Receiver.location_wkt, last_valid_values.c.location_wkt))), None),
+                                        (func.ST_Equals(Receiver.location_wkt, last_valid_values.c.location_wkt), Receiver.country_code)]).label('country_code')) \
+                           .filter(Receiver.name == last_valid_values.c.name) \
+                           .subquery()
 
-    # Update missing or changed status
-    last_status = session.query(ReceiverBeacon) \
-        .filter(and_(ReceiverBeacon.name == last_beacon_update.columns.name, ReceiverBeacon.timestamp == last_beacon_update.c.timestamp,
-                     ReceiverBeacon.version != null(), ReceiverBeacon.platform != null())) \
-        .subquery()
-
-    status_changed = session.query(last_status) \
-        .filter(and_(last_status.columns.name == Receiver.name)) \
-        .filter(or_(Receiver.version == null(), Receiver.platform == null(), Receiver.version != last_status.columns.version)) \
-        .subquery()
-
-    upd2 = session.query(Receiver) \
-        .filter(Receiver.name == status_changed.columns.name) \
-        .update({Receiver.version: status_changed.c.version,
-                 Receiver.platform: status_changed.c.platform},
+    update_receivers = session.query(Receiver) \
+        .filter(Receiver.name == update_values.c.name) \
+        .update({Receiver.firstseen: update_values.c.firstseen,
+                 Receiver.lastseen: update_values.c.lastseen,
+                 Receiver.location_wkt: update_values.c.location_wkt,
+                 Receiver.altitude: update_values.c.altitude,
+                 Receiver.version: update_values.c.version,
+                 Receiver.platform: update_values.c.platform,
+                 Receiver.country_code: update_values.c.country_code},
                 synchronize_session='fetch')
 
     # Update relations to aircraft beacons
-    upd3 = session.query(AircraftBeacon) \
+    update_aircraft_beacons = session.query(AircraftBeacon) \
         .filter(and_(AircraftBeacon.receiver_id == null(), AircraftBeacon.receiver_name == Receiver.name)) \
         .update({AircraftBeacon.receiver_id: Receiver.id},
                 synchronize_session='fetch')
 
     # Update relations to receiver beacons
-    upd4 = session.query(ReceiverBeacon) \
+    update_receiver_beacons = session.query(ReceiverBeacon) \
         .filter(and_(ReceiverBeacon.receiver_id == null(), ReceiverBeacon.name == Receiver.name)) \
         .update({ReceiverBeacon.receiver_id: Receiver.id},
                 synchronize_session='fetch')
 
     session.commit()
 
-    print("Inserted {} Receivers".format(insert_count))
-    print("Updated Receivers: {} positions, {} status".format(upd, upd2))
-    print("Updated Relations: {} aircraft beacons, {} receiver beacons".format(upd3, upd4))
-    return
+    print("Receivers: {} inserted, {} updated.".format(insert_count, update_receivers))
+    print("Updated relations: {} aircraft beacons, {} receiver beacons".format(update_aircraft_beacons, update_receiver_beacons))
+
+
+@manager.command
+def update_country_code():
+    # update country code if None
+    unknown_country_query = session.query(Receiver) \
+        .filter(Receiver.country_code == null()) \
+        .filter(Receiver.location_wkt != null()) \
+        .order_by(Receiver.name)
+
+    for receiver in unknown_country_query.all():
+        location = receiver.location
+        country_code = get_country_code(location.latitude, location.longitude)
+        if country_code is not None:
+            receiver.country_code = country_code
+            print("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
+
+    session.commit()
