@@ -16,8 +16,9 @@ addons:
 
 before_script:
   - flake8 tests ogn_test
-  - psql -c 'CREATE DATABASE ogn_test;' -U postgres
-  - psql -c 'CREATE EXTENSION postgis;' -U postgres -d ogn_test
+  - psql -U postgres -c 'CREATE DATABASE ogn_test;'
+  - psql -U postgres -c 'CREATE EXTENSION postgis;'
+  - psql -U postgres -d ogn_test
 
 script:
   - nosetests --with-coverage --cover-package=ogn
