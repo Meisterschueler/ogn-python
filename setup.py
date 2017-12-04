@@ -39,7 +39,7 @@ setup(
         'alembic==0.9.6',
         'aerofiles==0.4',
         'geoalchemy2==0.4.0',
-        'shapely==1.5.17.post1',
+        'shapely>=1.5.17,<1.6',
         'ogn-client==0.8.0',
         'psycopg2==2.7.3.2'
     ],
