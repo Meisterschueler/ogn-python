@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, SmallInteger
+from sqlalchemy import Column, Integer, String, Float, Boolean, SmallInteger, DateTime
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -9,6 +9,8 @@ class Device(Base):
 
     id = Column(Integer, primary_key=True)
     address = Column(String(6), index=True)
+    firstseen = Column(DateTime, index=True)
+    lastseen = Column(DateTime, index=True)
     aircraft_type = Column(SmallInteger, index=True)
     stealth = Column(Boolean)
     software_version = Column(Float)
