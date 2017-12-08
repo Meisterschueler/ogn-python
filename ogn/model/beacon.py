@@ -16,7 +16,7 @@ class Beacon(AbstractConcreteBase, Base):
 
     name = Column(String)
     receiver_name = Column(String(9))
-    dstcall = None
+    dstcall = Column(String)
     timestamp = Column(DateTime, index=True)
     symboltable = None
     symbolcode = None

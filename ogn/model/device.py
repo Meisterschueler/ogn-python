@@ -16,6 +16,8 @@ class Device(Base):
     software_version = Column(Float)
     hardware_version = Column(SmallInteger)
     real_address = Column(String(6))
+    firstseen = Column(DateTime, index=True)
+    lastseen = Column(DateTime, index=True)
 
     # Relations
     aircraft_beacons = relationship('AircraftBeacon')
