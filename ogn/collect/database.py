@@ -65,7 +65,8 @@ def update_devices():
     app.session.commit()
 
     # For each address in the new beacons: get firstseen, lastseen and last values != NULL
-    last_valid_values = app.session.query(distinct(AircraftBeacon.address).label('address'),
+    last_valid_values = app.session.query(
+            distinct(AircraftBeacon.address).label('address'),
             func.first_value(AircraftBeacon.timestamp)
                 .over(partition_by=AircraftBeacon.address, order_by=case([(AircraftBeacon.timestamp == null(), None), (AircraftBeacon.timestamp != null(), AircraftBeacon.timestamp)]))
                 .label('firstseen'),
@@ -87,44 +88,47 @@ def update_devices():
             func.first_value(AircraftBeacon.real_address)
                 .over(partition_by=AircraftBeacon.address, order_by=case([(AircraftBeacon.real_address == null(), None), (AircraftBeacon.real_address != null(), AircraftBeacon.real_address)]))
                 .label('real_address')) \
-            .filter(and_(AircraftBeacon.device_id == null(), AircraftBeacon.error_count == 0)) \
-            .subquery()
+        .filter(and_(AircraftBeacon.device_id == null(), AircraftBeacon.error_count == 0)) \
+        .subquery()
 
-    update_values = app.session.query(Device.address,
-                                  case([(or_(Device.firstseen == null(), Device.firstseen > last_valid_values.c.firstseen), last_valid_values.c.firstseen),
-                                        (Device.firstseen <= last_valid_values.c.firstseen, Device.firstseen)]).label('firstseen'),
-                                  case([(or_(Device.lastseen == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.lastseen),
-                                        (Device.lastseen >= last_valid_values.c.lastseen, Device.lastseen)]).label('lastseen'),
-                                  case([(or_(Device.aircraft_type == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.aircraft_type),
-                                        (Device.lastseen >= last_valid_values.c.lastseen, Device.aircraft_type)]).label('aircraft_type'),
-                                  case([(or_(Device.stealth == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.stealth),
-                                        (Device.lastseen >= last_valid_values.c.lastseen, Device.stealth)]).label('stealth'),
-                                  case([(or_(Device.software_version == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.software_version),
-                                        (Device.lastseen >= last_valid_values.c.lastseen, Device.software_version)]).label('software_version'),
-                                  case([(or_(Device.hardware_version == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.hardware_version),
-                                        (Device.lastseen >= last_valid_values.c.lastseen, Device.hardware_version)]).label('hardware_version'),
-                                  case([(or_(Device.real_address == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.real_address),
-                                        (Device.lastseen >= last_valid_values.c.lastseen, Device.real_address)]).label('real_address')) \
-                           .filter(Device.address == last_valid_values.c.address) \
-                           .subquery()
+    update_values = app.session.query(
+            Device.address,
+            case([(or_(Device.firstseen == null(), Device.firstseen > last_valid_values.c.firstseen), last_valid_values.c.firstseen),
+                  (Device.firstseen <= last_valid_values.c.firstseen, Device.firstseen)]).label('firstseen'),
+            case([(or_(Device.lastseen == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.lastseen),
+                  (Device.lastseen >= last_valid_values.c.lastseen, Device.lastseen)]).label('lastseen'),
+            case([(or_(Device.aircraft_type == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.aircraft_type),
+                  (Device.lastseen >= last_valid_values.c.lastseen, Device.aircraft_type)]).label('aircraft_type'),
+            case([(or_(Device.stealth == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.stealth),
+                  (Device.lastseen >= last_valid_values.c.lastseen, Device.stealth)]).label('stealth'),
+            case([(or_(Device.software_version == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.software_version),
+                  (Device.lastseen >= last_valid_values.c.lastseen, Device.software_version)]).label('software_version'),
+            case([(or_(Device.hardware_version == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.hardware_version),
+                  (Device.lastseen >= last_valid_values.c.lastseen, Device.hardware_version)]).label('hardware_version'),
+            case([(or_(Device.real_address == null(), Device.lastseen < last_valid_values.c.lastseen), last_valid_values.c.real_address),
+                  (Device.lastseen >= last_valid_values.c.lastseen, Device.real_address)]).label('real_address')) \
+        .filter(Device.address == last_valid_values.c.address) \
+        .subquery()
 
     update_receivers = app.session.query(Device) \
         .filter(Device.address == update_values.c.address) \
-        .update({Device.firstseen: update_values.c.firstseen,
-                 Device.lastseen: update_values.c.lastseen,
-                 Device.aircraft_type: update_values.c.aircraft_type,
-                 Device.stealth: update_values.c.stealth,
-                 Device.software_version: update_values.c.software_version,
-                 Device.hardware_version: update_values.c.hardware_version,
-                 Device.real_address: update_values.c.real_address},
-                synchronize_session='fetch')
+        .update({
+            Device.firstseen: update_values.c.firstseen,
+            Device.lastseen: update_values.c.lastseen,
+            Device.aircraft_type: update_values.c.aircraft_type,
+            Device.stealth: update_values.c.stealth,
+            Device.software_version: update_values.c.software_version,
+            Device.hardware_version: update_values.c.hardware_version,
+            Device.real_address: update_values.c.real_address},
+            synchronize_session='fetch')
 
     # Update relations to aircraft beacons
     upd = app.session.query(AircraftBeacon) \
         .filter(AircraftBeacon.device_id == null()) \
         .filter(AircraftBeacon.address == Device.address) \
-        .update({AircraftBeacon.device_id: Device.id},
-                synchronize_session='fetch')
+        .update({
+            AircraftBeacon.device_id: Device.id},
+            synchronize_session='fetch')
 
     app.session.commit()
     print("Devices: {} inserted, {} updated".format(insert_count, update_receivers))
@@ -147,7 +151,8 @@ def update_receivers():
     insert_count = res.rowcount
 
     # For each name in the new beacons: get firstseen, lastseen and last values != NULL
-    last_valid_values = app.session.query(distinct(ReceiverBeacon.name).label('name'),
+    last_valid_values = app.session.query(
+            distinct(ReceiverBeacon.name).label('name'),
             func.first_value(ReceiverBeacon.timestamp)
                 .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.timestamp == null(), None), (ReceiverBeacon.timestamp != null(), ReceiverBeacon.timestamp)]))
                 .label('firstseen'),
@@ -169,34 +174,36 @@ def update_receivers():
         .filter(ReceiverBeacon.receiver_id == null()) \
         .subquery()
 
-    update_values = app.session.query(Receiver.name,
-              case([(or_(Receiver.firstseen == null(), Receiver.firstseen > last_valid_values.c.firstseen), last_valid_values.c.firstseen),
-                    (Receiver.firstseen <= last_valid_values.c.firstseen, Receiver.firstseen)]).label('firstseen'),
-              case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.lastseen),
-                    (Receiver.firstseen >= last_valid_values.c.firstseen, Receiver.firstseen)]).label('lastseen'),
-              case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), func.ST_Transform(last_valid_values.c.location_wkt, 4326)),
-                    (Receiver.lastseen >= last_valid_values.c.lastseen, func.ST_Transform(Receiver.location_wkt, 4326))]).label('location_wkt'),
-              case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.altitude),
-                    (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.altitude)]).label('altitude'),
-              case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.version),
-                    (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.version)]).label('version'),
-              case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.platform),
-                    (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.platform)]).label('platform'),
-              case([(or_(Receiver.location_wkt == null(), not_(func.ST_Equals(Receiver.location_wkt, last_valid_values.c.location_wkt))), None),    # set country code to None if location changed
-                    (func.ST_Equals(Receiver.location_wkt, last_valid_values.c.location_wkt), Receiver.country_code)]).label('country_code')) \
-       .filter(Receiver.name == last_valid_values.c.name) \
-       .subquery()
+    update_values = app.session.query(
+            Receiver.name,
+            case([(or_(Receiver.firstseen == null(), Receiver.firstseen > last_valid_values.c.firstseen), last_valid_values.c.firstseen),
+                  (Receiver.firstseen <= last_valid_values.c.firstseen, Receiver.firstseen)]).label('firstseen'),
+            case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.lastseen),
+                  (Receiver.firstseen >= last_valid_values.c.firstseen, Receiver.firstseen)]).label('lastseen'),
+            case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), func.ST_Transform(last_valid_values.c.location_wkt, 4326)),
+                  (Receiver.lastseen >= last_valid_values.c.lastseen, func.ST_Transform(Receiver.location_wkt, 4326))]).label('location_wkt'),
+            case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.altitude),
+                  (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.altitude)]).label('altitude'),
+            case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.version),
+                  (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.version)]).label('version'),
+            case([(or_(Receiver.lastseen == null(), Receiver.lastseen < last_valid_values.c.lastseen), last_valid_values.c.platform),
+                  (Receiver.lastseen >= last_valid_values.c.lastseen, Receiver.platform)]).label('platform'),
+            case([(or_(Receiver.location_wkt == null(), not_(func.ST_Equals(Receiver.location_wkt, last_valid_values.c.location_wkt))), None),    # set country code to None if location changed
+                  (func.ST_Equals(Receiver.location_wkt, last_valid_values.c.location_wkt), Receiver.country_code)]).label('country_code')) \
+        .filter(Receiver.name == last_valid_values.c.name) \
+        .subquery()
 
     update_receivers = app.session.query(Receiver) \
         .filter(Receiver.name == update_values.c.name) \
-        .update({Receiver.firstseen: update_values.c.firstseen,
-                 Receiver.lastseen: update_values.c.lastseen,
-                 Receiver.location_wkt: update_values.c.location_wkt,
-                 Receiver.altitude: update_values.c.altitude,
-                 Receiver.version: update_values.c.version,
-                 Receiver.platform: update_values.c.platform,
-                 Receiver.country_code: update_values.c.country_code},
-                synchronize_session='fetch')
+        .update({
+            Receiver.firstseen: update_values.c.firstseen,
+            Receiver.lastseen: update_values.c.lastseen,
+            Receiver.location_wkt: update_values.c.location_wkt,
+            Receiver.altitude: update_values.c.altitude,
+            Receiver.version: update_values.c.version,
+            Receiver.platform: update_values.c.platform,
+            Receiver.country_code: update_values.c.country_code},
+            synchronize_session='fetch')
 
     # Update relations to aircraft beacons
     update_aircraft_beacons = app.session.query(AircraftBeacon) \

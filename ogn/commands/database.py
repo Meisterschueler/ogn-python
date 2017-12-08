@@ -93,12 +93,13 @@ def update_receivers():
 def update_receiver_stats():
     """Add/update entries in receiver stats table."""
 
-    asdf = session.query(ReceiverBeacon.receiver_id,
-                         func.count(distinct(AircraftBeacon.device_id)).label('device_count'),
-                         func.max(AircraftBeacon.altitude).label('max_altitude'),
-                         func.max(func.ST_Distance(AircraftBeacon.location_wkt, AircraftBeacon.location_wkt)).label('max_distance')) \
-                         .filter(ReceiverBeacon.receiver_id == AircraftBeacon.receiver_id) \
-                         .group_by(ReceiverBeacon.id)
+    asdf = session.query(
+        ReceiverBeacon.receiver_id,
+        func.count(distinct(AircraftBeacon.device_id)).label('device_count'),
+        func.max(AircraftBeacon.altitude).label('max_altitude'),
+        func.max(func.ST_Distance(AircraftBeacon.location_wkt, AircraftBeacon.location_wkt)).label('max_distance')) \
+        .filter(ReceiverBeacon.receiver_id == AircraftBeacon.receiver_id) \
+        .group_by(ReceiverBeacon.id)
 
     print(asdf)
     for a in asdf.all():
