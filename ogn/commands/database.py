@@ -172,7 +172,7 @@ def update_devices():
 
 @manager.command
 def update_receivers():
-    """Add/update_receivers entries in receiver table and update_receivers foreign keys in aircraft beacons and receiver beacons."""
+    """Add/update_receivers entries in receiver table and update receivers foreign keys and distance in aircraft beacons and update foreign keys in receiver beacons."""
     # Create missing Receiver from ReceiverBeacon
     available_receivers = session.query(Receiver.name) \
         .subquery()
@@ -240,7 +240,8 @@ def update_receivers():
     # Update relations to aircraft beacons
     update_aircraft_beacons = session.query(AircraftBeacon) \
         .filter(and_(AircraftBeacon.receiver_id == null(), AircraftBeacon.receiver_name == Receiver.name)) \
-        .update({AircraftBeacon.receiver_id: Receiver.id},
+        .update({AircraftBeacon.receiver_id: Receiver.id,
+                 AircraftBeacon.distance: func.ST_Distance_Sphere(AircraftBeacon.location_wkt, Receiver.location_wkt)},
                 synchronize_session='fetch')
 
     # Update relations to receiver beacons
