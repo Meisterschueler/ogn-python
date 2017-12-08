@@ -22,7 +22,7 @@ nm2m = 1852
 mi2m = 1609.34
 
 
-def get_ddb(csvfile=None, device_info_origin=DeviceInfoOrigin.unknown):
+def get_ddb(csvfile=None, address_origin=DeviceInfoOrigin.unknown):
     if csvfile is None:
         r = requests.get(DDB_URL)
         rows = '\n'.join(i for i in r.text.splitlines() if i[0] != '#')
@@ -43,7 +43,7 @@ def get_ddb(csvfile=None, device_info_origin=DeviceInfoOrigin.unknown):
         device_info.tracked = row[5] == 'Y'
         device_info.identified = row[6] == 'Y'
         device_info.aircraft_type = int(row[7])
-        device_info.address_origin = device_info_origin
+        device_info.address_origin = address_origin
 
         device_infos.append(device_info)
 
