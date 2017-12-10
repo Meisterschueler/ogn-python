@@ -131,8 +131,8 @@ def update_devices():
             synchronize_session='fetch')
 
     app.session.commit()
-    print("Devices: {} inserted, {} updated".format(insert_count, update_receivers))
-    print("Updated {} AircraftBeacons".format(upd))
+    logger.info("Devices: {} inserted, {} updated".format(insert_count, update_receivers))
+    logger.info("Updated {} AircraftBeacons".format(upd))
 
 
 @app.task
@@ -220,13 +220,13 @@ def update_receivers():
 
     app.session.commit()
 
-    print("Receivers: {} inserted, {} updated.".format(insert_count, update_receivers))
-    print("Updated relations: {} aircraft beacons, {} receiver beacons".format(update_aircraft_beacons, update_receiver_beacons))
+    logger.info("Receivers: {} inserted, {} updated.".format(insert_count, update_receivers))
+    logger.info("Updated relations: {} aircraft beacons, {} receiver beacons".format(update_aircraft_beacons, update_receiver_beacons))
 
 
 @app.task
 def update_country_code():
-    # update country code if None
+    # update country code in receivers table if None
     unknown_country_query = app.session.query(Receiver) \
         .filter(Receiver.country_code == null()) \
         .filter(Receiver.location_wkt != null()) \

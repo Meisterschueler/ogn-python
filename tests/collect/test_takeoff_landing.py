@@ -3,7 +3,7 @@ import os
 
 from ogn.model import TakeoffLanding
 
-from ogn.collect.takeoff_landing import compute_takeoff_and_landing
+from ogn.collect.takeoff_landing import update_takeoff_landing
 
 
 class TestDB(unittest.TestCase):
@@ -30,6 +30,7 @@ class TestDB(unittest.TestCase):
         session = self.session
         session.execute("DELETE FROM takeoff_landing")
         session.execute("DELETE FROM aircraft_beacon")
+        session.execute("DELETE FROM airport")
         session.commit()
         pass
 
@@ -44,6 +45,7 @@ class TestDB(unittest.TestCase):
         return i
 
     def test_broken_rope(self):
+        """Fill the db with a winch launch where the rope breaks. The algorithm should detect one takeoff and one landing."""
         session = self.session
 
         session.execute("INSERT INTO aircraft_beacon(address, location, altitude, timestamp, track, ground_speed, climb_rate, turn_rate) VALUES('DDEFF7','0101000020E61000009668B61829F12640330E0887F1E94740',604,'2016-07-02 10:47:12',0,0,0,0)")
@@ -95,7 +97,12 @@ class TestDB(unittest.TestCase):
         session.execute("UPDATE aircraft_beacon SET device_id = d.id FROM device d WHERE d.address='DDEFF7'")
         session.commit()
 
-        compute_takeoff_and_landing(session)
+        # find the takeoff and the landing
+        update_takeoff_landing(session)
+        self.assertEqual(self.count_takeoff_and_landings(), 2)
+
+        # we should not find the takeoff and the landing again
+        update_takeoff_landing(session)
         self.assertEqual(self.count_takeoff_and_landings(), 2)
 
 

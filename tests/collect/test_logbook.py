@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from ogn.collect.logbook import compute_logbook_entries
+from ogn.collect.logbook import update_logbook
 
 
 class TestDB(unittest.TestCase):
@@ -41,10 +41,10 @@ class TestDB(unittest.TestCase):
         session.execute(self.TAKEOFF_KOENIGSDF_DD0815)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/1')
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/0')
 
     def test_single_landing(self):
@@ -53,10 +53,10 @@ class TestDB(unittest.TestCase):
         session.execute(self.LANDING_KOENIGSDF_DD0815)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/1')
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/0')
 
     def test_different_takeoffs(self):
@@ -66,10 +66,10 @@ class TestDB(unittest.TestCase):
         session.execute(self.TAKEOFF_OHLSTADT_DD4711)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/2')
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/0')
 
     def test_takeoff_and_landing(self):
@@ -79,10 +79,10 @@ class TestDB(unittest.TestCase):
         session.execute(self.LANDING_KOENIGSDF_DD0815)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/1')
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/0')
 
     def test_takeoff_and_landing_on_different_days(self):
@@ -92,10 +92,10 @@ class TestDB(unittest.TestCase):
         session.execute(self.LANDING_KOENIGSDF_DD0815_LATER)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/2')
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/0')
 
     def test_update(self):
@@ -104,22 +104,22 @@ class TestDB(unittest.TestCase):
         session.execute(self.TAKEOFF_KOENIGSDF_DD0815)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/1')
 
         session.execute(self.LANDING_KOENIGSDF_DD0815)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '1/0')
 
         session.execute(self.TAKEOFF_OHLSTADT_DD4711)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/1')
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/0')
 
     def test_update_wrong_order(self):
@@ -128,13 +128,13 @@ class TestDB(unittest.TestCase):
         session.execute(self.LANDING_KOENIGSDF_DD0815)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '0/1')
 
         session.execute(self.TAKEOFF_KOENIGSDF_DD0815)
         session.commit()
 
-        entries_changed = compute_logbook_entries(session)
+        entries_changed = update_logbook(session)
         self.assertEqual(entries_changed, '1/0')
 
 

@@ -3,8 +3,8 @@
 from datetime import timedelta, datetime
 
 from manager import Manager
-from ogn.collect.logbook import compute_logbook_entries
-from ogn.collect.takeoff_landing import compute_takeoff_and_landing
+from ogn.collect.logbook import update_logbook
+from ogn.collect.takeoff_landing import update_takeoff_landing
 from ogn.commands.dbutils import session
 from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
 from sqlalchemy import and_, or_
@@ -19,7 +19,7 @@ manager = Manager()
 def compute_takeoff_landing():
     """Compute takeoffs and landings."""
     print("Compute takeoffs and landings...")
-    result = compute_takeoff_and_landing.delay()
+    result = update_takeoff_landing.delay()
     counter = result.get()
     print("New takeoffs/landings: {}".format(counter))
 
@@ -28,7 +28,7 @@ def compute_takeoff_landing():
 def compute_logbook():
     """Compute logbook."""
     print("Compute logbook...")
-    result = compute_logbook_entries.delay()
+    result = update_logbook.delay()
     counter = result.get()
     print("New logbook entries: {}".format(counter))
 

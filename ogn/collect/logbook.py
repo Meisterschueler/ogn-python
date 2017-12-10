@@ -11,7 +11,7 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def compute_logbook_entries(session=None):
+def update_logbook(session=None):
     logger.info("Compute logbook.")
 
     if session is None:
