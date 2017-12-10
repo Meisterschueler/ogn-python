@@ -42,6 +42,12 @@ def update_takeoff_landing(session=None):
               AircraftBeacon.receiver_id)
 
     # make a query with current, previous and next position
+    beacon_selection = session.query(AircraftBeacon.id) \
+        .filter(AircraftBeacon.status == null()) \
+        .order_by(AircraftBeacon.timestamp) \
+        .limit(1000000) \
+        .subquery()
+
     sq = session.query(
         AircraftBeacon.id,
         func.lag(AircraftBeacon.id).over(order_by=wo).label('id_prev'),
@@ -49,17 +55,13 @@ def update_takeoff_landing(session=None):
         AircraftBeacon.device_id,
         func.lag(AircraftBeacon.device_id).over(order_by=wo).label('device_id_prev'),
         func.lead(AircraftBeacon.device_id).over(order_by=wo).label('device_id_next')) \
-        .filter(AircraftBeacon.status == null()) \
-        .filter(and_(AircraftBeacon.timestamp >= '2017-12-09 11:00:00', AircraftBeacon.timestamp <= '2017-12-09 18:00:00')) \
+        .filter(AircraftBeacon.id == beacon_selection.c.id) \
         .subquery()
 
     # consider only positions with the same device id
     sq2 = session.query(sq) \
        .filter(sq.c.device_id_prev == sq.c.device_id == sq.c.device_id_next) \
        .subquery()
-
-    print(sq2)
-    return
 
     # Get timestamps, locations, tracks, ground_speeds and altitudes
     prev_ab = aliased(AircraftBeacon, name="prev_ab")

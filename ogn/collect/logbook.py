@@ -5,7 +5,7 @@ from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import true, false
 
 from ogn.collect.celery import app
-from ogn.model import TakeoffLanding, Logbook
+from ogn.model import TakeoffLanding, Logbook, AircraftBeacon
 
 logger = get_task_logger(__name__)
 
@@ -157,3 +157,35 @@ def update_logbook(session=None):
     logger.debug("New logbook entries: {}".format(insert_counter))
 
     return "{}/{}".format(update_counter, insert_counter)
+
+
+@app.task
+def update_max_altitude(session=None):
+    logger.info("Update logbook max altitude.")
+
+    if session is None:
+        session = app.session
+
+    logbook_entries = session.query(Logbook.id) \
+        .filter(and_(Logbook.takeoff_timestamp != null(), Logbook.landing_timestamp != null(), Logbook.max_altitude == null())) \
+        .limit(1000) \
+        .subquery()
+
+    max_altitudes = session.query(Logbook.id, func.max(AircraftBeacon.altitude).label('max_altitude')) \
+        .filter(Logbook.id == logbook_entries.c.id) \
+        .filter(and_(AircraftBeacon.device_id == Logbook.device_id,
+                     AircraftBeacon.timestamp >= Logbook.takeoff_timestamp,
+                     AircraftBeacon.timestamp <= Logbook.landing_timestamp)) \
+        .group_by(Logbook.id) \
+        .subquery()
+
+    update_logbook = app.session.query(Logbook) \
+        .filter(Logbook.id == max_altitudes.c.id) \
+        .update({
+            Logbook.max_altitude: max_altitudes.c.max_altitude},
+            synchronize_session='fetch')
+
+    session.commit()
+    logger.info("Logbook: {} entries updated.".format(update_logbook))
+
+    return update_logbook
