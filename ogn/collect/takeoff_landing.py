@@ -30,10 +30,10 @@ def update_takeoff_landing(session=None):
     takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
     landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
     duration = 100      # the points must not exceed this duration
-    radius = 0.05       # the points must not exceed this radius (degree!) around the 2nd point
+    radius = 5000       # the points must not exceed this radius around the 2nd point
 
     # takeoff / landing has to be near an airport
-    airport_radius = 0.025  # takeoff / landing must not exceed this radius (degree!) around the airport
+    airport_radius = 2500   # takeoff / landing must not exceed this radius around the airport
     airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
 
     # 'wo' is the window order for the sql window function
@@ -92,8 +92,8 @@ def update_takeoff_landing(session=None):
               (sq2.c.ground_speed < landing_speed, False)]).label('is_takeoff'),
         sq2.c.device_id) \
         .filter(sq2.c.timestamp_next - sq2.c.timestamp_prev < timedelta(seconds=duration)) \
-        .filter(and_(func.ST_DFullyWithin(sq2.c.location, sq2.c.location_wkt_prev, radius),
-                     func.ST_DFullyWithin(sq2.c.location, sq2.c.location_wkt_next, radius))) \
+        .filter(and_(func.ST_Distance_Sphere(sq2.c.location, sq2.c.location_wkt_prev) < radius,
+                     func.ST_Distance_Sphere(sq2.c.location, sq2.c.location_wkt_next) < radius)) \
         .filter(or_(and_(sq2.c.ground_speed_prev < takeoff_speed,    # takeoff
                          sq2.c.ground_speed > takeoff_speed,
                          sq2.c.ground_speed_next > takeoff_speed),
@@ -109,7 +109,7 @@ def update_takeoff_landing(session=None):
         sq3.c.is_takeoff,
         sq3.c.device_id,
         Airport.id.label('airport_id')) \
-        .filter(and_(func.ST_DFullyWithin(sq3.c.location, Airport.location_wkt, airport_radius),
+        .filter(and_(func.ST_Distance_Sphere(sq3.c.location, Airport.location_wkt) < airport_radius,
                      between(sq3.c.altitude, Airport.altitude - airport_delta, Airport.altitude + airport_delta))) \
         .filter(between(Airport.style, 2, 5)) \
         .subquery()
