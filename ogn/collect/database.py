@@ -134,6 +134,9 @@ def update_devices():
     logger.info("Devices: {} inserted, {} updated".format(insert_count, update_receivers))
     logger.info("Updated {} AircraftBeacons".format(upd))
 
+    return "{} Devices inserted, {} Devices updated, {} AircraftBeacons updated" \
+        .format(insert_count, update_receivers, upd)
+
 
 @app.task
 def update_receivers():
@@ -223,6 +226,9 @@ def update_receivers():
     logger.info("Receivers: {} inserted, {} updated.".format(insert_count, update_receivers))
     logger.info("Updated relations: {} aircraft beacons, {} receiver beacons".format(update_aircraft_beacons, update_receiver_beacons))
 
+    return "{} Receivers inserted, {} Receivers updated, {} AircraftBeacons updated, {} ReceiverBeacons updated" \
+        .format(insert_count, update_receivers, update_aircraft_beacons, update_receiver_beacons)
+
 
 @app.task
 def update_country_code():
@@ -232,11 +238,15 @@ def update_country_code():
         .filter(Receiver.location_wkt != null()) \
         .order_by(Receiver.name)
 
+    counter = 0
     for receiver in unknown_country_query.all():
         location = receiver.location
         country_code = get_country_code(location.latitude, location.longitude)
         if country_code is not None:
             receiver.country_code = country_code
-            print("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
+            logger.info("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
+            counter += 1
 
     app.session.commit()
+
+    return "Updated country_code for {} Receivers".format(counter)
