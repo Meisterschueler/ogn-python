@@ -81,31 +81,3 @@ def import_airports(path='tests/SeeYou.cup'):
     session.bulk_save_objects(airports)
     session.commit()
     print("Imported {} airports.".format(len(airports)))
-
-
-@manager.command
-def update_receivers():
-    from ogn.collect.database import update_receivers as ur
-    ur()
-
-
-@manager.command
-def update_receiver_stats():
-    """Add/update entries in receiver stats table."""
-
-    asdf = session.query(
-        ReceiverBeacon.receiver_id,
-        func.count(distinct(AircraftBeacon.device_id)).label('device_count'),
-        func.max(AircraftBeacon.altitude).label('max_altitude'),
-        func.max(func.ST_Distance(AircraftBeacon.location_wkt, AircraftBeacon.location_wkt)).label('max_distance')) \
-        .filter(ReceiverBeacon.receiver_id == AircraftBeacon.receiver_id) \
-        .group_by(ReceiverBeacon.id)
-
-    print(asdf)
-    for a in asdf.all():
-        print(a)
-
-    return
-
-    asdf = session.query(distinct(ReceiverBeacon.receiver_id), func.DATE(ReceiverBeacon.timestamp).label('date')) \
-        .filter(ReceiverBeacon.receiver_id != null())
