@@ -134,7 +134,7 @@ def update_takeoff_landing(session=None):
     # mark the computated AircraftBeacons as 'used'
     update_aircraft_beacons = session.query(AircraftBeacon) \
         .filter(AircraftBeacon.id == sq2.c.id) \
-        .update({AircraftBeacon.status: 0},
+        .update({AircraftBeacon.status: 1},
                 synchronize_session='fetch')
 
     session.commit()

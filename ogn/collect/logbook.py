@@ -184,4 +184,4 @@ def update_max_altitude(session=None):
     session.commit()
     logger.info("Logbook: {} entries updated.".format(update_logbook))
 
-    return update_logbook
+    return "Logbook: {} entries updated.".format(update_logbook)
