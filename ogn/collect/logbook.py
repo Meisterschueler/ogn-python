@@ -17,9 +17,6 @@ def update_logbook(session=None):
     if session is None:
         session = app.session
 
-    or_args = [between(TakeoffLanding.timestamp, '2016-06-28 00:00:00', '2016-06-28 23:59:59')]
-    or_args = []
-
     # 'wo' is the window order for the sql window function
     wo = and_(func.date(TakeoffLanding.timestamp),
               TakeoffLanding.device_id,
@@ -43,7 +40,6 @@ def update_logbook(session=None):
             TakeoffLanding.airport_id,
             func.lag(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_prev'),
             func.lead(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_next')) \
-        .filter(*or_args) \
         .subquery()
 
     # find complete flights (with takeoff and landing on the same day)
@@ -156,7 +152,7 @@ def update_logbook(session=None):
     session.commit()
     logger.debug("New logbook entries: {}".format(insert_counter))
 
-    return "{}/{}".format(update_counter, insert_counter)
+    return "Logbook entries: {} inserted, {} updated".format(update_counter, insert_counter)
 
 
 @app.task
