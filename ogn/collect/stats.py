@@ -2,6 +2,7 @@ from celery.utils.log import get_task_logger
 
 from sqlalchemy import insert, distinct
 from sqlalchemy.sql import null, and_, or_, func, not_
+from sqlalchemy.sql.expression import literal_column
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver, DeviceStats, ReceiverStats
 
@@ -55,8 +56,6 @@ def update_receiver_stats(date=None):
         logger.warn("A date is needed for calculating stats. Exiting")
         return None
 
-    return "Not usable. Need indices."
-
     # First kill the stats for the selected date
     deleted_counter = app.session.query(ReceiverStats) \
         .filter(ReceiverStats.date == date) \
@@ -64,23 +63,19 @@ def update_receiver_stats(date=None):
 
     # Calculate stats for the selected date
     receiver_stats = app.session.query(
-        ReceiverBeacon.receiver_id,
-        func.date(ReceiverBeacon.timestamp).label('date'),
+        AircraftBeacon.receiver_id,
+        literal_column("'{}'".format(date)).label('date'),
         func.count(AircraftBeacon.id).label('aircraft_beacon_count'),
-        func.count(ReceiverBeacon.id).label('receiver_beacon_count'),
         func.count(distinct(AircraftBeacon.device_id)).label('aircraft_count'),
         func.max(AircraftBeacon.distance).label('max_distance')) \
-        .filter(and_(ReceiverBeacon.receiver_id == AircraftBeacon.receiver_id, ReceiverBeacon.receiver_id != null(), AircraftBeacon.receiver_id != null())) \
-        .filter(and_(func.date(ReceiverBeacon.timestamp) == date, func.date(AircraftBeacon.timestamp) == date)) \
-        .group_by(ReceiverBeacon.receiver_id, func.date(ReceiverBeacon.timestamp)) \
+        .filter(AircraftBeacon.receiver_id != null()) \
+        .filter(func.date(AircraftBeacon.timestamp) == date) \
+        .group_by(AircraftBeacon.receiver_id) \
         .subquery()
-
-    print(receiver_stats)
-    return
 
     # And insert them
     ins = insert(ReceiverStats).from_select(
-        [ReceiverStats.receiver_id, ReceiverStats.date, ReceiverStats.aircraft_beacon_count, ReceiverStats.receiver_beacon_count, ReceiverStats.aircraft_count, ReceiverStats.max_distance],
+        [ReceiverStats.receiver_id, ReceiverStats.date, ReceiverStats.aircraft_beacon_count, ReceiverStats.aircraft_count, ReceiverStats.max_distance],
         receiver_stats)
     res = app.session.execute(ins)
     insert_counter = res.rowcount
