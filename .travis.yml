@@ -18,11 +18,9 @@ before_script:
   - flake8 tests ogn_test
   - psql -U postgres -c 'CREATE DATABASE ogn_test;'
   - psql -U postgres -c 'CREATE EXTENSION postgis;'
-  - psql -U postgres -d ogn_test
 
 script:
   - nosetests --with-coverage --cover-package=ogn
-
   - pip install . --upgrade
   - python -c 'import ogn'
 

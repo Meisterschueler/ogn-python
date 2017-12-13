@@ -5,7 +5,6 @@ from celery.utils.log import get_task_logger
 from sqlalchemy import and_, or_, insert, between, exists
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import case
-from sqlalchemy.orm import aliased
 
 from ogn.collect.celery import app
 from ogn.model import AircraftBeacon, TakeoffLanding, Airport
