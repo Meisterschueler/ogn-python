@@ -63,7 +63,8 @@ def show(airport_name, utc_delta_hours=0, date=None):
     # get all logbook entries and add device and airport infos
     takeoff_airport = aliased(Airport, name='takeoff_airport')
     landing_airport = aliased(Airport, name='landing_airport')
-    logbook_query = session.query(Logbook,
+    logbook_query = session.query(func.row_number().over(order_by=Logbook.reftime).label('row_number'),
+                                  Logbook,
                                   Device,
                                   sq3.c.registration,
                                   sq3.c.aircraft) \
@@ -105,8 +106,9 @@ def show(airport_name, utc_delta_hours=0, date=None):
     def none_altitude_replacer(altitude_object, airport_object):
         return "?" if altitude_object is None else "{:5d}m ({:+5d}m)".format(altitude_object, altitude_object - airport_object.altitude)
 
-    for [logbook, device, registration, aircraft] in logbook_query.all():
-        print('%10s   %8s (%2s)   %8s (%2s)   %8s  %15s %8s   %17s %20s' % (
+    for [row_number, logbook, device, registration, aircraft] in logbook_query.all():
+        print('%3d. %10s   %8s (%2s)   %8s (%2s)   %8s  %15s %8s   %17s %20s' % (
+            row_number,
             logbook.reftime.date(),
             none_datetime_replacer(logbook.takeoff_timestamp),
             none_track_replacer(logbook.takeoff_track),
