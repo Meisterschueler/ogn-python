@@ -38,6 +38,9 @@ class AircraftBeacon(Beacon):
 
     status = Column(SmallInteger, index=True)
 
+    # Calculated values
+    distance = Column(Float)
+
     # Relations
     receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
     receiver = relationship('Receiver', foreign_keys=[receiver_id])

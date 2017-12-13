@@ -3,8 +3,8 @@
 from datetime import timedelta, datetime
 
 from manager import Manager
-from ogn.collect.logbook import compute_logbook_entries
-from ogn.collect.takeoff_landing import compute_takeoff_and_landing
+from ogn.collect.logbook import update_logbook
+from ogn.collect.takeoff_landing import update_takeoff_landing
 from ogn.commands.dbutils import session
 from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
 from sqlalchemy import and_, or_
@@ -19,7 +19,7 @@ manager = Manager()
 def compute_takeoff_landing():
     """Compute takeoffs and landings."""
     print("Compute takeoffs and landings...")
-    result = compute_takeoff_and_landing.delay()
+    result = update_takeoff_landing.delay()
     counter = result.get()
     print("New takeoffs/landings: {}".format(counter))
 
@@ -28,7 +28,7 @@ def compute_takeoff_landing():
 def compute_logbook():
     """Compute logbook."""
     print("Compute logbook...")
-    result = compute_logbook_entries.delay()
+    result = update_logbook.delay()
     counter = result.get()
     print("New logbook entries: {}".format(counter))
 
@@ -63,7 +63,8 @@ def show(airport_name, utc_delta_hours=0, date=None):
     # get all logbook entries and add device and airport infos
     takeoff_airport = aliased(Airport, name='takeoff_airport')
     landing_airport = aliased(Airport, name='landing_airport')
-    logbook_query = session.query(Logbook,
+    logbook_query = session.query(func.row_number().over(order_by=Logbook.reftime).label('row_number'),
+                                  Logbook,
                                   Device,
                                   sq3.c.registration,
                                   sq3.c.aircraft) \
@@ -105,8 +106,9 @@ def show(airport_name, utc_delta_hours=0, date=None):
     def none_altitude_replacer(altitude_object, airport_object):
         return "?" if altitude_object is None else "{:5d}m ({:+5d}m)".format(altitude_object, altitude_object - airport_object.altitude)
 
-    for [logbook, device, registration, aircraft] in logbook_query.all():
-        print('%10s   %8s (%2s)   %8s (%2s)   %8s  %15s %8s   %17s %20s' % (
+    for [row_number, logbook, device, registration, aircraft] in logbook_query.all():
+        print('%3d. %10s   %8s (%2s)   %8s (%2s)   %8s  %15s %8s   %17s %20s' % (
+            row_number,
             logbook.reftime.date(),
             none_datetime_replacer(logbook.takeoff_timestamp),
             none_track_replacer(logbook.takeoff_track),

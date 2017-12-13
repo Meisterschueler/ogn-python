@@ -1,10 +1,10 @@
 from manager import Manager
 from ogn.collect.database import update_device_infos
 from ogn.commands.dbutils import engine, session
-from ogn.model import Base, AddressOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
+from ogn.model import Base, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon
 from ogn.utils import get_airports
-from sqlalchemy import insert, distinct
-from sqlalchemy.sql import null
+from sqlalchemy import distinct
+from sqlalchemy.sql import null, func
 
 
 manager = Manager()
@@ -53,7 +53,7 @@ def import_ddb():
     """Import registered devices from the DDB."""
 
     print("Import registered devices fom the DDB...")
-    address_origin = AddressOrigin.ogn_ddb
+    address_origin = DeviceInfoOrigin.ogn_ddb
     counter = update_device_infos(session,
                                   address_origin)
     print("Imported %i devices." % counter)
@@ -65,7 +65,7 @@ def import_file(path='tests/custom_ddb.txt'):
     # (flushes previously manually imported entries)
 
     print("Import registered devices from '{}'...".format(path))
-    address_origin = AddressOrigin.user_defined
+    address_origin = DeviceInfoOrigin.user_defined
     counter = update_device_infos(session,
                                   address_origin,
                                   csvfile=path)
@@ -81,53 +81,3 @@ def import_airports(path='tests/SeeYou.cup'):
     session.bulk_save_objects(airports)
     session.commit()
     print("Imported {} airports.".format(len(airports)))
-
-
-@manager.command
-def update_relations():
-    """Update AircraftBeacon and ReceiverBeacon relations"""
-
-    # Create missing Receiver from ReceiverBeacon
-    available_receivers = session.query(Receiver.name) \
-        .subquery()
-
-    missing_receiver_query = session.query(distinct(ReceiverBeacon.name)) \
-        .filter(ReceiverBeacon.receiver_id == null()) \
-        .filter(~ReceiverBeacon.name.in_(available_receivers))
-
-    ins = insert(Receiver).from_select([Receiver.name], missing_receiver_query)
-    session.execute(ins)
-
-    # Create missing Device from AircraftBeacon
-    available_addresses = session.query(Device.address) \
-        .subquery()
-
-    missing_addresses_query = session.query(distinct(AircraftBeacon.address)) \
-        .filter(AircraftBeacon.device_id == null()) \
-        .filter(~AircraftBeacon.address.in_(available_addresses))
-
-    ins2 = insert(Device).from_select([Device.address], missing_addresses_query)
-    session.execute(ins2)
-    session.commit()
-    print("Inserted {} Receivers and {} Devices".format(ins, ins2))
-    return
-
-    # Update AircraftBeacons
-    upd = session.query(AircraftBeacon) \
-        .filter(AircraftBeacon.device_id == null()) \
-        .filter(AircraftBeacon.receiver_id == null()) \
-        .filter(AircraftBeacon.address == Device.address) \
-        .filter(AircraftBeacon.receiver_name == Receiver.name) \
-        .update({AircraftBeacon.device_id: Device.id,
-                 AircraftBeacon.receiver_id: Receiver.id},
-                synchronize_session='fetch')
-
-    upd2 = session.query(ReceiverBeacon) \
-        .filter(ReceiverBeacon.receiver_id == null()) \
-        .filter(ReceiverBeacon.receiver_name == Receiver.name) \
-        .update({Receiver.name: ReceiverBeacon.receiver_name},
-                synchronize_session='fetch')
-
-    session.commit()
-    print("Updated {} AircraftBeacons and {} ReceiverBeacons".
-          format(upd, upd2))

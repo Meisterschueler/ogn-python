@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def compute_takeoff_and_landing(session=None):
+def update_takeoff_landing(session=None):
     logger.info("Compute takeoffs and landings.")
 
     if session is None:
@@ -29,10 +29,10 @@ def compute_takeoff_and_landing(session=None):
     takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
     landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
     duration = 100      # the points must not exceed this duration
-    radius = 0.05       # the points must not exceed this radius (degree!) around the 2nd point
+    radius = 5000       # the points must not exceed this radius around the 2nd point
 
     # takeoff / landing has to be near an airport
-    airport_radius = 0.025  # takeoff / landing must not exceed this radius (degree!) around the airport
+    airport_radius = 2500   # takeoff / landing must not exceed this radius around the airport
     airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
 
     # 'wo' is the window order for the sql window function
@@ -41,8 +41,19 @@ def compute_takeoff_and_landing(session=None):
               AircraftBeacon.receiver_id)
 
     # make a query with current, previous and next position
+    beacon_selection = session.query(AircraftBeacon.id) \
+        .filter(AircraftBeacon.status == null()) \
+        .order_by(AircraftBeacon.timestamp) \
+        .limit(1000000) \
+        .subquery()
+
     sq = session.query(
         AircraftBeacon.id,
+        func.lag(AircraftBeacon.id).over(order_by=wo).label('id_prev'),
+        func.lead(AircraftBeacon.id).over(order_by=wo).label('id_next'),
+        AircraftBeacon.device_id,
+        func.lag(AircraftBeacon.device_id).over(order_by=wo).label('device_id_prev'),
+        func.lead(AircraftBeacon.device_id).over(order_by=wo).label('device_id_next'),
         AircraftBeacon.timestamp,
         func.lag(AircraftBeacon.timestamp).over(order_by=wo).label('timestamp_prev'),
         func.lead(AircraftBeacon.timestamp).over(order_by=wo).label('timestamp_next'),
@@ -57,16 +68,14 @@ def compute_takeoff_and_landing(session=None):
         func.lead(AircraftBeacon.ground_speed).over(order_by=wo).label('ground_speed_next'),
         AircraftBeacon.altitude,
         func.lag(AircraftBeacon.altitude).over(order_by=wo).label('altitude_prev'),
-        func.lead(AircraftBeacon.altitude).over(order_by=wo).label('altitude_next'),
-        AircraftBeacon.device_id,
-        func.lag(AircraftBeacon.device_id).over(order_by=wo).label('device_id_prev'),
-        func.lead(AircraftBeacon.device_id).over(order_by=wo).label('device_id_next')) \
-        .filter(AircraftBeacon.status == null()) \
+        func.lead(AircraftBeacon.altitude).over(order_by=wo).label('altitude_next')) \
+        .filter(AircraftBeacon.id == beacon_selection.c.id) \
         .subquery()
 
+    # consider only positions with the same device id
     sq2 = session.query(sq) \
-        .filter(sq.c.device_id_prev == sq.c.device_id == sq.c.device_id_next) \
-        .subquery()
+       .filter(sq.c.device_id_prev == sq.c.device_id == sq.c.device_id_next) \
+       .subquery()
 
     # find possible takeoffs and landings
     sq3 = session.query(
@@ -82,8 +91,8 @@ def compute_takeoff_and_landing(session=None):
               (sq2.c.ground_speed < landing_speed, False)]).label('is_takeoff'),
         sq2.c.device_id) \
         .filter(sq2.c.timestamp_next - sq2.c.timestamp_prev < timedelta(seconds=duration)) \
-        .filter(and_(func.ST_DFullyWithin(sq2.c.location, sq2.c.location_wkt_prev, radius),
-                     func.ST_DFullyWithin(sq2.c.location, sq2.c.location_wkt_next, radius))) \
+        .filter(and_(func.ST_Distance_Sphere(sq2.c.location, sq2.c.location_wkt_prev) < radius,
+                     func.ST_Distance_Sphere(sq2.c.location, sq2.c.location_wkt_next) < radius)) \
         .filter(or_(and_(sq2.c.ground_speed_prev < takeoff_speed,    # takeoff
                          sq2.c.ground_speed > takeoff_speed,
                          sq2.c.ground_speed_next > takeoff_speed),
@@ -99,7 +108,7 @@ def compute_takeoff_and_landing(session=None):
         sq3.c.is_takeoff,
         sq3.c.device_id,
         Airport.id.label('airport_id')) \
-        .filter(and_(func.ST_DFullyWithin(sq3.c.location, Airport.location_wkt, airport_radius),
+        .filter(and_(func.ST_Distance_Sphere(sq3.c.location, Airport.location_wkt) < airport_radius,
                      between(sq3.c.altitude, Airport.altitude - airport_delta, Airport.altitude + airport_delta))) \
         .filter(between(Airport.style, 2, 5)) \
         .subquery()
@@ -120,7 +129,14 @@ def compute_takeoff_and_landing(session=None):
                                              takeoff_landing_query)
     result = session.execute(ins)
     counter = result.rowcount
+
+    # mark the computated AircraftBeacons as 'used'
+    update_aircraft_beacons = session.query(AircraftBeacon) \
+        .filter(AircraftBeacon.id == sq2.c.id) \
+        .update({AircraftBeacon.status: 1},
+                synchronize_session='fetch')
+
     session.commit()
-    logger.debug("New takeoffs and landings: {}".format(counter))
+    logger.debug("Inserted {} TakeoffLandings, updated {} AircraftBeacons".format(counter, update_aircraft_beacons))
 
     return counter

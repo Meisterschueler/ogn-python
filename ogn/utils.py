@@ -8,7 +8,7 @@ from geopy.geocoders import Nominatim
 from ogn.parser.utils import feet2m
 import requests
 
-from .model import AddressOrigin, DeviceInfo, Airport, Location
+from .model import DeviceInfoOrigin, DeviceInfo, Airport, Location
 
 
 DDB_URL = "http://ddb.glidernet.org/download/?t=1"
@@ -22,7 +22,7 @@ nm2m = 1852
 mi2m = 1609.34
 
 
-def get_ddb(csvfile=None, address_origin=AddressOrigin.unknown):
+def get_ddb(csvfile=None, address_origin=DeviceInfoOrigin.unknown):
     if csvfile is None:
         r = requests.get(DDB_URL)
         rows = '\n'.join(i for i in r.text.splitlines() if i[0] != '#')

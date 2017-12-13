@@ -5,18 +5,22 @@ env:
 
 python:
   - 3.4
+  - 3.5
+  - 3.6
 
-services:
-  - postgresql
+addons:
+  postgresql: "9.5"
+  apt:
+    packages:
+      - postgresql-9.5-postgis-2.3
 
 before_script:
-  - flake8 tests ogn
-  - psql -c 'CREATE DATABASE ogn_test;' -U postgres
-  - psql -c 'CREATE EXTENSION postgis;' -U postgres -d ogn_test
+  - flake8 tests ogn_test
+  - psql -U postgres -c 'CREATE DATABASE ogn_test;'
+  - psql -U postgres -c 'CREATE EXTENSION postgis;'
 
 script:
   - nosetests --with-coverage --cover-package=ogn
-
   - pip install . --upgrade
   - python -c 'import ogn'
 
