@@ -17,3 +17,10 @@ class DeviceStats(Base):
     # Relations
     device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
     device = relationship('Device', foreign_keys=[device_id])
+
+    def __repr__(self):
+        return "<DeviceStats: %s,%s,%s,%s>" % (
+            self.date,
+            self.receiver_count,
+            self.aircraft_beacon_count,
+            self.max_altitude)

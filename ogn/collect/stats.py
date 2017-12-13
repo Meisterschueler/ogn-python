@@ -12,20 +12,23 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def update_device_stats(date=None):
+def update_device_stats(session=None, date=None):
     """Add/update entries in device stats table."""
+
+    if session is None:
+        session = app.session
 
     if not date:
         logger.warn("A date is needed for calculating stats. Exiting")
         return None
 
     # First kill the stats for the selected date
-    deleted_counter = app.session.query(DeviceStats) \
+    deleted_counter = session.query(DeviceStats) \
         .filter(DeviceStats.date == date) \
         .delete()
 
     # Calculate stats for the selected date
-    device_stats = app.session.query(
+    device_stats = session.query(
         AircraftBeacon.device_id,
         func.date(AircraftBeacon.timestamp).label('date'),
         func.count(distinct(AircraftBeacon.receiver_id)).label('receiver_count'),
@@ -40,9 +43,9 @@ def update_device_stats(date=None):
     ins = insert(DeviceStats).from_select(
         [DeviceStats.device_id, DeviceStats.date, DeviceStats.receiver_count, DeviceStats.aircraft_beacon_count, DeviceStats.max_altitude],
         device_stats)
-    res = app.session.execute(ins)
+    res = session.execute(ins)
     insert_counter = res.rowcount
-    app.session.commit()
+    session.commit()
     logger.debug("DeviceStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
 
     return "DeviceStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
@@ -57,12 +60,12 @@ def update_receiver_stats(date=None):
         return None
 
     # First kill the stats for the selected date
-    deleted_counter = app.session.query(ReceiverStats) \
+    deleted_counter = session.query(ReceiverStats) \
         .filter(ReceiverStats.date == date) \
         .delete()
 
     # Calculate stats for the selected date
-    receiver_stats = app.session.query(
+    receiver_stats = session.query(
         AircraftBeacon.receiver_id,
         literal_column("'{}'".format(date)).label('date'),
         func.count(AircraftBeacon.id).label('aircraft_beacon_count'),
@@ -77,9 +80,9 @@ def update_receiver_stats(date=None):
     ins = insert(ReceiverStats).from_select(
         [ReceiverStats.receiver_id, ReceiverStats.date, ReceiverStats.aircraft_beacon_count, ReceiverStats.aircraft_count, ReceiverStats.max_distance],
         receiver_stats)
-    res = app.session.execute(ins)
+    res = session.execute(ins)
     insert_counter = res.rowcount
-    app.session.commit()
+    session.commit()
     logger.debug("ReceiverStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
 
     return "ReceiverStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
