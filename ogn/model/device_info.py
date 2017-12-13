@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, SmallInteger
+from sqlalchemy import Column, Integer, String, Boolean, SmallInteger, ForeignKey
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -18,15 +19,18 @@ class DeviceInfo(Base):
 
     address_origin = Column(SmallInteger)
 
+    # Relations
+    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
+    device = relationship('Device', foreign_keys=[device_id])
+
     def __repr__(self):
-        return "<DeviceInfo: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<DeviceInfo: %s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,
             self.address,
-            self.name,
-            self.airport,
             self.aircraft,
             self.registration,
             self.competition,
-            self.frequency,
             self.tracked,
-            self.identified)
+            self.identified,
+            self.aircraft_type,
+            self.address_origin)

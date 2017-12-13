@@ -1,7 +1,7 @@
 class Location:
     """Represents a location in WGS84"""
 
-    def __init__(self, lon, lat):
+    def __init__(self, lon=0, lat=0):
         self.longitude = lon
         self.latitude = lat
 

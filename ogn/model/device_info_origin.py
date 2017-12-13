@@ -4,7 +4,7 @@ class DeviceInfoOrigin:
     flarmnet = 2
     user_defined = 3
 
-    def __init__(self, origin):
+    def __init__(self, origin=0):
         if origin in [0, 1, 2, 3]:
             self.origin = origin
         else:
