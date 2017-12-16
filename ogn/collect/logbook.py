@@ -112,7 +112,8 @@ def update_logbook(session=None):
                         and_(Logbook.takeoff_airport_id == null(),
                              Logbook.landing_airport_id == union_query.c.landing_airport_id,
                              Logbook.landing_timestamp == union_query.c.landing_timestamp)))) \
-        .values({"takeoff_timestamp": union_query.c.takeoff_timestamp,
+        .values({"reftime": union_query.c.reftime,
+                 "takeoff_timestamp": union_query.c.takeoff_timestamp,
                  "takeoff_track": union_query.c.takeoff_track,
                  "takeoff_airport_id": union_query.c.takeoff_airport_id,
                  "landing_timestamp": union_query.c.landing_timestamp,
@@ -152,7 +153,7 @@ def update_logbook(session=None):
     session.commit()
     logger.debug("New logbook entries: {}".format(insert_counter))
 
-    return "Logbook entries: {} inserted, {} updated".format(update_counter, insert_counter)
+    return "Logbook entries: {} inserted, {} updated".format(insert_counter, update_counter)
 
 
 @app.task
