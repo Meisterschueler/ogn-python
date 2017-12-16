@@ -40,6 +40,13 @@ class ReceiverBeacon(Beacon):
     # Multi-column indices
     Index('ix_receiver_beacon_receiver_id_name', 'receiver_id', 'name')
 
+    def __init__(self, name, timestamp, altitude, version, platform):
+        self.name = name
+        self.timestamp = timestamp
+        self.altitude = altitude
+        self.version = version
+        self.platform = platform
+
     def __repr__(self):
         return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.version,

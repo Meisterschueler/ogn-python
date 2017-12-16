@@ -170,22 +170,22 @@ def update_receivers(session=None):
     last_valid_values = session.query(
             distinct(ReceiverBeacon.name).label('name'),
             func.first_value(ReceiverBeacon.timestamp)
-                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.timestamp == null(), None), (ReceiverBeacon.timestamp != null(), ReceiverBeacon.timestamp)]))
+                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.timestamp == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
                 .label('firstseen'),
             func.last_value(ReceiverBeacon.timestamp)
-                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.timestamp == null(), None), (ReceiverBeacon.timestamp != null(), ReceiverBeacon.timestamp)]))
+                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.timestamp == null(), None)], else_=ReceiverBeacon.timestamp).asc().nullslast())
                 .label('lastseen'),
             func.first_value(ReceiverBeacon.location_wkt)
-                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.location_wkt == null(), None), (ReceiverBeacon.location_wkt != null(), ReceiverBeacon.location_wkt)]))
+                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.location_wkt == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
                 .label('location_wkt'),
             func.first_value(ReceiverBeacon.altitude)
-                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.altitude == null(), None), (ReceiverBeacon.altitude != null(), ReceiverBeacon.altitude)]))
+                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.altitude == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
                 .label('altitude'),
             func.first_value(ReceiverBeacon.version)
-                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.version == null(), None), (ReceiverBeacon.version != null(), ReceiverBeacon.version)]))
+                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.version == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
                 .label('version'),
             func.first_value(ReceiverBeacon.platform)
-                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.platform == null(), None), (ReceiverBeacon.platform != null(), ReceiverBeacon.platform)]))
+                .over(partition_by=ReceiverBeacon.name, order_by=case([(ReceiverBeacon.platform == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
                 .label('platform')) \
         .filter(ReceiverBeacon.receiver_id == null()) \
         .subquery()
