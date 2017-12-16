@@ -56,7 +56,7 @@ def update_devices():
         .subquery()
 
     missing_devices_query = app.session.query(distinct(AircraftBeacon.address)) \
-        .filter(and_(AircraftBeacon.device_id == null(), AircraftBeacon.error_count == 0)) \
+        .filter(and_(AircraftBeacon.device_id == null(), not_(AircraftBeacon.address.like('00%')), AircraftBeacon.error_count == 0)) \
         .filter(~AircraftBeacon.address.in_(available_devices))
 
     ins = insert(Device).from_select([Device.address], missing_devices_query)
