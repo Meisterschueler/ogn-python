@@ -22,6 +22,9 @@ class Device(Base):
     # Relations
     aircraft_beacons = relationship('AircraftBeacon')
 
+    def __init__(self, address):
+        self.address = address
+
     def __repr__(self):
         return "<Device: %s,%s,%s,%s,%s,%s>" % (
             self.address,
