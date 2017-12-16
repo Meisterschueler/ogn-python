@@ -1,8 +1,6 @@
 import unittest
 import os
 
-from sqlalchemy.sql import null
-
 from ogn.model import Logbook, Airport, Device, TakeoffLanding
 from ogn.collect.logbook import update_logbook
 
