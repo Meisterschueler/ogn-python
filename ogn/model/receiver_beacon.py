@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, String, Integer, SmallInteger, ForeignKey
+from sqlalchemy import Column, Float, String, Integer, SmallInteger, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
 from .beacon import Beacon
@@ -34,8 +34,11 @@ class ReceiverBeacon(Beacon):
     status = Column(SmallInteger, index=True)
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
+    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'))
     receiver = relationship('Receiver', foreign_keys=[receiver_id])
+
+    # Multi-column indices
+    Index('ix_receiver_beacon_receiver_id_name', 'receiver_id', 'name')
 
     def __repr__(self):
         return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

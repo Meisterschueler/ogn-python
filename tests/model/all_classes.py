@@ -15,5 +15,6 @@ class TestStringMethods(unittest.TestCase):
         except AttributeError as e:
             raise AssertionError(e)
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
 from .beacon import Beacon
@@ -42,11 +42,15 @@ class AircraftBeacon(Beacon):
     distance = Column(Float)
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
+    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'))
     receiver = relationship('Receiver', foreign_keys=[receiver_id])
 
-    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
+    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'))
     device = relationship('Device', foreign_keys=[device_id])
+
+    # Multi-column indices
+    Index('ix_aircraft_beacon_receiver_id_receiver_name', 'receiver_id', 'receiver_name')
+    Index('ix_aircraft_beacon_device_id_address', 'device_id', 'address')
 
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
