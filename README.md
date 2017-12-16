@@ -102,7 +102,6 @@ available commands:
     import_ddb             Import registered devices from the DDB.
     import_file            Import registered devices from a local file.
     init                   Initialize the database.
-    update_relations       Update AircraftBeacon and ReceiverBeacon relations
     upgrade                Upgrade database to the latest version.
   
   [gateway]
@@ -115,6 +114,11 @@ available commands:
     compute_logbook        Compute logbook.
     compute_takeoff_landingCompute takeoffs and landings.
     show                   Show a logbook for <airport_name>.
+  
+  [stats]
+    airports               Compute airport statistics.
+    devices                Compute device statistics
+    receivers              Compute receiver statistics.
   
   [show.airport]
     list_all               Show a list of all airports.
@@ -139,10 +143,16 @@ Only the command `logbook.compute` requires a running task server (celery) at th
 
 ### Available tasks
 
-- `ogn.collect.database.import_ddb` - Import registered devices from the ddb
-- `ogn.collect.database.import_file` - Import registered devices from a local file
-- `ogn.collect.receiver.update_receivers` - Populate/update receiver table
-- `ogn.collect.logbook.compute_takeoff_and_landing` - Generate TakeoffLanding table
+- `ogn.collect.database.import_ddb` - Import registered devices from the DDB.
+- `ogn.collect.database.import_file` - Import registered devices from a local file.
+- `ogn.collect.database.update_country_code` - Update country code in receivers table if None.
+- `ogn.collect.database.update_devices` - Add/update entries in devices table and update foreign keys in aircraft beacons.
+- `ogn.collect.database.update_receivers` - Add/update_receivers entries in receiver table and update receivers foreign keys and distance in aircraft beacons and update foreign keys in receiver beacons.
+- `ogn.collect.logbook.update_logbook` - Add/update logbook entries.
+- `ogn.collect.logbook.update_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
+- `ogn.collect.stats.update_device_stats` - Add/update entries in device stats table.
+- `ogn.collect.stats.update_receiver_stats` - Add/update entries in receiver stats table.
+- `ogn.collect.takeoff_landing.update_takeoff_landing` - Compute takeoffs and landings.
 
 If the task server is up and running, tasks could be started manually.
 

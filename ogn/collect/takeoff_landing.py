@@ -14,6 +14,8 @@ logger = get_task_logger(__name__)
 
 @app.task
 def update_takeoff_landing(session=None):
+    """Compute takeoffs and landings."""
+
     logger.info("Compute takeoffs and landings.")
 
     if session is None:

@@ -12,6 +12,8 @@ logger = get_task_logger(__name__)
 
 @app.task
 def update_logbook(session=None):
+    """Add/update logbook entries."""
+
     logger.info("Compute logbook.")
 
     if session is None:
@@ -158,6 +160,8 @@ def update_logbook(session=None):
 
 @app.task
 def update_max_altitude(session=None):
+    """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
+
     logger.info("Update logbook max altitude.")
 
     if session is None:

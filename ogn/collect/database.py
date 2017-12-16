@@ -245,7 +245,7 @@ def update_receivers(session=None):
 
 @app.task
 def update_country_code(session=None):
-    # update country code in receivers table if None
+    """Update country code in receivers table if None."""
 
     if session is None:
         session = app.session
