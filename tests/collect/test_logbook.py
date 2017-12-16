@@ -3,9 +3,8 @@ import os
 
 from sqlalchemy.sql import null
 
-from ogn.model import Logbook, Airport, Device
+from ogn.model import Logbook, Airport, Device, TakeoffLanding
 from ogn.collect.logbook import update_logbook
-from ogn.model.takeoff_landing import TakeoffLanding
 
 
 class TestDB(unittest.TestCase):
@@ -53,27 +52,6 @@ class TestDB(unittest.TestCase):
     def get_logbook_entries(self):
         session = self.session
         return session.query(Logbook).order_by(Logbook.takeoff_airport_id, Logbook.reftime).all()
-
-    def assert_entries(self, koen_to=0, koen_ldg=0, koen_complete=0, ohl_to=0, ohl_ldg=0, ohl_complete=0):
-        session = self.session
-
-        entries = len(session.query(Logbook).filter(Logbook.takeoff_airport_id == self.koenigsdorf.id).filter(Logbook.landing_airport_id == null()).all())
-        self.assertEqual(entries, koen_to)
-
-        entries = len(session.query(Logbook).filter(Logbook.landing_airport_id == self.koenigsdorf.id).filter(Logbook.takeoff_airport_id == null()).all())
-        self.assertEqual(entries, koen_ldg)
-
-        entries = len(session.query(Logbook).filter(Logbook.takeoff_airport_id == Logbook.landing_airport_id == self.koenigsdorf.id).all())
-        self.assertEqual(entries, koen_complete)
-
-        entries = len(session.query(Logbook).filter(Logbook.takeoff_airport_id == self.ohlstadt.id).filter(Logbook.landing_airport_id == null()).all())
-        self.assertEqual(entries, ohl_to)
-
-        entries = len(session.query(Logbook).filter(Logbook.landing_airport_id == self.ohlstadt.id).filter(Logbook.takeoff_airport_id == null()).all())
-        self.assertEqual(entries, ohl_ldg)
-
-        entries = len(session.query(Logbook).filter(Logbook.takeoff_airport_id == Logbook.landing_airport_id == self.ohlstadt.id).all())
-        self.assertEqual(entries, ohl_complete)
 
     def test_single_takeoff(self):
         session = self.session
