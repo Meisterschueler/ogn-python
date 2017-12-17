@@ -71,6 +71,7 @@ def update_takeoff_landing(session=None):
         AircraftBeacon.altitude,
         func.lag(AircraftBeacon.altitude).over(order_by=wo).label('altitude_prev'),
         func.lead(AircraftBeacon.altitude).over(order_by=wo).label('altitude_next')) \
+        .filter(AircraftBeacon.status == null()) \
         .filter(AircraftBeacon.id == beacon_selection.c.id) \
         .subquery()
 
@@ -141,4 +142,4 @@ def update_takeoff_landing(session=None):
     session.commit()
     logger.debug("Inserted {} TakeoffLandings, updated {} AircraftBeacons".format(counter, update_aircraft_beacons))
 
-    return counter
+    return "Inserted {} TakeoffLandings, updated {} AircraftBeacons".format(counter, update_aircraft_beacons)
