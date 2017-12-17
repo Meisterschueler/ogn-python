@@ -38,6 +38,8 @@ def import_ddb(session=None):
     counter = update_device_infos(session, address_origin)
     logger.info("Imported {} devices.".format(counter))
 
+    return "Imported {} devices.".format(counter)
+
 
 @app.task
 def import_file(session=None, path='tests/custom_ddb.txt'):
@@ -51,6 +53,8 @@ def import_file(session=None, path='tests/custom_ddb.txt'):
 
     counter = update_device_infos(session, address_origin, csvfile=path)
     logger.info("Imported {} devices.".format(counter))
+
+    return "Imported {} devices.".format(counter)
 
 
 @app.task

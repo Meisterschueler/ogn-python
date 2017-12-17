@@ -11,20 +11,28 @@ CELERYBEAT_SCHEDULE = {
         'task': 'ogn.collect.database.import_ddb',
         'schedule': timedelta(minutes=15),
     },
+    'update-device-table': {
+        'task': 'ogn.collect.database.update_devices',
+        'schedule': timedelta(minutes=5),
+    },
+    'update-receiver-table': {
+        'task': 'ogn.collect.database.update_receivers',
+        'schedule': timedelta(minutes=5),
+    },
+    'update-country-codes': {
+        'task': 'ogn.collect.database.update_country_code',
+        'schedule': timedelta(minutes=5),
+    },
     'update-takeoff-and-landing': {
-        'task': 'ogn.collect.logbook.compute_takeoff_and_landing',
+        'task': 'ogn.collect.takeoff_landing.update_takeoff_landing',
         'schedule': timedelta(minutes=15),
     },
     'update-logbook': {
-        'task': 'ogn.collect.logbook.compute_logbook',
-        'schedule': timedelta(minutes=1),
+        'task': 'ogn.collect.logbook.update_logbook',
+        'schedule': timedelta(minutes=15),
     },
-    'update-altitudes': {
-        'task': 'ogn.collect.logbook.compute_altitudes',
-        'schedule': timedelta(minutes=1),
-    },
-    'update-receiver-table': {
-        'task': 'ogn.collect.receiver.update_receivers',
+    'update-max-altitudes': {
+        'task': 'ogn.collect.logbook.update_max_altitude',
         'schedule': timedelta(minutes=15),
     },
 }
