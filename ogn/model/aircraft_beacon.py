@@ -52,17 +52,6 @@ class AircraftBeacon(Beacon):
     Index('ix_aircraft_beacon_receiver_id_receiver_name', 'receiver_id', 'receiver_name')
     Index('ix_aircraft_beacon_device_id_address', 'device_id', 'address')
 
-    def __init__(self, receiver_name, address, timestamp, aircraft_type, stealth, error_count, software_version, hardware_version, real_address):
-        self.receiver_name
-        self.address = address
-        self.timestamp = timestamp
-        self.aircraft_type = aircraft_type
-        self.stealth = stealth
-        self.error_count = error_count
-        self.software_version = software_version
-        self.hardware_version = hardware_version
-        self.real_address = real_address
-
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,

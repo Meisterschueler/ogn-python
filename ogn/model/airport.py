@@ -25,9 +25,6 @@ class Airport(Base):
     # Relations
     takeoff_landings = relationship('TakeoffLanding')
 
-    def __init__(self, name):
-        self.name = name
-
     def __repr__(self):
         return "<Airport %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (
             self.name,
