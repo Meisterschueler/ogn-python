@@ -3,7 +3,6 @@ import re
 
 from manager import Manager
 from ogn.commands.dbutils import session
-from ogn.gateway.process import message_to_beacon
 from ogn.model import AircraftBeacon, ReceiverBeacon
 from ogn.utils import open_file
 
@@ -33,6 +32,8 @@ def convert(sourcefile, path=''):
     import csv
     import gzip
     import datetime
+
+    from ogn.gateway.process import message_to_beacon
 
     match = re.search(PATTERN, sourcefile)
     if match:
