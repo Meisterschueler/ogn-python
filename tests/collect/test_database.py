@@ -1,8 +1,8 @@
 import unittest
 import os
 
-from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver
-from ogn.collect.database import update_devices, update_receivers
+from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver, DeviceInfo
+from ogn.collect.database import update_devices, update_receivers, import_ddb_file
 
 
 class TestDB(unittest.TestCase):
@@ -33,6 +33,7 @@ class TestDB(unittest.TestCase):
 
     def tearDown(self):
         session = self.session
+        session.execute("DELETE FROM device_info")
         session.execute("DELETE FROM device")
         session.execute("DELETE FROM receiver")
         session.execute("DELETE FROM aircraft_beacon")
@@ -116,6 +117,14 @@ class TestDB(unittest.TestCase):
         self.assertEqual(self.rb02.receiver_id, receivers[0].id)
         self.assertEqual(self.rb03.receiver_id, receivers[0].id)
         self.assertEqual(self.ab01.receiver_id, receivers[0].id)
+
+    def test_import_ddb_file(self):
+        session = self.session
+
+        import_ddb_file(session, path=os.path.dirname(__file__) + '/../custom_ddb.txt')
+
+        device_infos = session.query(DeviceInfo).all()
+        self.assertEqual(len(device_infos), 6)
 
 
 if __name__ == '__main__':

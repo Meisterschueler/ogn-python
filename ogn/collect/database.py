@@ -42,7 +42,7 @@ def import_ddb(session=None):
 
 
 @app.task
-def import_file(session=None, path='tests/custom_ddb.txt'):
+def import_ddb_file(session=None, path='tests/custom_ddb.txt'):
     """Import registered devices from a local file."""
 
     if session is None:

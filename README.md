@@ -100,7 +100,7 @@ available commands:
     drop                   Drop all tables.
     import_airports        Import airports from a ".cup" file
     import_ddb             Import registered devices from the DDB.
-    import_file            Import registered devices from a local file.
+    import_ddb_file        Import registered devices from a local file.
     init                   Initialize the database.
     upgrade                Upgrade database to the latest version.
   
