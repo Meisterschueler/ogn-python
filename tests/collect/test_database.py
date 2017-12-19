@@ -102,6 +102,7 @@ class TestDB(unittest.TestCase):
         session.add(self.rb01)
         session.add(self.rb02)
         session.add(self.rb03)
+        session.add(self.ab01)
         session.commit()
 
         update_receivers(session)
@@ -111,6 +112,10 @@ class TestDB(unittest.TestCase):
         self.assertEqual(receivers[0].name, 'Koenigsdf')
         self.assertEqual(receivers[0].altitude, 601)
         self.assertEqual(receivers[0].version, '0.2.6')
+        self.assertEqual(self.rb01.receiver_id, receivers[0].id)
+        self.assertEqual(self.rb02.receiver_id, receivers[0].id)
+        self.assertEqual(self.rb03.receiver_id, receivers[0].id)
+        self.assertEqual(self.ab01.receiver_id, receivers[0].id)
 
 
 if __name__ == '__main__':
