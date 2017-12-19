@@ -2,7 +2,7 @@ import os
 import unittest
 
 from ogn.model import AircraftType
-from ogn.utils import get_ddb, get_trackable, get_country_code
+from ogn.utils import get_ddb, get_trackable, get_country_code, get_airports
 import unittest.mock as mock
 
 
@@ -53,3 +53,7 @@ class TestStringMethods(unittest.TestCase):
         instance.reverse.side_effect = GeocoderTimedOut('Too busy')
         country_code = get_country_code(0, 0)
         self.assertIsNone(country_code)
+
+    def test_get_airports(self):
+        airports = get_airports(os.path.dirname(__file__) + '/SeeYou.cup')
+        self.assertGreater(len(airports), 1000)
