@@ -17,7 +17,7 @@ def update_device_infos(session, address_origin, csvfile=None):
 
     session.query(DeviceInfo) \
         .filter(DeviceInfo.address_origin == address_origin) \
-        .delete()
+        .delete(synchronize_session='fetch')
 
     session.bulk_save_objects(device_infos)
     session.commit()
