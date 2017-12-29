@@ -21,8 +21,8 @@ def stations2_filtered_pl(session):
 
     query = session.query(
         Receiver.name.label('s'),
-        label('lt', func.round(func.ST_Y(Receiver.location_wkt)*10000)/10000),
-        label('lg', func.round(func.ST_X(Receiver.location_wkt)*10000)/10000),
+        label('lt', func.round(func.ST_Y(Receiver.location_wkt) * 10000) / 10000),
+        label('lg', func.round(func.ST_X(Receiver.location_wkt) * 10000) / 10000),
         case([(Receiver.lastseen > last_10_minutes, "U")],
             else_="D").label('u'),
         Receiver.lastseen.label('ut'),
@@ -30,6 +30,6 @@ def stations2_filtered_pl(session):
         .order_by(Receiver.lastseen)
 
     res = session.execute(query)
-    stations = json.dumps({"stations": [dict(r) for r in res]}, default=alchemyencoder)
+    stations = json.dumps({'stations': [dict(r) for r in res]}, default=alchemyencoder)
 
     return stations

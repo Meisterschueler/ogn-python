@@ -1,9 +1,20 @@
-from datetime import datetime, timedelta, date
-import os
+from datetime import datetime, timedelta, timezone, date
 
-from sqlalchemy import func, and_, between, case, null
+from sqlalchemy import func, and_, between, case
 
-from ogn.model import AircraftBeacon, DeviceInfo, Device, Receiver
+from ogn.model import AircraftBeacon, Device, Receiver
+
+
+def utc_to_local(utc_dt):
+    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
+
+def encode(address):
+    return 'xx' + address
+
+
+def decode(code):
+    return code[2:9]
 
 
 def rec(session):
@@ -34,28 +45,25 @@ def lxml(session, show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_
     else:
         observation_start = datetime.utcnow() - timedelta(minutes=5)
 
-    position_query = session.query(Device, AircraftBeacon, DeviceInfo) \
+    position_query = session.query(AircraftBeacon, Device) \
         .filter(and_(between(func.ST_Y(AircraftBeacon.location_wkt), lat_min, lat_max),
                      between(func.ST_X(AircraftBeacon.location_wkt), lon_min, lon_max))) \
         .filter(Device.lastseen > observation_start) \
-        .filter(Device.last_position_beacon_id == AircraftBeacon.id) \
-        .outerjoin(DeviceInfo, DeviceInfo.device_id == Device.id)
+        .filter(Device.lastseen == AircraftBeacon.timestamp) \
+        .filter(Device.id == AircraftBeacon.device_id)
 
     lines = list()
     lines.append('<?xml version="1.0" encoding="UTF-8"?>')
     lines.append('<markers>')
 
-    for [aircraft_beacon, device_info] in position_query.all():
-        if device_info and (not device_info.tracked or not device_info.identified):
-            continue
+    for [aircraft_beacon, device] in position_query.all():
+        code = encode(device.address)
 
-        code = encode(aircraft_beacon.address)
+        if len(device.informations) > 0:
+            device_info = device.informations[0]
+            if device_info and (not device_info.tracked or not device_info.identified):
+                continue
 
-        if device_info is None:
-            competition = ('_' + code[-2:]).lower()
-            registration = code
-            address = 0
-        else:
             if not device_info.competition:
                 competition = device_info.registration[-2:]
             else:
@@ -66,12 +74,18 @@ def lxml(session, show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_
             else:
                 registration = device_info.registration
 
-            address = device_info.address
+            address = device.address
+
+        else:
+            device_info = None
+            competition = ('_' + code[-2:]).lower()
+            registration = code
+            address = 0
 
         elapsed_time = datetime.utcnow() - aircraft_beacon.timestamp
         elapsed_seconds = int(elapsed_time.total_seconds())
 
-        lines.append('<m a="{0:.7f},{1:.7f},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}"/>'
+        lines.append('   <m a="{0:.7f},{1:.7f},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}"/>'
                      .format(aircraft_beacon.location.latitude,
                              aircraft_beacon.location.longitude,
                              competition,
@@ -81,7 +95,7 @@ def lxml(session, show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_
                              elapsed_seconds,
                              int(aircraft_beacon.track),
                              int(aircraft_beacon.ground_speed),
-                             int(aircraft_beacon.climb_rate*10)/10,
+                             int(aircraft_beacon.climb_rate * 10) / 10,
                              aircraft_beacon.aircraft_type,
                              aircraft_beacon.receiver_name,
                              address,
