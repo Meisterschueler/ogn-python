@@ -17,4 +17,4 @@ class ReceiverStats(Base):
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
-    receiver = relationship('Receiver', foreign_keys=[receiver_id])
+    receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='stats')

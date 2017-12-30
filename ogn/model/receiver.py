@@ -22,10 +22,6 @@ class Receiver(Base):
     version = Column(String)
     platform = Column(String)
 
-    # Relations
-    aircraft_beacons = relationship('AircraftBeacon')
-    receiver_beacons = relationship('ReceiverBeacon')
-
     @property
     def location(self):
         if self.location_wkt is None:

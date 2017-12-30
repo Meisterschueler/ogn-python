@@ -43,10 +43,10 @@ class AircraftBeacon(Beacon):
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'))
-    receiver = relationship('Receiver', foreign_keys=[receiver_id])
+    receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='aircraft_beacons')
 
     device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'))
-    device = relationship('Device', foreign_keys=[device_id])
+    device = relationship('Device', foreign_keys=[device_id], backref='aircraft_beacons')
 
     # Multi-column indices
     Index('ix_aircraft_beacon_receiver_id_receiver_name', 'receiver_id', 'receiver_name')

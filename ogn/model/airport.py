@@ -22,9 +22,6 @@ class Airport(Base):
     runway_length = Column(Integer)
     frequency = Column(Float)
 
-    # Relations
-    takeoff_landings = relationship('TakeoffLanding')
-
     def __repr__(self):
         return "<Airport %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (
             self.name,

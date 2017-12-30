@@ -59,8 +59,8 @@ def lxml(session, show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_
     for [aircraft_beacon, device] in position_query.all():
         code = encode(device.address)
 
-        if len(device.informations) > 0:
-            device_info = device.informations[0]
+        if len(device.infos) > 0:
+            device_info = device.infos[0]
             if device_info and (not device_info.tracked or not device_info.identified):
                 continue
 

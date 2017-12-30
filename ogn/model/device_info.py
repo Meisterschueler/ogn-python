@@ -21,6 +21,7 @@ class DeviceInfo(Base):
 
     # Relations
     device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
+    device = relationship('Device', foreign_keys=[device_id], backref='infos')
 
     def __repr__(self):
         return "<DeviceInfo: %s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

@@ -17,10 +17,6 @@ class Device(Base):
     hardware_version = Column(SmallInteger)
     real_address = Column(String(6))
 
-    # Relations
-    aircraft_beacons = relationship('AircraftBeacon')
-    informations = relationship('DeviceInfo', backref="device")
-
     def __repr__(self):
         return "<Device: %s,%s,%s,%s,%s,%s>" % (
             self.address,
