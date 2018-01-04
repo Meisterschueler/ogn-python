@@ -28,6 +28,8 @@ class Beacon(AbstractConcreteBase, Base):
     beacon_type = None
     aprs_type = None
 
+    location_mgrs = None
+
     @property
     def location(self):
         if self.location_wkt is None:

@@ -41,7 +41,8 @@ setup(
         'geoalchemy2==0.4.0',
         'shapely>=1.5.17,<1.6',
         'ogn-client==0.8.0',
-        'psycopg2==2.7.3.2'
+        'psycopg2==2.7.3.2',
+        'mgrs==1.3.5'
     ],
     extras_require={
         'dev': [

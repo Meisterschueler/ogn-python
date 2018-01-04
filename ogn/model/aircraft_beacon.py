@@ -40,6 +40,7 @@ class AircraftBeacon(Beacon):
 
     # Calculated values
     distance = Column(Float)
+    location_mgrs = Column(String(15), index=True)
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'))

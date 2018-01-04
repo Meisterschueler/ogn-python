@@ -1,5 +1,7 @@
 import logging
 
+from mgrs import MGRS
+
 from ogn.commands.dbutils import session
 from ogn.model import AircraftBeacon, ReceiverBeacon, Location
 from ogn.parser import parse, ParseError
@@ -7,11 +9,13 @@ from datetime import datetime, timedelta
 
 
 logger = logging.getLogger(__name__)
+myMGRS = MGRS()
 
 
 def replace_lonlat_with_wkt(message):
     location = Location(message['longitude'], message['latitude'])
     message['location_wkt'] = location.to_wkt()
+    message['location_mgrs'] = myMGRS.toMGRS(message['latitude'], message['longitude'])
     del message['latitude']
     del message['longitude']
     return message
