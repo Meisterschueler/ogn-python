@@ -13,5 +13,6 @@ from .receiver_stats import ReceiverStats
 from .takeoff_landing import TakeoffLanding
 from .airport import Airport
 from .logbook import Logbook
+from .receiver_coverage import ReceiverCoverage
 
 from .geo import Location

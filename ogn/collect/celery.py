@@ -29,6 +29,7 @@ app = Celery('ogn.collect',
                       "ogn.collect.logbook",
                       "ogn.collect.stats",
                       "ogn.collect.takeoff_landing",
+                      "ogn.collect.ognrange"
                       ])
 
 app.config_from_envvar("OGN_CONFIG_MODULE")
