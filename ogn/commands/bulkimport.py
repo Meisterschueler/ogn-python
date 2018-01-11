@@ -120,6 +120,12 @@ def drop_indices():
     """)
     print("Dropped indices of AircraftBeacon")
 
+    # disable constraint trigger
+    session.execute("""
+        ALTER TABLE aircraft_beacons DISABLE TRIGGER ALL
+    """)
+    print("Disabled constraint triggers")
+
 
 @manager.command
 def create_indices():
@@ -132,6 +138,11 @@ def create_indices():
         CREATE INDEX ix_aircraft_beacon_status ON aircraft_beacons USING BTREE(status);
     """)
     print("Created indices for AircraftBeacon")
+
+    session.execute("""
+        ALTER TABLE aircraft_beacons ENABLE TRIGGER ALL
+    """)
+    print("Enabled constraint triggers")
 
 
 @manager.command
@@ -267,12 +278,6 @@ def import_aircraft_beacon_logfile(csv_logfile):
     """)
     print("Inserted missing Receivers")
 
-    # disable constraint trigger
-    session.execute("""
-        ALTER TABLE aircraft_beacons DISABLE TRIGGER ALL
-    """)
-    print("Disabled constraint triggers")
-
     session.execute("""
         INSERT INTO aircraft_beacons(location, altitude, name, receiver_name, timestamp, track, ground_speed,
                                     address_type, aircraft_type, stealth, address, climb_rate, turn_rate, flightlevel, signal_quality, error_count, frequency_offset, gps_status, software_version, hardware_version, real_address, signal_power,
@@ -284,11 +289,6 @@ def import_aircraft_beacon_logfile(csv_logfile):
         WHERE t.receiver_name = r.name AND t.address = d.address
     """)
     print("Wrote AircraftBeacons from temporary table into final table")
-
-    session.execute("""
-        ALTER TABLE aircraft_beacons ENABLE TRIGGER ALL
-    """)
-    print("Enabled constraint triggers")
 
     session.execute("""DROP TABLE aircraft_beacons_temp""")
     print("Dropped temporary table")
