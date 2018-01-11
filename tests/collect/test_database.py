@@ -33,11 +33,11 @@ class TestDB(unittest.TestCase):
 
     def tearDown(self):
         session = self.session
-        session.execute("DELETE FROM device_info")
-        session.execute("DELETE FROM device")
-        session.execute("DELETE FROM receiver")
-        session.execute("DELETE FROM aircraft_beacon")
-        session.execute("DELETE FROM receiver_beacon")
+        session.execute("DELETE FROM device_infos")
+        session.execute("DELETE FROM devices")
+        session.execute("DELETE FROM receivers")
+        session.execute("DELETE FROM aircraft_beacons")
+        session.execute("DELETE FROM receiver_beacons")
         session.commit()
 
     def test_update_devices(self):

@@ -21,8 +21,8 @@ class TestDB(unittest.TestCase):
 
     def tearDown(self):
         session = self.session
-        session.execute("DELETE FROM aircraft_beacon")
-        session.execute("DELETE FROM receiver_beacon")
+        session.execute("DELETE FROM aircraft_beacons")
+        session.execute("DELETE FROM receiver_beacons")
         session.commit()
 
     def test_convert_logfile(self):

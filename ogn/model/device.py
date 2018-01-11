@@ -5,7 +5,7 @@ from .base import Base
 
 
 class Device(Base):
-    __tablename__ = 'device'
+    __tablename__ = 'devices'
 
     id = Column(Integer, primary_key=True)
     address = Column(String(6), index=True)

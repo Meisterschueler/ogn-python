@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 
 @app.task
 def update_device_stats(session=None, date=None):
-    """Add/update entries in device stats table."""
+    """Add/update device stats."""
 
     if session is None:
         session = app.session
@@ -46,14 +46,14 @@ def update_device_stats(session=None, date=None):
     res = session.execute(ins)
     insert_counter = res.rowcount
     session.commit()
-    logger.debug("DeviceStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
+    logger.debug("DeviceStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
 
-    return "DeviceStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
+    return "DeviceStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
 
 
 @app.task
 def update_receiver_stats(date=None):
-    """Add/update entries in receiver stats table."""
+    """Add/update receiver stats."""
 
     if not date:
         logger.warn("A date is needed for calculating stats. Exiting")
@@ -83,6 +83,6 @@ def update_receiver_stats(date=None):
     res = session.execute(ins)
     insert_counter = res.rowcount
     session.commit()
-    logger.debug("ReceiverStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
+    logger.debug("ReceiverStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
 
-    return "ReceiverStats entries for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
+    return "ReceiverStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)

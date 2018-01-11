@@ -6,7 +6,7 @@ from .base import Base
 
 
 class Airport(Base):
-    __tablename__ = "airport"
+    __tablename__ = "airports"
 
     id = Column(Integer, primary_key=True)
 

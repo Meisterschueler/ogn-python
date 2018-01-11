@@ -41,10 +41,10 @@ class TestDB(unittest.TestCase):
 
     def tearDown(self):
         session = self.session
-        session.execute("DELETE FROM takeoff_landing")
+        session.execute("DELETE FROM takeoff_landings")
         session.execute("DELETE FROM logbook")
-        session.execute("DELETE FROM device")
-        session.execute("DELETE FROM airport")
+        session.execute("DELETE FROM devices")
+        session.execute("DELETE FROM airports")
         session.commit()
 
     def get_logbook_entries(self):

@@ -13,9 +13,9 @@ logger = get_task_logger(__name__)
 
 @app.task
 def update_receiver_coverage(session=None):
-    """Add/update receiver coverage entries."""
+    """Add/update receiver coverages."""
 
-    logger.info("Compute receiver coverage.")
+    logger.info("Compute receiver coverages.")
 
     if session is None:
         session = app.session
@@ -46,7 +46,7 @@ def update_receiver_coverage(session=None):
                   sq.c.date) \
         .subquery()
 
-     # if a receiver coverage entry exist --> update it
+    # if a receiver coverage entry exist --> update it
     upd = update(ReceiverCoverage) \
         .where(and_(ReceiverCoverage.location_mgrs == query.c.reduced_mgrs,
                     ReceiverCoverage.receiver_id == query.c.receiver_id,

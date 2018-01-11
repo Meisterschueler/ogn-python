@@ -16,5 +16,5 @@ class ReceiverStats(Base):
     max_distance = Column(Float)
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), index=True)
+    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'), index=True)
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='stats')

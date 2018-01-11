@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def update_takeoff_landing(session=None):
+def update_takeoff_landings(session=None):
     """Compute takeoffs and landings."""
 
     logger.info("Compute takeoffs and landings.")

@@ -6,10 +6,10 @@ from .base import Base
 
 
 class ReceiverCoverage(Base):
-    __tablename__ = "receiver_coverage"
+    __tablename__ = "receiver_coverages"
 
     location_mgrs = Column(String(9), primary_key=True)
-    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'), primary_key=True)
+    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'), primary_key=True)
     date = Column(Date, primary_key=True)
 
     max_signal_quality = Column(Float)

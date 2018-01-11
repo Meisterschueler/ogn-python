@@ -5,7 +5,7 @@ from .beacon import Beacon
 
 
 class AircraftBeacon(Beacon):
-    __tablename__ = "aircraft_beacon"
+    __tablename__ = "aircraft_beacons"
 
     # Flarm specific data
     address_type = Column(SmallInteger)
@@ -43,15 +43,15 @@ class AircraftBeacon(Beacon):
     location_mgrs = Column(String(15), index=True)
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'))
+    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'))
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='aircraft_beacons')
 
-    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'))
+    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'))
     device = relationship('Device', foreign_keys=[device_id], backref='aircraft_beacons')
 
     # Multi-column indices
-    Index('ix_aircraft_beacon_receiver_id_receiver_name', 'receiver_id', 'receiver_name')
-    Index('ix_aircraft_beacon_device_id_address', 'device_id', 'address')
+    Index('ix_aircraft_beacons_receiver_id_receiver_name', 'receiver_id', 'receiver_name')
+    Index('ix_aircraft_beacons_device_id_address', 'device_id', 'address')
 
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

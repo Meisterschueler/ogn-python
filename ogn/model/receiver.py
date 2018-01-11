@@ -8,7 +8,7 @@ from .geo import Location
 
 
 class Receiver(Base):
-    __tablename__ = "receiver"
+    __tablename__ = "receivers"
 
     id = Column(Integer, primary_key=True)
 

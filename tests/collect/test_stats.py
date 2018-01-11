@@ -20,14 +20,14 @@ class TestDB(unittest.TestCase):
         from ogn.commands.database import init
         init()
 
-        session.execute("INSERT INTO device(address) VALUES('DDEFF7')")
-        session.execute("INSERT INTO receiver(name) VALUES('Koenigsdf')")
-        session.execute("INSERT INTO receiver(name) VALUES('Ohlstadt')")
+        session.execute("INSERT INTO devices(address) VALUES('DDEFF7')")
+        session.execute("INSERT INTO receivers(name) VALUES('Koenigsdf')")
+        session.execute("INSERT INTO receivers(name) VALUES('Ohlstadt')")
 
     def tearDown(self):
         session = self.session
-        session.execute("DELETE FROM aircraft_beacon")
-        session.execute("DELETE FROM device")
+        session.execute("DELETE FROM aircraft_beacons")
+        session.execute("DELETE FROM devices")
 
         session.execute("DELETE FROM device_stats")
         session.execute("DELETE FROM receiver_stats")
@@ -35,13 +35,13 @@ class TestDB(unittest.TestCase):
     def test_update_device_stats(self):
         session = self.session
 
-        session.execute("INSERT INTO aircraft_beacon(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Koenigsdf',604,'2016-07-02 10:47:12')")
-        session.execute("INSERT INTO aircraft_beacon(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Koenigsdf',605,'2016-07-02 10:47:32')")
-        session.execute("INSERT INTO aircraft_beacon(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Koenigsdf',606,'2016-07-02 10:47:52')")
-        session.execute("INSERT INTO aircraft_beacon(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Ohlstadt',606,'2016-07-02 10:48:12')")
-        session.execute("INSERT INTO aircraft_beacon(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Ohlstadt',606,'2016-07-02 10:48:24')")
+        session.execute("INSERT INTO aircraft_beacons(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Koenigsdf',604,'2016-07-02 10:47:12')")
+        session.execute("INSERT INTO aircraft_beacons(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Koenigsdf',605,'2016-07-02 10:47:32')")
+        session.execute("INSERT INTO aircraft_beacons(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Koenigsdf',606,'2016-07-02 10:47:52')")
+        session.execute("INSERT INTO aircraft_beacons(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Ohlstadt',606,'2016-07-02 10:48:12')")
+        session.execute("INSERT INTO aircraft_beacons(address, receiver_name, altitude, timestamp) VALUES('DDEFF7','Ohlstadt',606,'2016-07-02 10:48:24')")
 
-        session.execute("UPDATE aircraft_beacon SET device_id = d.id, receiver_id = r.id FROM device d, receiver r WHERE aircraft_beacon.address=d.address AND aircraft_beacon.receiver_name=r.name")
+        session.execute("UPDATE aircraft_beacons SET device_id = d.id, receiver_id = r.id FROM devices d, receivers r WHERE aircraft_beacons.address=d.address AND aircraft_beacons.receiver_name=r.name")
 
         update_device_stats(session, date='2016-07-02')
         stats = session.query(DeviceStats).all()

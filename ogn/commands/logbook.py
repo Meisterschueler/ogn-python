@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 
 from manager import Manager
 from ogn.collect.logbook import update_logbook
-from ogn.collect.takeoff_landing import update_takeoff_landing
+from ogn.collect.takeoff_landing import update_takeoff_landings
 from ogn.commands.dbutils import session
 from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
 from sqlalchemy import and_, or_

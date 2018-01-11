@@ -5,7 +5,7 @@ from .base import Base
 
 
 class TakeoffLanding(Base):
-    __tablename__ = 'takeoff_landing'
+    __tablename__ = 'takeoff_landings'
 
     id = Column(Integer, primary_key=True)
 
@@ -14,8 +14,8 @@ class TakeoffLanding(Base):
     track = Column(Integer)
 
     # Relations
-    airport_id = Column(Integer, ForeignKey('airport.id', ondelete='SET NULL'), index=True)
+    airport_id = Column(Integer, ForeignKey('airports.id', ondelete='SET NULL'), index=True)
     airport = relationship('Airport', foreign_keys=[airport_id], backref='takeoff_landings')
 
-    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
+    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)
     device = relationship('Device', foreign_keys=[device_id], backref='takeoff_landings')

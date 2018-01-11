@@ -5,7 +5,7 @@ from .base import Base
 
 
 class DeviceInfo(Base):
-    __tablename__ = 'device_info'
+    __tablename__ = 'device_infos'
 
     id = Column(Integer, primary_key=True)
     address_type = None
@@ -20,7 +20,7 @@ class DeviceInfo(Base):
     address_origin = Column(SmallInteger)
 
     # Relations
-    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
+    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)
     device = relationship('Device', foreign_keys=[device_id], backref='infos')
 
     def __repr__(self):

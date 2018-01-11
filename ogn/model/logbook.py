@@ -18,13 +18,13 @@ class Logbook(Base):
     max_altitude = Column(Integer)
 
     # Relations
-    takeoff_airport_id = Column(Integer, ForeignKey('airport.id', ondelete='CASCADE'), index=True)
+    takeoff_airport_id = Column(Integer, ForeignKey('airports.id', ondelete='CASCADE'), index=True)
     takeoff_airport = relationship('Airport', foreign_keys=[takeoff_airport_id])
 
-    landing_airport_id = Column(Integer, ForeignKey('airport.id', ondelete='CASCADE'), index=True)
+    landing_airport_id = Column(Integer, ForeignKey('airports.id', ondelete='CASCADE'), index=True)
     landing_airport = relationship('Airport', foreign_keys=[landing_airport_id])
 
-    device_id = Column(Integer, ForeignKey('device.id', ondelete='CASCADE'), index=True)
+    device_id = Column(Integer, ForeignKey('devices.id', ondelete='CASCADE'), index=True)
     device = relationship('Device', foreign_keys=[device_id])
 
     @hybrid_property

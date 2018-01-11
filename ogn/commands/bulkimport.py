@@ -112,11 +112,11 @@ def convert(sourcefile, path=''):
 def drop_indices():
     """Drop indices of AircraftBeacon."""
     session.execute("""
-        DROP INDEX IF EXISTS idx_aircraft_beacon_location;
-        DROP INDEX IF EXISTS ix_aircraft_beacon_receiver_id;
-        DROP INDEX IF EXISTS ix_aircraft_beacon_device_id;
-        DROP INDEX IF EXISTS ix_aircraft_beacon_timestamp;
-        DROP INDEX IF EXISTS ix_aircraft_beacon_status;
+        DROP INDEX IF EXISTS idx_aircraft_beacons_location;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_receiver_id;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_device_id;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_timestamp;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_status;
     """)
     print("Dropped indices of AircraftBeacon")
 
@@ -125,11 +125,11 @@ def drop_indices():
 def create_indices():
     """Create indices for AircraftBeacon."""
     session.execute("""
-        CREATE INDEX idx_aircraft_beacon_location ON aircraft_beacon USING GIST(location);
-        CREATE INDEX ix_aircraft_beacon_receiver_id ON aircraft_beacon USING BTREE(receiver_id);
-        CREATE INDEX ix_aircraft_beacon_device_id ON aircraft_beacon USING BTREE(device_id);
-        CREATE INDEX ix_aircraft_beacon_timestamp ON aircraft_beacon USING BTREE(timestamp);
-        CREATE INDEX ix_aircraft_beacon_status ON aircraft_beacon USING BTREE(status);
+        CREATE INDEX idx_aircraft_beacon_location ON aircraft_beacons USING GIST(location);
+        CREATE INDEX ix_aircraft_beacon_receiver_id ON aircraft_beacons USING BTREE(receiver_id);
+        CREATE INDEX ix_aircraft_beacon_device_id ON aircraft_beacons USING BTREE(device_id);
+        CREATE INDEX ix_aircraft_beacon_timestamp ON aircraft_beacons USING BTREE(timestamp);
+        CREATE INDEX ix_aircraft_beacon_status ON aircraft_beacons USING BTREE(status);
     """)
     print("Created indices for AircraftBeacon")
 
@@ -175,12 +175,12 @@ def import_logfile(path):
     receiver_beacon_header = ','.join(ReceiverBeacon.get_csv_columns())
 
     if header == aircraft_beacon_header:
-        if check_no_beacons('aircraft_beacon', reference_date_string):
+        if check_no_beacons('aircraft_beacons', reference_date_string):
             import_aircraft_beacon_logfile(path)
         else:
             print("For {} beacons already exist. Skipping".format(reference_date_string))
     elif header == receiver_beacon_header:
-        if check_no_beacons('receiver_beacon', reference_date_string):
+        if check_no_beacons('receiver_beacons', reference_date_string):
             import_receiver_beacon_logfile(path)
         else:
             print("For {} beacons already exist. Skipping".format(reference_date_string))
@@ -198,8 +198,8 @@ def check_no_beacons(tablename, reference_date_string):
 
 def import_aircraft_beacon_logfile(csv_logfile):
     SQL_TEMPTABLE_STATEMENT = """
-    DROP TABLE IF EXISTS aircraft_beacon_temp;
-    CREATE TABLE aircraft_beacon_temp(
+    DROP TABLE IF EXISTS aircraft_beacons_temp;
+    CREATE TABLE aircraft_beacons_temp(
         location geometry,
         altitude integer,
         name character varying,
@@ -229,7 +229,7 @@ def import_aircraft_beacon_logfile(csv_logfile):
     session.execute(SQL_TEMPTABLE_STATEMENT)
 
     SQL_COPY_STATEMENT = """
-    COPY aircraft_beacon_temp(%s) FROM STDIN WITH
+    COPY aircraft_beacons_temp(%s) FROM STDIN WITH
         CSV
         HEADER
         DELIMITER AS ','
@@ -251,46 +251,46 @@ def import_aircraft_beacon_logfile(csv_logfile):
 
     # create device if not exist
     session.execute("""
-        INSERT INTO device(address)
+        INSERT INTO devices(address)
         SELECT DISTINCT(t.address)
-        FROM aircraft_beacon_temp t
-        WHERE NOT EXISTS (SELECT 1 FROM device d WHERE d.address = t.address)
+        FROM aircraft_beacons_temp t
+        WHERE NOT EXISTS (SELECT 1 FROM devices d WHERE d.address = t.address)
     """)
     print("Inserted missing Devices")
 
     # create receiver if not exist
     session.execute("""
-        INSERT INTO receiver(name)
+        INSERT INTO receivers(name)
         SELECT DISTINCT(t.receiver_name)
-        FROM aircraft_beacon_temp t
-        WHERE NOT EXISTS (SELECT 1 FROM receiver r WHERE r.name = t.receiver_name)
+        FROM aircraft_beacons_temp t
+        WHERE NOT EXISTS (SELECT 1 FROM receivers r WHERE r.name = t.receiver_name)
     """)
     print("Inserted missing Receivers")
 
     # disable constraint trigger
     session.execute("""
-        ALTER TABLE aircraft_beacon DISABLE TRIGGER ALL
+        ALTER TABLE aircraft_beacons DISABLE TRIGGER ALL
     """)
     print("Disabled constraint triggers")
 
     session.execute("""
-        INSERT INTO aircraft_beacon(location, altitude, name, receiver_name, timestamp, track, ground_speed,
+        INSERT INTO aircraft_beacons(location, altitude, name, receiver_name, timestamp, track, ground_speed,
                                     address_type, aircraft_type, stealth, address, climb_rate, turn_rate, flightlevel, signal_quality, error_count, frequency_offset, gps_status, software_version, hardware_version, real_address, signal_power,
                                    status, receiver_id, device_id)
         SELECT t.location, t.altitude, t.name, t.receiver_name, t.timestamp, t.track, t.ground_speed,
                t.address_type, t.aircraft_type, t.stealth, t.address, t.climb_rate, t.turn_rate, t.flightlevel, t.signal_quality, t.error_count, t.frequency_offset, t.gps_status, t.software_version, t.hardware_version, t.real_address, t.signal_power,
                0, r.id, d.id
-        FROM aircraft_beacon_temp t, receiver r, device d
+        FROM aircraft_beacons_temp t, receivers r, devices d
         WHERE t.receiver_name = r.name AND t.address = d.address
     """)
     print("Wrote AircraftBeacons from temporary table into final table")
 
     session.execute("""
-        ALTER TABLE aircraft_beacon ENABLE TRIGGER ALL
+        ALTER TABLE aircraft_beacons ENABLE TRIGGER ALL
     """)
     print("Enabled constraint triggers")
 
-    session.execute("""DROP TABLE aircraft_beacon_temp""")
+    session.execute("""DROP TABLE aircraft_beacons_temp""")
     print("Dropped temporary table")
 
     session.commit()
@@ -301,8 +301,8 @@ def import_receiver_beacon_logfile(csv_logfile):
     """Import csv logfile <arg: csv logfile>."""
 
     SQL_TEMPTABLE_STATEMENT = """
-    DROP TABLE IF EXISTS receiver_beacon_temp;
-    CREATE TABLE receiver_beacon_temp(
+    DROP TABLE IF EXISTS receiver_beacons_temp;
+    CREATE TABLE receiver_beacons_temp(
         location geometry,
         altitude integer,
         name character varying,
@@ -335,7 +335,7 @@ def import_receiver_beacon_logfile(csv_logfile):
     session.execute(SQL_TEMPTABLE_STATEMENT)
 
     SQL_COPY_STATEMENT = """
-    COPY receiver_beacon_temp(%s) FROM STDIN WITH
+    COPY receiver_beacons_temp(%s) FROM STDIN WITH
         CSV
         HEADER
         DELIMITER AS ','
@@ -357,26 +357,26 @@ def import_receiver_beacon_logfile(csv_logfile):
 
     # create receiver if not exist
     session.execute("""
-        INSERT INTO receiver(name)
+        INSERT INTO receivers(name)
         SELECT DISTINCT(t.name)
-        FROM receiver_beacon_temp t
-        WHERE NOT EXISTS (SELECT 1 FROM receiver r WHERE r.name = t.name)
+        FROM receiver_beacons_temp t
+        WHERE NOT EXISTS (SELECT 1 FROM receivers r WHERE r.name = t.name)
     """)
     print("Inserted missing Receivers")
 
     session.execute("""
-        INSERT INTO receiver_beacon(location, altitude, name, receiver_name, timestamp, track, ground_speed,
+        INSERT INTO receiver_beacons(location, altitude, name, receiver_name, timestamp, track, ground_speed,
                                     version, platform, cpu_load, free_ram, total_ram, ntp_error, rt_crystal_correction, voltage,amperage, cpu_temp, senders_visible, senders_total, rec_input_noise, senders_signal, senders_messages, good_senders_signal, good_senders, good_and_bad_senders,
                                     status, receiver_id)
         SELECT t.location, t.altitude, t.name, t.receiver_name, t.timestamp, t.track, t.ground_speed,
                t.version, t.platform, t.cpu_load, t.free_ram, t.total_ram, t.ntp_error, t.rt_crystal_correction, t.voltage,amperage, t.cpu_temp, t.senders_visible, t.senders_total, t.rec_input_noise, t.senders_signal, t.senders_messages, t.good_senders_signal, t.good_senders, t.good_and_bad_senders,
                0, r.id
-        FROM receiver_beacon_temp t, receiver r
+        FROM receiver_beacons_temp t, receivers r
         WHERE t.name = r.name
     """)
     print("Wrote ReceiverBeacons from temporary table into final table")
 
-    session.execute("""DROP TABLE receiver_beacon_temp""")
+    session.execute("""DROP TABLE receiver_beacons_temp""")
     print("Dropped temporary table")
 
     session.commit()

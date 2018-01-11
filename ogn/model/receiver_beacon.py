@@ -5,7 +5,7 @@ from .beacon import Beacon
 
 
 class ReceiverBeacon(Beacon):
-    __tablename__ = "receiver_beacon"
+    __tablename__ = "receiver_beacons"
 
     # ReceiverBeacon specific data
     version = Column(String)
@@ -34,11 +34,11 @@ class ReceiverBeacon(Beacon):
     status = Column(SmallInteger, index=True)
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receiver.id', ondelete='SET NULL'))
+    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'))
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='receiver_beacons')
 
     # Multi-column indices
-    Index('ix_receiver_beacon_receiver_id_name', 'receiver_id', 'name')
+    Index('ix_receiver_beacons_receiver_id_name', 'receiver_id', 'name')
 
     def __repr__(self):
         return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

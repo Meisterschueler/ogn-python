@@ -15,7 +15,7 @@ class DeviceStats(Base):
     max_altitude = Column(Float)
 
     # Relations
-    device_id = Column(Integer, ForeignKey('device.id', ondelete='SET NULL'), index=True)
+    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)
     device = relationship('Device', foreign_keys=[device_id], backref='stats')
 
     def __repr__(self):

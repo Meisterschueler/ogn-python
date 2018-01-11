@@ -28,7 +28,7 @@ app = Celery('ogn.collect',
              include=["ogn.collect.database",
                       "ogn.collect.logbook",
                       "ogn.collect.stats",
-                      "ogn.collect.takeoff_landing",
+                      "ogn.collect.takeoff_landings",
                       "ogn.collect.ognrange"
                       ])
 
