@@ -24,7 +24,7 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(minutes=5),
     },
     'update-takeoff-and-landing': {
-        'task': 'ogn.collect.takeoff_landing.update_takeoff_landing',
+        'task': 'ogn.collect.takeoff_landings.update_takeoff_landings',
         'schedule': timedelta(minutes=15),
     },
     'update-logbook': {

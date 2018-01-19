@@ -31,8 +31,6 @@ class ReceiverBeacon(Beacon):
 
     user_comment = None
 
-    status = Column(SmallInteger, index=True)
-
     # Relations
     receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'))
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='receiver_beacons')
@@ -61,9 +59,7 @@ class ReceiverBeacon(Beacon):
             self.senders_messages,
             self.good_senders_signal,
             self.good_senders,
-            self.good_and_bad_senders,
-
-            self.status)
+            self.good_and_bad_senders)
 
     @classmethod
     def get_csv_columns(self):
@@ -71,6 +67,7 @@ class ReceiverBeacon(Beacon):
                'altitude',
                'name',
                'receiver_name',
+               'dstcall',
                'timestamp',
                'track',
                'ground_speed',
@@ -102,6 +99,7 @@ class ReceiverBeacon(Beacon):
             int(self.altitude) if self.altitude else None,
             self.name,
             self.receiver_name,
+            self.dstcall,
             self.timestamp,
             self.track,
             self.ground_speed,

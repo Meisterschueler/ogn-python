@@ -9,7 +9,7 @@ class AircraftBeacon(Beacon):
 
     # Flarm specific data
     address_type = Column(SmallInteger)
-    aircraft_type = Column(SmallInteger, index=True)
+    aircraft_type = Column(SmallInteger)
     stealth = Column(Boolean)
     address = Column(String(6))
     climb_rate = Column(Float)
@@ -35,8 +35,6 @@ class AircraftBeacon(Beacon):
     transmitter_power = None
     noise_level = None
     relays = None
-
-    status = Column(SmallInteger, index=True)
 
     # Calculated values
     distance = Column(Float)
@@ -71,7 +69,7 @@ class AircraftBeacon(Beacon):
             self.real_address,
             self.signal_power,
 
-            self.status)
+            self.location_mgrs)
 
     @classmethod
     def get_csv_columns(self):
@@ -79,6 +77,7 @@ class AircraftBeacon(Beacon):
                'altitude',
                'name',
                'receiver_name',
+               'dstcall',
                'timestamp',
                'track',
                'ground_speed',
@@ -97,14 +96,17 @@ class AircraftBeacon(Beacon):
                'software_version',
                'hardware_version',
                'real_address',
-               'signal_power']
+               'signal_power',
+
+               'location_mgrs']
 
     def get_csv_values(self):
         return [
             self.location_wkt,
-            int(self.altitude) if self.altitude else None,
+            int(self.altitude),
             self.name,
             self.receiver_name,
+            self.dstcall,
             self.timestamp,
             self.track,
             self.ground_speed,
@@ -117,10 +119,12 @@ class AircraftBeacon(Beacon):
             self.turn_rate,
             self.flightlevel,
             self.signal_quality,
-            int(self.error_count) if self.error_count else None,
+            self.error_count,
             self.frequency_offset,
             self.gps_status,
             self.software_version,
             self.hardware_version,
             self.real_address,
-            self.signal_power]
+            self.signal_power,
+
+            self.location_mgrs]

@@ -8,6 +8,7 @@ class Device(Base):
     __tablename__ = 'devices'
 
     id = Column(Integer, primary_key=True)
+
     address = Column(String(6), index=True)
     firstseen = Column(DateTime, index=True)
     lastseen = Column(DateTime, index=True)

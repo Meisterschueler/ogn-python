@@ -13,9 +13,12 @@ myMGRS = MGRS()
 
 
 def replace_lonlat_with_wkt(message):
-    location = Location(message['longitude'], message['latitude'])
+    latitude = message['latitude']
+    longitude = message['longitude']
+
+    location = Location(longitude, latitude)
     message['location_wkt'] = location.to_wkt()
-    message['location_mgrs'] = myMGRS.toMGRS(message['latitude'], message['longitude'])
+    message['location_mgrs'] = myMGRS.toMGRS(latitude, longitude).decode('utf-8')
     del message['latitude']
     del message['longitude']
     return message
@@ -44,6 +47,9 @@ def message_to_beacon(raw_message, reference_date):
             logger.error('Drop packet, {}'.format(e.message))
         except TypeError as e:
             logger.error('TypeError: {}'.format(raw_message))
+        except Exception as e:
+            logger.error(raw_message)
+            logger.error(e)
 
     return beacon
 

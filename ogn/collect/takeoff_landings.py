@@ -44,7 +44,6 @@ def update_takeoff_landings(session=None):
 
     # make a query with current, previous and next position
     beacon_selection = session.query(AircraftBeacon.id) \
-        .filter(AircraftBeacon.status == null()) \
         .order_by(AircraftBeacon.timestamp) \
         .limit(1000000) \
         .subquery()
@@ -71,7 +70,6 @@ def update_takeoff_landings(session=None):
         AircraftBeacon.altitude,
         func.lag(AircraftBeacon.altitude).over(order_by=wo).label('altitude_prev'),
         func.lead(AircraftBeacon.altitude).over(order_by=wo).label('altitude_next')) \
-        .filter(AircraftBeacon.status == null()) \
         .filter(AircraftBeacon.id == beacon_selection.c.id) \
         .subquery()
 
@@ -133,13 +131,7 @@ def update_takeoff_landings(session=None):
     result = session.execute(ins)
     counter = result.rowcount
 
-    # mark the computated AircraftBeacons as 'used'
-    update_aircraft_beacons = session.query(AircraftBeacon) \
-        .filter(AircraftBeacon.id == sq2.c.id) \
-        .update({AircraftBeacon.status: 1},
-                synchronize_session='fetch')
-
     session.commit()
-    logger.debug("Inserted {} TakeoffLandings, updated {} AircraftBeacons".format(counter, update_aircraft_beacons))
+    logger.debug("Inserted {} TakeoffLandings".format(counter))
 
-    return "Inserted {} TakeoffLandings, updated {} AircraftBeacons".format(counter, update_aircraft_beacons)
+    return "Inserted {} TakeoffLandings".format(counter)

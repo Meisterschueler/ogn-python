@@ -3,7 +3,7 @@ import os
 
 from ogn.model import TakeoffLanding
 
-from ogn.collect.takeoff_landing import update_takeoff_landings
+from ogn.collect.takeoff_landings import update_takeoff_landings
 
 
 class TestDB(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestDB(unittest.TestCase):
         i = 0
         for takeoff_landing in query.all():
             i = i + 1
-            print("{} {} {} {} {} {}".format(takeoff_landing.id, takeoff_landing.device_id, takeoff_landing.airport_id, takeoff_landing.timestamp, takeoff_landing.is_takeoff, takeoff_landing.track))
+            print("{} {} {} {} {}".format(takeoff_landing.device_id, takeoff_landing.airport_id, takeoff_landing.timestamp, takeoff_landing.is_takeoff, takeoff_landing.track))
 
         return i
 

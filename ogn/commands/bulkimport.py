@@ -116,7 +116,6 @@ def drop_indices():
         DROP INDEX IF EXISTS ix_aircraft_beacons_receiver_id;
         DROP INDEX IF EXISTS ix_aircraft_beacons_device_id;
         DROP INDEX IF EXISTS ix_aircraft_beacons_timestamp;
-        DROP INDEX IF EXISTS ix_aircraft_beacons_status;
     """)
     print("Dropped indices of AircraftBeacon")
 
@@ -135,7 +134,6 @@ def create_indices():
         CREATE INDEX ix_aircraft_beacon_receiver_id ON aircraft_beacons USING BTREE(receiver_id);
         CREATE INDEX ix_aircraft_beacon_device_id ON aircraft_beacons USING BTREE(device_id);
         CREATE INDEX ix_aircraft_beacon_timestamp ON aircraft_beacons USING BTREE(timestamp);
-        CREATE INDEX ix_aircraft_beacon_status ON aircraft_beacons USING BTREE(status);
     """)
     print("Created indices for AircraftBeacon")
 
@@ -215,6 +213,7 @@ def import_aircraft_beacon_logfile(csv_logfile):
         altitude integer,
         name character varying,
         receiver_name character varying(9),
+        dstcall character varying,
         "timestamp" timestamp without time zone,
         track integer,
         ground_speed double precision,
@@ -233,7 +232,9 @@ def import_aircraft_beacon_logfile(csv_logfile):
         software_version double precision,
         hardware_version smallint,
         real_address character varying(6),
-        signal_power double precision
+        signal_power double precision,
+
+        location_mgrs character varying(15)
         );
     """
 
@@ -279,12 +280,12 @@ def import_aircraft_beacon_logfile(csv_logfile):
     print("Inserted missing Receivers")
 
     session.execute("""
-        INSERT INTO aircraft_beacons(location, altitude, name, receiver_name, timestamp, track, ground_speed,
+        INSERT INTO aircraft_beacons(location, altitude, name, receiver_name, dstcall, timestamp, track, ground_speed,
                                     address_type, aircraft_type, stealth, address, climb_rate, turn_rate, flightlevel, signal_quality, error_count, frequency_offset, gps_status, software_version, hardware_version, real_address, signal_power,
-                                   status, receiver_id, device_id)
-        SELECT t.location, t.altitude, t.name, t.receiver_name, t.timestamp, t.track, t.ground_speed,
+                                    receiver_id, device_id)
+        SELECT t.location, t.altitude, t.name, t.receiver_name, t.dstcall, t.timestamp, t.track, t.ground_speed,
                t.address_type, t.aircraft_type, t.stealth, t.address, t.climb_rate, t.turn_rate, t.flightlevel, t.signal_quality, t.error_count, t.frequency_offset, t.gps_status, t.software_version, t.hardware_version, t.real_address, t.signal_power,
-               0, r.id, d.id
+               r.id, d.id
         FROM aircraft_beacons_temp t, receivers r, devices d
         WHERE t.receiver_name = r.name AND t.address = d.address
     """)
@@ -307,6 +308,7 @@ def import_receiver_beacon_logfile(csv_logfile):
         altitude integer,
         name character varying,
         receiver_name character varying(9),
+        dstcall character varying,
         "timestamp" timestamp without time zone,
         track integer,
         ground_speed double precision,
@@ -365,12 +367,12 @@ def import_receiver_beacon_logfile(csv_logfile):
     print("Inserted missing Receivers")
 
     session.execute("""
-        INSERT INTO receiver_beacons(location, altitude, name, receiver_name, timestamp, track, ground_speed,
+        INSERT INTO receiver_beacons(location, altitude, name, receiver_name, dstcall, timestamp, track, ground_speed,
                                     version, platform, cpu_load, free_ram, total_ram, ntp_error, rt_crystal_correction, voltage,amperage, cpu_temp, senders_visible, senders_total, rec_input_noise, senders_signal, senders_messages, good_senders_signal, good_senders, good_and_bad_senders,
-                                    status, receiver_id)
-        SELECT t.location, t.altitude, t.name, t.receiver_name, t.timestamp, t.track, t.ground_speed,
+                                    receiver_id)
+        SELECT t.location, t.altitude, t.name, t.receiver_name, t.dstcall, t.timestamp, t.track, t.ground_speed,
                t.version, t.platform, t.cpu_load, t.free_ram, t.total_ram, t.ntp_error, t.rt_crystal_correction, t.voltage,amperage, t.cpu_temp, t.senders_visible, t.senders_total, t.rec_input_noise, t.senders_signal, t.senders_messages, t.good_senders_signal, t.good_senders, t.good_and_bad_senders,
-               0, r.id
+               r.id
         FROM receiver_beacons_temp t, receivers r
         WHERE t.name = r.name
     """)
