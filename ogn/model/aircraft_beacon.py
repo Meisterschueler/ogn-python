@@ -12,17 +12,17 @@ class AircraftBeacon(Beacon):
     aircraft_type = Column(SmallInteger)
     stealth = Column(Boolean)
     address = Column(String(6))
-    climb_rate = Column(Float)
-    turn_rate = Column(Float)
-    flightlevel = Column(Float)
-    signal_quality = Column(Float)
-    error_count = Column(Integer)
-    frequency_offset = Column(Float)
+    climb_rate = Column(Float(precision=2))
+    turn_rate = Column(Float(precision=2))
+    flightlevel = Column(Float(precision=2))
+    signal_quality = Column(Float(precision=2))
+    error_count = Column(SmallInteger)
+    frequency_offset = Column(Float(precision=2))
     gps_status = Column(String)
-    software_version = Column(Float)
+    software_version = Column(Float(precision=2))
     hardware_version = Column(SmallInteger)
     real_address = Column(String(6))
-    signal_power = Column(Float)
+    signal_power = Column(Float(precision=2))
 
     proximity = None
     gps_satellites = None
@@ -37,6 +37,7 @@ class AircraftBeacon(Beacon):
     relays = None
 
     # Calculated values
+    status = Column(SmallInteger, default=0)
     distance = Column(Float)
     location_mgrs = Column(String(15), index=True)
 

@@ -12,7 +12,7 @@ class Beacon(AbstractConcreteBase, Base):
 
     # APRS data
     location_wkt = Column('location', Geometry('POINT', srid=4326))
-    altitude = Column(Integer)
+    altitude = Column(Float(precision=2))
 
     name = Column(String)
     receiver_name = Column(String(9))
@@ -21,7 +21,7 @@ class Beacon(AbstractConcreteBase, Base):
     symboltable = None
     symbolcode = None
     track = Column(Integer)
-    ground_speed = Column(Float)
+    ground_speed = Column(Float(precision=2))
     comment = None
 
     relay = None
