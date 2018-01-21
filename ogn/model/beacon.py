@@ -1,6 +1,6 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, String, Integer, Float, DateTime
+from sqlalchemy import Column, String, Integer, SmallInteger, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 
 from .base import Base
@@ -20,7 +20,7 @@ class Beacon(AbstractConcreteBase, Base):
     timestamp = Column(DateTime, index=True)
     symboltable = None
     symbolcode = None
-    track = Column(Integer)
+    track = Column(SmallInteger)
     ground_speed = Column(Float(precision=2))
     comment = None
 

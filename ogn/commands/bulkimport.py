@@ -112,9 +112,11 @@ def convert(sourcefile, path=''):
 def drop_indices():
     """Drop indices of AircraftBeacon."""
     session.execute("""
-        DROP INDEX IF EXISTS idx_aircraft_beacons_location;
-        DROP INDEX IF EXISTS ix_aircraft_beacons_receiver_id;
-        DROP INDEX IF EXISTS ix_aircraft_beacons_device_id;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_receiver_id_receiver_name;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_device_id_address;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_device_id_timestamp;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_location;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_location_mgrs;
         DROP INDEX IF EXISTS ix_aircraft_beacons_timestamp;
     """)
     print("Dropped indices of AircraftBeacon")
@@ -130,10 +132,12 @@ def drop_indices():
 def create_indices():
     """Create indices for AircraftBeacon."""
     session.execute("""
-        CREATE INDEX idx_aircraft_beacon_location ON aircraft_beacons USING GIST(location);
-        CREATE INDEX ix_aircraft_beacon_receiver_id ON aircraft_beacons USING BTREE(receiver_id);
-        CREATE INDEX ix_aircraft_beacon_device_id ON aircraft_beacons USING BTREE(device_id);
-        CREATE INDEX ix_aircraft_beacon_timestamp ON aircraft_beacons USING BTREE(timestamp);
+        CREATE INDEX ix_aircraft_beacons_receiver_id_receiver_name ON aircraft_beacons USING BTREE(receiver_id, receiver_name);
+        CREATE INDEX ix_aircraft_beacons_device_id_address ON aircraft_beacons USING BTREE(device_id, address);
+        CREATE INDEX ix_aircraft_beacons_device_id_timestamp ON aircraft_beacons USING BTREE(device_id, timestamp);
+        CREATE INDEX ix_aircraft_beacons_location ON aircraft_beacons USING GIST(location);
+
+        CREATE INDEX ix_aircraft_beacons_date_receiver_id_distance ON aircraft_beacons USING btree((timestamp::date), receiver_id, distance)
     """)
     print("Created indices for AircraftBeacon")
 

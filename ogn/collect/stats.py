@@ -3,7 +3,7 @@ from datetime import datetime
 from celery.utils.log import get_task_logger
 
 from sqlalchemy import insert, distinct
-from sqlalchemy.sql import null, and_, func, or_
+from sqlalchemy.sql import null, and_, func, or_, update
 from sqlalchemy.sql.expression import literal_column, case
 
 from ogn.model import AircraftBeacon, DeviceStats, ReceiverStats
@@ -35,7 +35,7 @@ def update_device_stats(session=None, date=None):
             func.dense_rank()
                 .over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.receiver_id)
                 .label('dr')) \
-        .filter(and_(AircraftBeacon.device_id != null(), func.date(AircraftBeacon.timestamp) == date)) \
+        .filter(and_(func.date(AircraftBeacon.timestamp) == date, AircraftBeacon.device_id != null())) \
         .filter(or_(AircraftBeacon.error_count == 0, AircraftBeacon.error_count == null())) \
         .subquery()
 
@@ -89,8 +89,11 @@ def update_device_stats(session=None, date=None):
 
 
 @app.task
-def update_receiver_stats(date=None):
+def update_receiver_stats(session=None, date=None):
     """Add/update receiver stats."""
+
+    if session is None:
+        session = app.session
 
     if not date:
         logger.warn("A date is needed for calculating stats. Exiting")
@@ -101,25 +104,49 @@ def update_receiver_stats(date=None):
         .filter(ReceiverStats.date == date) \
         .delete()
 
-    # Calculate stats for the selected date
+    # Calculate stats, firstseen, lastseen and last values != NULL
     receiver_stats = session.query(
-        AircraftBeacon.receiver_id,
-        literal_column("'{}'".format(date)).label('date'),
-        func.count(AircraftBeacon.id).label('aircraft_beacon_count'),
-        func.count(distinct(AircraftBeacon.device_id)).label('aircraft_count'),
-        func.max(AircraftBeacon.distance).label('max_distance')) \
-        .filter(AircraftBeacon.receiver_id != null()) \
-        .filter(func.date(AircraftBeacon.timestamp) == date) \
-        .group_by(AircraftBeacon.receiver_id) \
+            distinct(ReceiverBeacon.receiver_id).label('receiver_id'),
+            func.date(ReceiverBeacon.timestamp).label('date'),
+            func.first_value(ReceiverBeacon.timestamp)
+                .over(partition_by=ReceiverBeacon.receiver_id, order_by=case([(ReceiverBeacon.timestamp == null(), None)], else_=ReceiverBeacon.timestamp).asc().nullslast())
+                .label('firstseen'),
+            func.first_value(ReceiverBeacon.timestamp)
+                .over(partition_by=ReceiverBeacon.receiver_id, order_by=case([(ReceiverBeacon.timestamp == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
+                .label('lastseen'),
+            func.first_value(ReceiverBeacon.location_wkt)
+                .over(partition_by=ReceiverBeacon.receiver_id, order_by=case([(ReceiverBeacon.location_wkt == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
+                .label('location_wkt'),
+            func.first_value(ReceiverBeacon.altitude)
+                .over(partition_by=ReceiverBeacon.receiver_id, order_by=case([(ReceiverBeacon.altitude == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
+                .label('altitude'),
+            func.first_value(ReceiverBeacon.version)
+                .over(partition_by=ReceiverBeacon.receiver_id, order_by=case([(ReceiverBeacon.version == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
+                .label('version'),
+            func.first_value(ReceiverBeacon.platform)
+                .over(partition_by=ReceiverBeacon.receiver_id, order_by=case([(ReceiverBeacon.platform == null(), None)], else_=ReceiverBeacon.timestamp).desc().nullslast())
+                .label('platform')) \
         .subquery()
 
     # And insert them
     ins = insert(ReceiverStats).from_select(
-        [ReceiverStats.receiver_id, ReceiverStats.date, ReceiverStats.aircraft_beacon_count, ReceiverStats.aircraft_count, ReceiverStats.max_distance],
+        [ReceiverStats.receiver_id, ReceiverStats.date, ReceiverStats.firstseen, ReceiverStats.lastseen, ReceiverStats.location_wkt, ReceiverStats.altitude, ReceiverStats.version, ReceiverStats.platform],
         receiver_stats)
     res = session.execute(ins)
     insert_counter = res.rowcount
     session.commit()
-    logger.debug("ReceiverStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
+    logger.warn("ReceiverStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
 
-    return "ReceiverStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
+    # Update AircraftBeacon distances
+    upd = update(AircraftBeacon) \
+        .where(and_(func.date(AircraftBeacon.timestamp) == ReceiverStats.date,
+                    AircraftBeacon.receiver_id == ReceiverStats.receiver_id,
+                    AircraftBeacon.distance == null())) \
+        .values({"distance": func.ST_Distance_Sphere(AircraftBeacon.location_wkt, ReceiverStats.location_wkt)})
+
+    result = session.execute(upd)
+    update_counter = result.rowcount
+    session.commit()
+    logger.warn("Updated {} AircraftBeacons".format(update_counter))
+
+    return "ReceiverStats for {}: {} deleted, {} inserted, AircraftBeacons: {} updated".format(date, deleted_counter, insert_counter, update_counter)

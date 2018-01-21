@@ -1,6 +1,6 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, Float, String, Integer, DateTime
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -13,7 +13,7 @@ class Receiver(Base):
     id = Column(Integer, primary_key=True)
 
     location_wkt = Column('location', Geometry('POINT', srid=4326))
-    altitude = Column(Integer)
+    altitude = Column(Float(precision=2))
 
     name = Column(String(9))
     firstseen = Column(DateTime, index=True)

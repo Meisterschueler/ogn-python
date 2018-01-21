@@ -11,16 +11,16 @@ class Airport(Base):
     id = Column(Integer, primary_key=True)
 
     location_wkt = Column('location', Geometry('POINT', srid=4326))
-    altitude = Column(Integer)
+    altitude = Column(Float(precision=2))
 
     name = Column(String, index=True)
     code = Column(String(6))
     country_code = Column(String(2))
     style = Column(SmallInteger)
     description = Column(String)
-    runway_direction = Column(Integer)
-    runway_length = Column(Integer)
-    frequency = Column(Float)
+    runway_direction = Column(SmallInteger)
+    runway_length = Column(SmallInteger)
+    frequency = Column(Float(precision=2))
 
     def __repr__(self):
         return "<Airport %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (

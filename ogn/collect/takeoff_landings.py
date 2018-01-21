@@ -1,8 +1,8 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from celery.utils.log import get_task_logger
 
-from sqlalchemy import and_, or_, insert, between, exists
+from sqlalchemy import and_, or_, insert, update, between, exists
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import case
 
@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def update_takeoff_landings(session=None):
+def update_takeoff_landings(session=None, date=None):
     """Compute takeoffs and landings."""
 
     logger.info("Compute takeoffs and landings.")
@@ -43,10 +43,20 @@ def update_takeoff_landings(session=None):
               AircraftBeacon.receiver_id)
 
     # make a query with current, previous and next position
-    beacon_selection = session.query(AircraftBeacon.id) \
-        .order_by(AircraftBeacon.timestamp) \
-        .limit(1000000) \
-        .subquery()
+    if date is None:
+        beacon_selection = session.query(AircraftBeacon.id) \
+            .filter(AircraftBeacon.status == 0) \
+            .order_by(AircraftBeacon.timestamp) \
+            .subquery()
+    else:
+        my_day = datetime.strptime(date, '%Y-%m-%d')
+        beacon_selection = session.query(AircraftBeacon.id) \
+            .filter(and_(AircraftBeacon.status == 0,
+                         AircraftBeacon.timestamp >= my_day - timedelta(minutes=5),
+                         AircraftBeacon.timestamp < my_day + timedelta(days=1, minutes=5))) \
+            .order_by(AircraftBeacon.timestamp) \
+            .limit(100000) \
+            .subquery()
 
     sq = session.query(
         AircraftBeacon.id,
@@ -77,6 +87,9 @@ def update_takeoff_landings(session=None):
     sq2 = session.query(sq) \
        .filter(sq.c.device_id_prev == sq.c.device_id == sq.c.device_id_next) \
        .subquery()
+
+    logger.warn(sq2)
+    return
 
     # find possible takeoffs and landings
     sq3 = session.query(
@@ -129,9 +142,17 @@ def update_takeoff_landings(session=None):
                                               TakeoffLanding.airport_id),
                                              takeoff_landing_query)
     result = session.execute(ins)
-    counter = result.rowcount
+    insert_counter = result.rowcount
+    logger.warn("Inserted {} TakeoffLandings".format(insert_counter))
 
+    # Set calculated beacons as 'used'
+    upd = update(AircraftBeacon) \
+        .where(AircraftBeacon.id == sq2.c.id) \
+        .values({"status": 1})
+
+    result = session.execute(upd)
+    update_counter = result.rowcount
     session.commit()
-    logger.debug("Inserted {} TakeoffLandings".format(counter))
+    logger.warn("Updated {} AircraftBeacons".format(update_counter))
 
-    return "Inserted {} TakeoffLandings".format(counter)
+    return "Inserted {} TakeoffLandings, updated {} AircraftBeacons".format(insert_counter, update_counter)

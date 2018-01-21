@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger, ForeignKey, Index
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.sql import func
 from .beacon import Beacon
 
 
@@ -24,6 +24,7 @@ class AircraftBeacon(Beacon):
     real_address = Column(String(6))
     signal_power = Column(Float(precision=2))
 
+    # Not so very important data
     proximity = None
     gps_satellites = None
     gps_quality = None
@@ -51,6 +52,9 @@ class AircraftBeacon(Beacon):
     # Multi-column indices
     Index('ix_aircraft_beacons_receiver_id_receiver_name', 'receiver_id', 'receiver_name')
     Index('ix_aircraft_beacons_device_id_address', 'device_id', 'address')
+    Index('ix_aircraft_beacons_device_id_timestamp', 'device_id', 'timestamp')
+
+    #Index('ix_aircraft_beacons_date_receiver_id_distance', func.date(self.timestamp), 'receiver_id', 'distance')
 
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

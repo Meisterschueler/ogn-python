@@ -14,7 +14,7 @@ class Device(Base):
     lastseen = Column(DateTime, index=True)
     aircraft_type = Column(SmallInteger, index=True)
     stealth = Column(Boolean)
-    software_version = Column(Float)
+    software_version = Column(Float(precision=2))
     hardware_version = Column(SmallInteger)
     real_address = Column(String(6))
 

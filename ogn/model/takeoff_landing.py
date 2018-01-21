@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, SmallInteger, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -12,7 +12,7 @@ class TakeoffLanding(Base):
     timestamp = Column(DateTime, primary_key=True)
 
     is_takeoff = Column(Boolean)
-    track = Column(Integer)
+    track = Column(SmallInteger)
 
     # Relations
     airport = relationship('Airport', foreign_keys=[airport_id], backref='takeoff_landings')

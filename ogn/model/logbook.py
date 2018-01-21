@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, DateTime, Column, ForeignKey, case, null
+from sqlalchemy import Integer, SmallInteger, Float, DateTime, Column, ForeignKey, case, null
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
@@ -12,10 +12,10 @@ class Logbook(Base):
 
     reftime = Column(DateTime, index=True)
     takeoff_timestamp = Column(DateTime)
-    takeoff_track = Column(Integer)
+    takeoff_track = Column(SmallInteger)
     landing_timestamp = Column(DateTime)
-    landing_track = Column(Integer)
-    max_altitude = Column(Integer)
+    landing_track = Column(SmallInteger)
+    max_altitude = Column(Float(precision=2))
 
     # Relations
     takeoff_airport_id = Column(Integer, ForeignKey('airports.id', ondelete='CASCADE'), index=True)

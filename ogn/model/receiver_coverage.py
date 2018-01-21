@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Date, ForeignKey, Index
+from sqlalchemy import Column, String, Integer, SmallInteger, Float, Date, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
 
@@ -13,11 +13,11 @@ class ReceiverCoverage(Base):
     date = Column(Date, primary_key=True)
 
     max_signal_quality = Column(Float)
-    max_altitude = Column(Integer)
-    min_altitude = Column(Integer)
+    max_altitude = Column(Float(precision=2))
+    min_altitude = Column(Float(precision=2))
     aircraft_beacon_count = Column(Integer)
 
-    device_count = Column(Integer)
+    device_count = Column(SmallInteger)
 
     # Relations
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='receiver_coverages')
