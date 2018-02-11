@@ -74,6 +74,7 @@ class AircraftBeacon(Beacon):
             self.real_address,
             self.signal_power,
 
+            self.distance,
             self.location_mgrs)
 
     @classmethod
@@ -103,6 +104,7 @@ class AircraftBeacon(Beacon):
                'real_address',
                'signal_power',
 
+               'distance',
                'location_mgrs']
 
     def get_csv_values(self):
@@ -132,4 +134,5 @@ class AircraftBeacon(Beacon):
             self.real_address,
             self.signal_power,
 
+            self.distance,
             self.location_mgrs]

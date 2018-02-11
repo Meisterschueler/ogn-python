@@ -12,9 +12,14 @@ logger = logging.getLogger(__name__)
 myMGRS = MGRS()
 
 
-def replace_lonlat_with_wkt(message):
+def replace_lonlat_with_wkt(message, reference_position=None):
+    from haversine import haversine
+
     latitude = message['latitude']
     longitude = message['longitude']
+
+    if reference_position is not None:
+        message['distance'] = 1000.0 * haversine((reference_position['latitude'], reference_position['longitude']), (latitude, longitude))
 
     location = Location(longitude, latitude)
     message['location_wkt'] = location.to_wkt()
@@ -24,14 +29,19 @@ def replace_lonlat_with_wkt(message):
     return message
 
 
-def message_to_beacon(raw_message, reference_date):
+def message_to_beacon(raw_message, reference_date, receivers=None):
     beacon = None
 
     if raw_message[0] != '#':
         try:
             message = parse(raw_message, reference_date)
             if message['aprs_type'] == 'position':
-                message = replace_lonlat_with_wkt(message)
+                if message['beacon_type'] == 'receiver_beacon':
+                    receivers.update({message['name']: {'latitude': message['latitude'], 'longitude': message['longitude']}})
+                    message = replace_lonlat_with_wkt(message)
+                elif message['beacon_type'] == 'aircraft_beacon':
+                    reference_receiver = receivers.get(message['receiver_name'])
+                    message = replace_lonlat_with_wkt(message, reference_position=reference_receiver)
 
             if message['beacon_type'] == 'aircraft_beacon':
                 beacon = AircraftBeacon(**message)

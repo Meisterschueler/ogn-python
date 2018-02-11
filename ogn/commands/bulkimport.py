@@ -74,6 +74,8 @@ def convert(sourcefile, path=''):
     wr_rb = csv.writer(fout_rb, delimiter=',')
     wr_rb.writerow(ReceiverBeacon.get_csv_columns())
 
+    receivers = dict()
+
     print('Start importing ogn-logfile')
     for line in fin:
         num_lines += 1
@@ -89,7 +91,7 @@ def convert(sourcefile, path=''):
                     wr_rb.writerow(beacon.get_csv_values())
                 receiver_beacons = list()
 
-        beacon = message_to_beacon(line.strip(), reference_date=reference_date)
+        beacon = message_to_beacon(line.strip(), reference_date=reference_date, receivers=receivers)
         if beacon is not None:
             if isinstance(beacon, AircraftBeacon):
                 aircraft_beacons.append(beacon)
@@ -238,6 +240,7 @@ def import_aircraft_beacon_logfile(csv_logfile):
         real_address character varying(6),
         signal_power double precision,
 
+        distance double precision,
         location_mgrs character varying(15)
         );
     """
@@ -285,10 +288,10 @@ def import_aircraft_beacon_logfile(csv_logfile):
 
     session.execute("""
         INSERT INTO aircraft_beacons(location, altitude, name, receiver_name, dstcall, timestamp, track, ground_speed,
-                                    address_type, aircraft_type, stealth, address, climb_rate, turn_rate, flightlevel, signal_quality, error_count, frequency_offset, gps_status, software_version, hardware_version, real_address, signal_power,
+                                    address_type, aircraft_type, stealth, address, climb_rate, turn_rate, flightlevel, signal_quality, error_count, frequency_offset, gps_status, software_version, hardware_version, real_address, signal_power, distance, location_mgrs,
                                     receiver_id, device_id)
         SELECT t.location, t.altitude, t.name, t.receiver_name, t.dstcall, t.timestamp, t.track, t.ground_speed,
-               t.address_type, t.aircraft_type, t.stealth, t.address, t.climb_rate, t.turn_rate, t.flightlevel, t.signal_quality, t.error_count, t.frequency_offset, t.gps_status, t.software_version, t.hardware_version, t.real_address, t.signal_power,
+               t.address_type, t.aircraft_type, t.stealth, t.address, t.climb_rate, t.turn_rate, t.flightlevel, t.signal_quality, t.error_count, t.frequency_offset, t.gps_status, t.software_version, t.hardware_version, t.real_address, t.signal_power, t.distance, t.location_mgrs,
                r.id, d.id
         FROM aircraft_beacons_temp t, receivers r, devices d
         WHERE t.receiver_name = r.name AND t.address = d.address

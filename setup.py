@@ -42,7 +42,8 @@ setup(
         'shapely>=1.5.17,<1.6',
         'ogn-client==0.8.2',
         'psycopg2==2.7.3.2',
-        'mgrs==1.3.5'
+        'mgrs==1.3.5',
+        'haversine==0.4.5'
     ],
     extras_require={
         'dev': [
