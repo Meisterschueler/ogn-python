@@ -43,8 +43,10 @@ def message_to_beacon(raw_message, reference_date, receivers=None):
                     reference_receiver = receivers.get(message['receiver_name'])
                     message = replace_lonlat_with_wkt(message, reference_position=reference_receiver)
 
-            if message['beacon_type'] == 'aircraft_beacon':
+            if message['beacon_type'] == 'aircraft_beacon' and message['aprs_type'] == 'position':
                 beacon = AircraftBeacon(**message)
+            elif message['beacon_type'] == 'aircraft_beacon' and message['aprs_type'] == 'status':
+                pass
             elif message['beacon_type'] == 'receiver_beacon':
                 beacon = ReceiverBeacon(**message)
             else:
