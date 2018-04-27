@@ -74,8 +74,6 @@ def convert(sourcefile, path=''):
     wr_rb = csv.writer(fout_rb, delimiter=',')
     wr_rb.writerow(ReceiverBeacon.get_csv_columns())
 
-    receivers = dict()
-
     print('Start importing ogn-logfile')
     for line in fin:
         num_lines += 1
@@ -91,7 +89,7 @@ def convert(sourcefile, path=''):
                     wr_rb.writerow(beacon.get_csv_values())
                 receiver_beacons = list()
 
-        beacon = message_to_beacon(line.strip(), reference_date=reference_date, receivers=receivers)
+        beacon = message_to_beacon(line.strip(), reference_date=reference_date)
         if beacon is not None:
             if isinstance(beacon, AircraftBeacon):
                 aircraft_beacons.append(beacon)
