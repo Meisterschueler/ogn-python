@@ -7,6 +7,9 @@ from .beacon import Beacon
 class AircraftBeacon(Beacon):
     __tablename__ = "aircraft_beacons"
 
+    # Activate relay for AircraftBeacon
+    relay = Column(String)
+
     # Flarm specific data
     address_type = Column(SmallInteger)
     aircraft_type = Column(SmallInteger)
@@ -54,8 +57,6 @@ class AircraftBeacon(Beacon):
     Index('ix_aircraft_beacons_device_id_address', 'device_id', 'address')
     Index('ix_aircraft_beacons_device_id_timestamp', 'device_id', 'timestamp')
 
-    #Index('ix_aircraft_beacons_date_receiver_id_distance', func.date(self.timestamp), 'receiver_id', 'distance')
-
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,
@@ -82,8 +83,9 @@ class AircraftBeacon(Beacon):
         return['location',
                'altitude',
                'name',
-               'receiver_name',
                'dstcall',
+               'relay',
+               'receiver_name',
                'timestamp',
                'track',
                'ground_speed',
@@ -112,8 +114,9 @@ class AircraftBeacon(Beacon):
             self.location_wkt,
             int(self.altitude),
             self.name,
-            self.receiver_name,
             self.dstcall,
+            self.relay,
+            self.receiver_name,
             self.timestamp,
             self.track,
             self.ground_speed,
@@ -136,3 +139,6 @@ class AircraftBeacon(Beacon):
 
             self.distance,
             self.location_mgrs]
+
+
+Index('ix_aircraft_beacons_date_receiver_id_distance', func.date(AircraftBeacon.timestamp), AircraftBeacon.receiver_id, AircraftBeacon.distance)

@@ -15,8 +15,9 @@ class Beacon(AbstractConcreteBase, Base):
     altitude = Column(Float(precision=2))
 
     name = Column(String)
-    receiver_name = Column(String(9))
     dstcall = Column(String)
+    relay = None
+    receiver_name = Column(String(9))
     timestamp = Column(DateTime, index=True)
     symboltable = None
     symbolcode = None
@@ -24,7 +25,6 @@ class Beacon(AbstractConcreteBase, Base):
     ground_speed = Column(Float(precision=2))
     comment = None
 
-    relay = None
     beacon_type = None
     aprs_type = None
 

@@ -7,6 +7,10 @@ from .beacon import Beacon
 class ReceiverBeacon(Beacon):
     __tablename__ = "receiver_beacons"
 
+    # disable not so important aprs fields
+    track = None
+    ground_speed = None
+
     # ReceiverBeacon specific data
     version = Column(String)
     platform = Column(String)
@@ -66,11 +70,9 @@ class ReceiverBeacon(Beacon):
         return['location',
                'altitude',
                'name',
-               'receiver_name',
                'dstcall',
+               'receiver_name',
                'timestamp',
-               'track',
-               'ground_speed',
 
                'version',
                'platform',
@@ -98,11 +100,9 @@ class ReceiverBeacon(Beacon):
             self.location_wkt,
             int(self.altitude) if self.altitude else None,
             self.name,
-            self.receiver_name,
             self.dstcall,
+            self.receiver_name,
             self.timestamp,
-            self.track,
-            self.ground_speed,
 
             self.version,
             self.platform,

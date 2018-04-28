@@ -74,6 +74,7 @@ def message_to_beacon(raw_message, reference_date, wait_for_brother=False):
                 params = message
                 params.update(previous_message)
                 params['aprs_type'] = 'merged'
+                previous_message = None
             else:
                 params = previous_message
                 previous_message = message
@@ -83,7 +84,7 @@ def message_to_beacon(raw_message, reference_date, wait_for_brother=False):
         # create beacons
         if params['beacon_type'] in ['aircraft_beacon', 'aprs_aircraft', 'flarm', 'tracker']:
             beacon = AircraftBeacon(**params)
-        elif message['beacon_type'] in ['receiver_beacon', 'aprs_receiver', 'receiver']:
+        elif params['beacon_type'] in ['receiver_beacon', 'aprs_receiver', 'receiver']:
             beacon = ReceiverBeacon(**params)
         else:
             print("Whoops: what is this: {}".format(params))
