@@ -42,7 +42,7 @@ class ReceiverBeacon(Beacon):
     Index('ix_receiver_beacons_receiver_id_name', 'receiver_id', 'name')
 
     def __repr__(self):
-        return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.version,
             self.platform,
             self.cpu_load,

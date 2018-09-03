@@ -82,13 +82,9 @@ class Converter:
         self.callback = callback
     
     def add_message(self, message):
-        try:
+        if message['aprs_type'] in ['status', 'position']:
             beacon = self.message_to_beacon(message)
             self.callback.add_message(beacon)
-        except Exception as e:
-            print(e)
-            print(message)
-            return
 
     def message_to_beacon(self, message):
         # create beacons
@@ -109,8 +105,7 @@ class Converter:
 
 class DummySaver:
     def add_message(self, message):
-        if message['beacon_type'] != "aprs_aircraft":
-            print(message['beacon_type'])
+        print(message)
 
     def flush(self):
         print("========== flush ==========")
