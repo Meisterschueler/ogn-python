@@ -5,7 +5,7 @@ from io import StringIO
 from aerofiles.seeyou import Reader
 from geopy.exc import GeopyError
 from geopy.geocoders import Nominatim
-from ogn.parser.utils import feet2m
+from ogn.parser.utils import FEETS_TO_METER
 import requests
 
 from .model import DeviceInfoOrigin, DeviceInfo, Airport, Location
@@ -89,7 +89,7 @@ def get_airports(cupfile):
                     airport.location_wkt = location.to_wkt()
                     airport.altitude = waypoint['elevation']['value']
                     if (waypoint['elevation']['unit'] == 'ft'):
-                        airport.altitude = airport.altitude * feet2m
+                        airport.altitude = airport.altitude * FEETS_TO_METER
                     airport.runway_direction = waypoint['runway_direction']
                     airport.runway_length = waypoint['runway_length']['value']
                     if (waypoint['runway_length']['unit'] == 'nm'):
@@ -116,3 +116,27 @@ def open_file(filename):
     else:
         f = open(filename, 'rt')
         return f
+    
+from math import radians, cos, sin, asin, sqrt, atan2, degrees
+
+def haversine(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    r = 6371000.785 # Radius of earth in meters
+    d = c * r
+    
+    # calculate bearing
+    bearing = atan2(sin(dlon)*cos(lat2), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
+    bearing = (degrees(bearing) + 360) % 360
+    
+    return d,bearing

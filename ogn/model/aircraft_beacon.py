@@ -7,28 +7,28 @@ from .beacon import Beacon
 class AircraftBeacon(Beacon):
     __tablename__ = "aircraft_beacons"
 
-    # Activate relay for AircraftBeacon
-    relay = Column(String)
-
     # Flarm specific data
     address_type = Column(SmallInteger)
     aircraft_type = Column(SmallInteger)
     stealth = Column(Boolean)
-    address = Column(String(6))
+    address = Column(String)
     climb_rate = Column(Float(precision=2))
     turn_rate = Column(Float(precision=2))
-    flightlevel = Column(Float(precision=2))
     signal_quality = Column(Float(precision=2))
     error_count = Column(SmallInteger)
     frequency_offset = Column(Float(precision=2))
-    gps_status = Column(String)
+    gps_quality_horizontal = Column(SmallInteger)
+    gps_quality_vertical = Column(SmallInteger)
     software_version = Column(Float(precision=2))
     hardware_version = Column(SmallInteger)
     real_address = Column(String(6))
     signal_power = Column(Float(precision=2))
-
-    # Not so very important data
     proximity = None
+    
+    # Tracker stuff (position message)
+    flightlevel = None
+
+    # Tracker stuff (status message)
     gps_satellites = None
     gps_quality = None
     gps_altitude = None
@@ -40,10 +40,16 @@ class AircraftBeacon(Beacon):
     noise_level = None
     relays = None
 
+    # Spider stuff
+    spider_id = None
+    model = None
+    status = None
+
     # Calculated values
-    status = Column(SmallInteger, default=0)
-    distance = Column(Float)
-    location_mgrs = Column(String(15), index=True)
+    distance = Column(Float(precision=2))
+    radial = Column(SmallInteger)
+    normalized_signal_quality = Column(Float(precision=2))
+    location_mgrs = Column(String(15))
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'))
@@ -58,24 +64,26 @@ class AircraftBeacon(Beacon):
     Index('ix_aircraft_beacons_device_id_timestamp', 'device_id', 'timestamp')
 
     def __repr__(self):
-        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,
             self.aircraft_type,
             self.stealth,
             self.address,
             self.climb_rate,
             self.turn_rate,
-            self.flightlevel,
             self.signal_quality,
             self.error_count,
             self.frequency_offset,
-            self.gps_status,
+            self.gps_quality_horizontal,
+            self.gps_quality_vertical,
             self.software_version,
             self.hardware_version,
             self.real_address,
             self.signal_power,
 
             self.distance,
+            self.radial,
+            self.normalized_signal_quality,
             self.location_mgrs)
 
     @classmethod
@@ -89,6 +97,9 @@ class AircraftBeacon(Beacon):
                'timestamp',
                'track',
                'ground_speed',
+               
+               #'raw_message',
+               #'reference_timestamp',
 
                'address_type',
                'aircraft_type',
@@ -96,23 +107,25 @@ class AircraftBeacon(Beacon):
                'address',
                'climb_rate',
                'turn_rate',
-               'flightlevel',
                'signal_quality',
                'error_count',
                'frequency_offset',
-               'gps_status',
+               'gps_quality_horizontal',
+               'gps_quality_vertical',
                'software_version',
                'hardware_version',
                'real_address',
                'signal_power',
 
                'distance',
+               'radial',
+               'normalized_signal_quality',
                'location_mgrs']
 
     def get_csv_values(self):
         return [
             self.location_wkt,
-            int(self.altitude),
+            int(self.altitude) if self.altitude else None,
             self.name,
             self.dstcall,
             self.relay,
@@ -120,6 +133,9 @@ class AircraftBeacon(Beacon):
             self.timestamp,
             self.track,
             self.ground_speed,
+            
+            #self.raw_message,
+            #self.reference_timestamp,
 
             self.address_type,
             self.aircraft_type,
@@ -127,18 +143,21 @@ class AircraftBeacon(Beacon):
             self.address,
             self.climb_rate,
             self.turn_rate,
-            self.flightlevel,
             self.signal_quality,
             self.error_count,
             self.frequency_offset,
-            self.gps_status,
+            self.gps_quality_horizontal,
+            self.gps_quality_vertical,
             self.software_version,
             self.hardware_version,
             self.real_address,
             self.signal_power,
 
             self.distance,
+            self.radial,
+            self.normalized_signal_quality,
             self.location_mgrs]
 
 
+Index('ix_aircraft_beacons_date_device_id_address', func.date(AircraftBeacon.timestamp), AircraftBeacon.device_id, AircraftBeacon.address)
 Index('ix_aircraft_beacons_date_receiver_id_distance', func.date(AircraftBeacon.timestamp), AircraftBeacon.receiver_id, AircraftBeacon.distance)

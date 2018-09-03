@@ -22,8 +22,8 @@ def init():
     session.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
     session.commit()
     Base.metadata.create_all(engine)
-    alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
-    command.stamp(alembic_cfg, "head")
+    #alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
+    #command.stamp(alembic_cfg, "head")
     print("Done.")
 
 

@@ -1,10 +1,12 @@
 import os
 import re
+import logging
 
 from manager import Manager
 from ogn.commands.dbutils import session
 from ogn.model import AircraftBeacon, ReceiverBeacon
 from ogn.utils import open_file
+from ogn.gateway.process_tools import FileSaver, Converter, Merger
 
 
 manager = Manager()
@@ -13,118 +15,101 @@ PATTERN = '^.+\.txt\_(\d{4}\-\d{2}\-\d{2})(\.gz)?$'
 
 
 @manager.command
-def convert_logfile(path, logfile='main.log', loglevel='INFO'):
+def convert_logfile(path):
     """Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD."""
+
+    logging.basicConfig(filename='convert.log', level=logging.DEBUG)
 
     if os.path.isfile(path):
         head, tail = os.path.split(path)
         convert(tail, path=head)
-        print("Finished")
+        logging.info("Finished converting single file {}".format(head))
     elif os.path.isdir(path):
         for filename in os.listdir(path):
             convert(filename, path=path)
-        print("Finished")
+        logging.info("Finished converting file path {}".format(path))
     else:
-        print("Not a file nor a path: {}".format(path))
+        logging.warning("Not a file nor a path: {}".format(path))
 
 
 def convert(sourcefile, path=''):
-    import csv
-    import gzip
+    logging.info("convert: {} {}".format(sourcefile, path))
     import datetime
 
-    from ogn.gateway.process import message_to_beacon
+    from ogn.gateway.process import string_to_message
 
     match = re.search(PATTERN, sourcefile)
     if match:
         reference_date_string = match.group(1)
         reference_date = datetime.datetime.strptime(reference_date_string, "%Y-%m-%d")
 
-        aircraft_beacon_filename = os.path.join(path, 'aircraft_beacons.csv_' + reference_date_string + '.gz')
-        receiver_beacon_filename = os.path.join(path, 'receiver_beacons.csv_' + reference_date_string + '.gz')
+        # Build the processing pipeline
+        saver = FileSaver()
+        converter = Converter(callback=saver)
+        merger = Merger(callback=converter)
 
-        if not os.path.exists(aircraft_beacon_filename) and not os.path.exists(receiver_beacon_filename):
-            print("Reading file: {}".format(sourcefile))
-            fout_ab = gzip.open(aircraft_beacon_filename, 'wt')
-            fout_rb = gzip.open(receiver_beacon_filename, 'wt')
-        else:
-            print("Output files for file {} already exists. Skipping".format(sourcefile))
+        try:
+            saver.open(path, reference_date_string)
+        except FileExistsError:
+            logging.warning("Output files already exists. Skipping")
             return
     else:
-        print("filename '{}' does not match pattern. Skipping".format(sourcefile))
+        logging.warning("filename '{}' does not match pattern. Skipping".format(sourcefile))
         return
 
     fin = open_file(os.path.join(path, sourcefile))
 
     # get total lines of the input file
-    total = 0
+    total_lines = 0
     for line in fin:
-        total += 1
+        total_lines += 1
     fin.seek(0)
 
-    aircraft_beacons = list()
-    receiver_beacons = list()
-
     progress = -1
-    num_lines = 0
-
-    wr_ab = csv.writer(fout_ab, delimiter=',')
-    wr_ab.writerow(AircraftBeacon.get_csv_columns())
-
-    wr_rb = csv.writer(fout_rb, delimiter=',')
-    wr_rb.writerow(ReceiverBeacon.get_csv_columns())
+    current_line = 0
 
     print('Start importing ogn-logfile')
     for line in fin:
-        num_lines += 1
-        if int(100 * num_lines / total) != progress:
-            progress = round(100 * num_lines / total)
-            print("\rReading line {} ({}%)".format(num_lines, progress), end='')
-            if len(aircraft_beacons) > 0:
-                for beacon in aircraft_beacons:
-                    wr_ab.writerow(beacon.get_csv_values())
-                aircraft_beacons = list()
-            if len(receiver_beacons) > 0:
-                for beacon in receiver_beacons:
-                    wr_rb.writerow(beacon.get_csv_values())
-                receiver_beacons = list()
+        current_line += 1
+        if int(1000 * current_line / total_lines) != progress:
+            progress = round(1000 * current_line / total_lines)
+            print("\rReading line {} ({}%)".format(current_line, progress / 10), end='')
 
-        beacon = message_to_beacon(line.strip(), reference_date=reference_date, wait_for_brother=True)
-        if beacon is not None:
-            if isinstance(beacon, AircraftBeacon):
-                aircraft_beacons.append(beacon)
-            elif isinstance(beacon, ReceiverBeacon):
-                receiver_beacons.append(beacon)
+        message = string_to_message(line.strip(), reference_date=reference_date)
+        if message is None:
+            print("=====")
+            print(line.strip())
+            continue
+        
+        merger.add_message(message)
 
-    if len(aircraft_beacons) > 0:
-        for beacon in aircraft_beacons:
-            wr_ab.writerow(beacon.get_csv_values())
-    if len(receiver_beacons) > 0:
-        for beacon in receiver_beacons:
-            wr_rb.writerow(beacon.get_csv_values())
+    merger.flush()
+    saver.close()
 
     fin.close()
-    fout_ab.close()
-    fout_rb.close()
 
 
 @manager.command
 def drop_indices():
     """Drop indices of AircraftBeacon."""
     session.execute("""
-        DROP INDEX IF EXISTS ix_aircraft_beacons_receiver_id_receiver_name;
-        DROP INDEX IF EXISTS ix_aircraft_beacons_device_id_address;
-        DROP INDEX IF EXISTS ix_aircraft_beacons_device_id_timestamp;
-        DROP INDEX IF EXISTS ix_aircraft_beacons_location;
-        DROP INDEX IF EXISTS ix_aircraft_beacons_location_mgrs;
+        DROP INDEX IF EXISTS idx_aircraft_beacons_location;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_date_device_id_address;
+        DROP INDEX IF EXISTS ix_aircraft_beacons_date_receiver_id_distance;
         DROP INDEX IF EXISTS ix_aircraft_beacons_timestamp;
+        
+        DROP INDEX IF EXISTS idx_receiver_beacons_location;
+        DROP INDEX IF EXISTS ix_receiver_beacons_date_receiver_id;
+        DROP INDEX IF EXISTS ix_receiver_beacons_timestamp;
     """)
-    print("Dropped indices of AircraftBeacon")
+    print("Dropped indices of AircraftBeacon and ReceiverBeacon")
 
     # disable constraint trigger
     session.execute("""
-        ALTER TABLE aircraft_beacons DISABLE TRIGGER ALL
+        ALTER TABLE aircraft_beacons DISABLE TRIGGER ALL;
+        ALTER TABLE receiver_beacons DISABLE TRIGGER ALL;
     """)
+    session.commit()
     print("Disabled constraint triggers")
 
 
@@ -132,18 +117,22 @@ def drop_indices():
 def create_indices():
     """Create indices for AircraftBeacon."""
     session.execute("""
-        CREATE INDEX ix_aircraft_beacons_receiver_id_receiver_name ON aircraft_beacons USING BTREE(receiver_id, receiver_name);
-        CREATE INDEX ix_aircraft_beacons_device_id_address ON aircraft_beacons USING BTREE(device_id, address);
-        CREATE INDEX ix_aircraft_beacons_device_id_timestamp ON aircraft_beacons USING BTREE(device_id, timestamp);
-        CREATE INDEX ix_aircraft_beacons_location ON aircraft_beacons USING GIST(location);
-
-        CREATE INDEX ix_aircraft_beacons_date_receiver_id_distance ON aircraft_beacons USING btree((timestamp::date), receiver_id, distance)
+        CREATE INDEX idx_aircraft_beacons_location ON aircraft_beacons USING GIST(location);
+        CREATE INDEX ix_aircraft_beacons_date_device_id_address ON aircraft_beacons USING BTREE((timestamp::date), device_id, address);
+        CREATE INDEX ix_aircraft_beacons_date_receiver_id_distance ON aircraft_beacons USING BTREE((timestamp::date), receiver_id, distance);
+        CREATE INDEX ix_aircraft_beacons_timestamp ON aircraft_beacons USING BTREE(timestamp);
+        
+        CREATE INDEX idx_receiver_beacons_location ON receiver_beacons USING GIST(location);
+        CREATE INDEX ix_receiver_beacons_date_receiver_id ON receiver_beacons USING BTREE((timestamp::date), receiver_id);
+        CREATE INDEX ix_receiver_beacons_timestamp ON receiver_beacons USING BTREE(timestamp);
     """)
-    print("Created indices for AircraftBeacon")
+    print("Created indices for AircraftBeacon and ReceiverBeacon")
 
     session.execute("""
-        ALTER TABLE aircraft_beacons ENABLE TRIGGER ALL
+        ALTER TABLE aircraft_beacons ENABLE TRIGGER ALL;
+        ALTER TABLE receiver_beacons ENABLE TRIGGER ALL;
     """)
+    session.commit()
     print("Enabled constraint triggers")
 
 
@@ -198,6 +187,11 @@ def import_logfile(path):
         else:
             print("For {} beacons already exist. Skipping".format(reference_date_string))
     else:
+        s1 = header
+        s2 = ','.join(AircraftBeacon.get_csv_columns())
+        print(s1)
+        print(s2)
+        print([i for i in range(len(s1)) if s1[i] != s2[i]])
         print("Unknown file type: {}".format(tail))
 
 
@@ -214,32 +208,34 @@ def import_aircraft_beacon_logfile(csv_logfile):
     DROP TABLE IF EXISTS aircraft_beacons_temp;
     CREATE TABLE aircraft_beacons_temp(
         location geometry,
-        altitude integer,
+        altitude real,
         name character varying,
         dstcall character varying,
         relay character varying,
         receiver_name character varying(9),
         "timestamp" timestamp without time zone,
-        track integer,
-        ground_speed double precision,
+        track smallint,
+        ground_speed real,
 
         address_type smallint,
         aircraft_type smallint,
         stealth boolean,
-        address character varying(6),
-        climb_rate double precision,
-        turn_rate double precision,
-        flightlevel double precision,
-        signal_quality double precision,
-        error_count integer,
-        frequency_offset double precision,
-        gps_status character varying,
-        software_version double precision,
+        address character varying,
+        climb_rate real,
+        turn_rate real,
+        signal_quality real,
+        error_count smallint,
+        frequency_offset real,
+        gps_quality_horizontal smallint,
+        gps_quality_vertical smallint,
+        software_version real,
         hardware_version smallint,
         real_address character varying(6),
-        signal_power double precision,
+        signal_power real,
 
-        distance double precision,
+        distance real,
+        radial smallint,
+        normalized_signal_quality real,
         location_mgrs character varying(15)
         );
     """
@@ -287,10 +283,12 @@ def import_aircraft_beacon_logfile(csv_logfile):
 
     session.execute("""
         INSERT INTO aircraft_beacons(location, altitude, name, dstcall, relay, receiver_name, timestamp, track, ground_speed,
-                                    address_type, aircraft_type, stealth, address, climb_rate, turn_rate, flightlevel, signal_quality, error_count, frequency_offset, gps_status, software_version, hardware_version, real_address, signal_power, distance, location_mgrs,
+                                    address_type, aircraft_type, stealth, address, climb_rate, turn_rate, signal_quality, error_count, frequency_offset, gps_quality_horizontal, gps_quality_vertical, software_version, hardware_version, real_address, signal_power,
+                                    distance, radial, normalized_signal_quality, location_mgrs,
                                     receiver_id, device_id)
         SELECT t.location, t.altitude, t.name, t.dstcall, t.relay, t.receiver_name, t.timestamp, t.track, t.ground_speed,
-               t.address_type, t.aircraft_type, t.stealth, t.address, t.climb_rate, t.turn_rate, t.flightlevel, t.signal_quality, t.error_count, t.frequency_offset, t.gps_status, t.software_version, t.hardware_version, t.real_address, t.signal_power, t.distance, t.location_mgrs,
+               t.address_type, t.aircraft_type, t.stealth, t.address, t.climb_rate, t.turn_rate, t.signal_quality, t.error_count, t.frequency_offset, t.gps_quality_horizontal, t.gps_quality_vertical, t.software_version, t.hardware_version, t.real_address, t.signal_power,
+               t.distance, t.radial, t.normalized_signal_quality, t.location_mgrs,
                r.id, d.id
         FROM aircraft_beacons_temp t, receivers r, devices d
         WHERE t.receiver_name = r.name AND t.address = d.address
@@ -311,7 +309,7 @@ def import_receiver_beacon_logfile(csv_logfile):
     DROP TABLE IF EXISTS receiver_beacons_temp;
     CREATE TABLE receiver_beacons_temp(
         location geometry,
-        altitude integer,
+        altitude real,
         name character varying,
         receiver_name character varying(9),
         dstcall character varying,
@@ -319,20 +317,20 @@ def import_receiver_beacon_logfile(csv_logfile):
 
         version character varying,
         platform character varying,
-        cpu_load double precision,
-        free_ram double precision,
-        total_ram double precision,
-        ntp_error double precision,
-        rt_crystal_correction double precision,
-        voltage double precision,
-        amperage double precision,
-        cpu_temp double precision,
+        cpu_load real,
+        free_ram real,
+        total_ram real,
+        ntp_error real,
+        rt_crystal_correction real,
+        voltage real,
+        amperage real,
+        cpu_temp real,
         senders_visible integer,
         senders_total integer,
-        rec_input_noise double precision,
-        senders_signal double precision,
+        rec_input_noise real,
+        senders_signal real,
         senders_messages integer,
-        good_senders_signal double precision,
+        good_senders_signal real,
         good_senders integer,
         good_and_bad_senders integer
         );

@@ -11,10 +11,7 @@ class DeviceStats(Base):
 
     date = Column(Date)
 
-    # Statistic data
-    max_altitude = Column(Float(precision=2))
-    receiver_count = Column(SmallInteger)
-    aircraft_beacon_count = Column(Integer)
+    # Static data
     firstseen = Column(DateTime)
     lastseen = Column(DateTime)
     aircraft_type = Column(SmallInteger)
@@ -23,7 +20,20 @@ class DeviceStats(Base):
     hardware_version = Column(SmallInteger)
     real_address = Column(String(6))
 
+    # Statistic data
+    max_altitude = Column(Float(precision=2))
+    receiver_count = Column(SmallInteger)
+    aircraft_beacon_count = Column(Integer)
+
     ambiguous = Column(Boolean)
+    
+    # Ranking data
+    max_altitude_ranking_worldwide = Column(Integer)
+    max_altitude_ranking_country = Column(Integer)
+    receiver_count_ranking_worldwide = Column(Integer)
+    receiver_count_ranking_country = Column(Integer)
+    aircraft_beacon_count_ranking_worldwide = Column(Integer)
+    aircraft_beacon_count_ranking_country = Column(Integer)
 
     # Relations
     device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)

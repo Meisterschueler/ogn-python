@@ -16,7 +16,7 @@ class Beacon(AbstractConcreteBase, Base):
 
     name = Column(String)
     dstcall = Column(String)
-    relay = None
+    relay = Column(String)
     receiver_name = Column(String(9))
     timestamp = Column(DateTime, index=True)
     symboltable = None
@@ -25,10 +25,13 @@ class Beacon(AbstractConcreteBase, Base):
     ground_speed = Column(Float(precision=2))
     comment = None
 
+    # Type information
     beacon_type = None
     aprs_type = None
 
-    location_mgrs = None
+    # Debug information
+    raw_message = None #Column(String)
+    reference_timestamp = None #Column(DateTime, index=True)
 
     @property
     def location(self):

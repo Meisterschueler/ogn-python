@@ -9,7 +9,8 @@ class Device(Base):
 
     id = Column(Integer, primary_key=True)
 
-    address = Column(String(6), index=True)
+    #address = Column(String(6), index=True)
+    address = Column(String, index=True)
     firstseen = Column(DateTime, index=True)
     lastseen = Column(DateTime, index=True)
     aircraft_type = Column(SmallInteger, index=True)

@@ -1,24 +1,30 @@
 import logging
+from math import log10
 
 from mgrs import MGRS
-from haversine import haversine
 
+from ogn.utils import haversine
 from ogn.commands.dbutils import session
 from ogn.model import AircraftBeacon, ReceiverBeacon, Location
 from ogn.parser import parse, ParseError
-from datetime import datetime, timedelta
+from ogn.gateway.process_tools import DbSaver, Converter, DummyMerger, AIRCRAFT_TYPES, RECEIVER_TYPES
 
 
 logger = logging.getLogger(__name__)
 myMGRS = MGRS()
 
 
-def replace_lonlat_with_wkt(message, reference_receiver=None):
+
+def _replace_lonlat_with_wkt(message, reference_receiver=None):
     latitude = message['latitude']
     longitude = message['longitude']
 
     if reference_receiver is not None:
-        message['distance'] = 1000.0 * haversine((reference_receiver['latitude'], reference_receiver['longitude']), (latitude, longitude))
+        distance,bearing = haversine(reference_receiver['latitude'], reference_receiver['longitude'], latitude, longitude)
+        message['distance'] = distance
+        message['radial'] = round(bearing)
+        if message['signal_quality'] is not None and distance >= 1:
+            message['normalized_signal_quality'] = message['signal_quality'] + 20 * log10(message['distance'] / 10000)  # normalized to 10km
 
     location = Location(longitude, latitude)
     message['location_wkt'] = location.to_wkt()
@@ -27,88 +33,55 @@ def replace_lonlat_with_wkt(message, reference_receiver=None):
     del message['longitude']
     return message
 
-previous_message = None
+
 receivers = dict()
 
-
-def message_to_beacon(raw_message, reference_date, wait_for_brother=False):
-    beacon = None
-    global previous_message
+def string_to_message(raw_string, reference_date):
     global receivers
 
-    if raw_message[0] != '#':
-        try:
-            message = parse(raw_message, reference_date)
-        except NotImplementedError as e:
-            logger.error('Received message: {}'.format(raw_message))
-            logger.error(e)
-            return None
-        except ParseError as e:
-            logger.error('Received message: {}'.format(raw_message))
-            logger.error('Drop packet, {}'.format(e.message))
-            return None
-        except TypeError as e:
-            logger.error('TypeError: {}'.format(raw_message))
-            return None
-        except Exception as e:
-            logger.error(raw_message)
-            logger.error(e)
-            return None
+    try:
+        message = parse(raw_string, reference_date)
+    except NotImplementedError as e:
+        logger.error('No parser implemented for message: {}'.format(raw_string))
+        return None
+    except ParseError as e:
+        logger.error('Parsing error with message: {}'.format(raw_string))
+        return None
+    except TypeError as e:
+        logger.error('TypeError with message: {}'.format(raw_string))
+        return None
+    except Exception as e:
+        logger.error(raw_string)
+        logger.error(e)
+        return None
 
-        # update reference receivers and distance to the receiver
-        if message['aprs_type'] == 'position':
-            if message['beacon_type'] in ['receiver_beacon', 'aprs_receiver', 'receiver']:
-                receivers.update({message['name']: {'latitude': message['latitude'], 'longitude': message['longitude']}})
-                message = replace_lonlat_with_wkt(message)
-            elif message['beacon_type'] in ['aircraft_beacon', 'aprs_aircraft', 'flarm', 'tracker']:
-                reference_receiver = receivers.get(message['receiver_name'])
-                message = replace_lonlat_with_wkt(message, reference_receiver=reference_receiver)
+    # update reference receivers and distance to the receiver
+    if message['aprs_type'] == 'position':
+        if message['beacon_type'] in RECEIVER_TYPES:
+            receivers.update({message['name']: {'latitude': message['latitude'], 'longitude': message['longitude']}})
+            message = _replace_lonlat_with_wkt(message)
+        elif message['beacon_type'] in AIRCRAFT_TYPES:
+            reference_receiver = receivers.get(message['receiver_name'])
+            message = _replace_lonlat_with_wkt(message, reference_receiver=reference_receiver)
+            if 'gps_quality' in message and message['gps_quality'] is not None and 'horizontal' in message['gps_quality']:
+                message['gps_quality_horizontal'] = message['gps_quality']['horizontal']
+                message['gps_quality_vertical'] = message['gps_quality']['vertical']
 
-        # optional: merge different beacon types
-        params = dict()
-        if wait_for_brother is True:
-            if previous_message is None:
-                previous_message = message
-                return None
-            elif message['name'] == previous_message['name'] and message['timestamp'] == previous_message['timestamp']:
-                params = message
-                params.update(previous_message)
-                params['aprs_type'] = 'merged'
-                previous_message = None
-            else:
-                params = previous_message
-                previous_message = message
-        else:
-            params = message
+    # update raw_message
+    message['raw_message'] = raw_string
 
-        # create beacons
-        if params['beacon_type'] in ['aircraft_beacon', 'aprs_aircraft', 'flarm', 'tracker']:
-            beacon = AircraftBeacon(**params)
-        elif params['beacon_type'] in ['receiver_beacon', 'aprs_receiver', 'receiver']:
-            beacon = ReceiverBeacon(**params)
-        else:
-            print("Whoops: what is this: {}".format(params))
-
-    return beacon
-
-beacons = list()
-last_commit = datetime.utcnow()
+    return message
 
 
-def process_beacon(raw_message, reference_date=None):
-    global beacons
-    global last_commit
+# Build the processing pipeline
+saver = DbSaver(session=session)
+converter = Converter(callback=saver)
+merger = DummyMerger(callback=converter)
 
-    beacon = message_to_beacon(raw_message, reference_date)
-    if beacon is not None:
-        beacons.append(beacon)
-        logger.debug('Received message: {}'.format(raw_message))
 
-    current_time = datetime.utcnow()
-    elapsed_time = current_time - last_commit
-    if elapsed_time >= timedelta(seconds=1):
-        session.bulk_save_objects(beacons)
-        session.commit()
-        logger.debug('Commited beacons')
-        beacons = list()
-        last_commit = current_time
+def process_raw_message(raw_message, reference_date=None, merger=merger):
+    logger.debug('Received message: {}'.format(raw_message))
+    message = string_to_message(raw_message, reference_date)
+    merger.add_message(message)
+
+

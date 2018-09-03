@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Float, String, Integer, SmallInteger, ForeignKey, Index
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.sql import func
 from .beacon import Beacon
 
 
 class ReceiverBeacon(Beacon):
     __tablename__ = "receiver_beacons"
 
-    # disable not so important aprs fields
+    # disable irrelevant aprs fields
     track = None
     ground_speed = None
 
@@ -24,8 +24,6 @@ class ReceiverBeacon(Beacon):
     cpu_temp = Column(Float(precision=2))
     senders_visible = Column(Integer)
     senders_total = Column(Integer)
-    rec_crystal_correction = 0       # obsolete since 0.2.0
-    rec_crystal_correction_fine = 0  # obsolete since 0.2.0
     rec_input_noise = Column(Float(precision=2))
     senders_signal = Column(Float(precision=2))
     senders_messages = Column(Integer)
@@ -33,6 +31,7 @@ class ReceiverBeacon(Beacon):
     good_senders = Column(Integer)
     good_and_bad_senders = Column(Integer)
 
+    # User comment: used for additional information like hardware configuration, web site, email address, ...
     user_comment = None
 
     # Relations
@@ -43,7 +42,7 @@ class ReceiverBeacon(Beacon):
     Index('ix_receiver_beacons_receiver_id_name', 'receiver_id', 'name')
 
     def __repr__(self):
-        return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.version,
             self.platform,
             self.cpu_load,
@@ -56,8 +55,6 @@ class ReceiverBeacon(Beacon):
             self.cpu_temp,
             self.senders_visible,
             self.senders_total,
-            # self.rec_crystal_correction,
-            # self.rec_crystal_correction_fine,
             self.rec_input_noise,
             self.senders_signal,
             self.senders_messages,
@@ -73,6 +70,9 @@ class ReceiverBeacon(Beacon):
                'dstcall',
                'receiver_name',
                'timestamp',
+               
+               # 'raw_message',
+               # 'reference_timestamp',
 
                'version',
                'platform',
@@ -86,8 +86,6 @@ class ReceiverBeacon(Beacon):
                'cpu_temp',
                'senders_visible',
                'senders_total',
-               # 'rec_crystal_correction',
-               # 'rec_crystal_correction_fine',
                'rec_input_noise',
                'senders_signal',
                'senders_messages',
@@ -103,6 +101,9 @@ class ReceiverBeacon(Beacon):
             self.dstcall,
             self.receiver_name,
             self.timestamp,
+            
+            # self.raw_message,
+            # self.reference_timestamp,
 
             self.version,
             self.platform,
@@ -116,11 +117,11 @@ class ReceiverBeacon(Beacon):
             self.cpu_temp,
             int(self.senders_visible) if self.senders_visible else None,
             int(self.senders_total) if self.senders_visible else None,
-            # self.rec_crystal_correction,
-            # self.rec_crystal_correction_fine,
             self.rec_input_noise,
             self.senders_signal,
             int(self.senders_messages) if self.senders_messages else None,
             self.good_senders_signal,
             int(self.good_senders) if self.good_senders else None,
             int(self.good_and_bad_senders) if self.good_and_bad_senders else None]
+
+Index('ix_receiver_beacons_date_receiver_id', func.date(ReceiverBeacon.timestamp), ReceiverBeacon.receiver_id)

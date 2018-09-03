@@ -9,7 +9,8 @@ class DeviceInfo(Base):
 
     id = Column(Integer, primary_key=True)
     address_type = None
-    address = Column(String(6), index=True)
+    #address = Column(String(6), index=True)
+    address = Column(String, index=True)
     aircraft = Column(String)
     registration = Column(String(7))
     competition = Column(String(3))
