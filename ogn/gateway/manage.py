@@ -4,8 +4,8 @@ from manager import Manager
 from ogn.client import AprsClient
 from ogn.gateway.process import  string_to_message
 from datetime import datetime
-from ogn.gateway.process_tools import DummyMerger, Converter, DummySaver
-
+from ogn.gateway.process_tools import DummyMerger, Converter, DbSaver
+from ogn.commands.dbutils import session
 
 manager = Manager()
 
@@ -13,7 +13,7 @@ logging_formatstr = '%(asctime)s - %(levelname).4s - %(name)s - %(message)s'
 log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
 
 # Build the processing pipeline
-saver = DummySaver()
+saver = DbSaver(session=session)
 converter = Converter(callback=saver)
 merger = DummyMerger(callback=converter)
 

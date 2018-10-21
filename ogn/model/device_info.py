@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, SmallInteger, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from .base import Base
 
@@ -22,7 +22,7 @@ class DeviceInfo(Base):
 
     # Relations
     device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)
-    device = relationship('Device', foreign_keys=[device_id], backref='infos')
+    device = relationship('Device', foreign_keys=[device_id], backref=backref('infos', order_by='DeviceInfo.address_origin.asc()'))
 
     def __repr__(self):
         return "<DeviceInfo: %s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

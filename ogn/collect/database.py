@@ -6,18 +6,25 @@ from sqlalchemy.sql.expression import case
 
 from ogn.collect.celery import app
 from ogn.model import DeviceInfo, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
-from ogn.utils import get_ddb, get_country_code
+from ogn.utils import get_ddb, get_country_code, get_flarmnet
 
 
 logger = get_task_logger(__name__)
 
 
-def update_device_infos(session, address_origin, csvfile=None):
-    device_infos = get_ddb(csvfile=csvfile, address_origin=address_origin)
+def update_device_infos(session, address_origin, path=None):
+    if address_origin == DeviceInfoOrigin.flarmnet:
+        device_infos = get_flarmnet(fln_file=path)
+    else:
+        device_infos = get_ddb(csv_file=path)
 
     session.query(DeviceInfo) \
         .filter(DeviceInfo.address_origin == address_origin) \
         .delete(synchronize_session='fetch')
+    session.commit()
+
+    for device_info in device_infos:
+        device_info.address_origin = address_origin
 
     session.bulk_save_objects(device_infos)
     session.commit()
@@ -33,25 +40,7 @@ def import_ddb(session=None):
         session = app.session
 
     logger.info("Import registered devices fom the DDB...")
-    address_origin = DeviceInfoOrigin.ogn_ddb
-
-    counter = update_device_infos(session, address_origin)
-    logger.info("Imported {} devices.".format(counter))
-
-    return "Imported {} devices.".format(counter)
-
-
-@app.task
-def import_ddb_file(session=None, path='tests/custom_ddb.txt'):
-    """Import registered devices from a local file."""
-
-    if session is None:
-        session = app.session
-
-    logger.info("Import registered devices from '{}'...".format(path))
-    address_origin = DeviceInfoOrigin.user_defined
-
-    counter = update_device_infos(session, address_origin, csvfile=path)
+    counter = update_device_infos(session, DeviceInfoOrigin.ogn_ddb)
     logger.info("Imported {} devices.".format(counter))
 
     return "Imported {} devices.".format(counter)
@@ -150,6 +139,7 @@ def update_country_code(session=None):
     for receiver in unknown_country_query.all():
         location = receiver.location
         country_code = get_country_code(location.latitude, location.longitude)
+        print("{}: {}".format(receiver.name, country_code))
         if country_code is not None:
             receiver.country_code = country_code
             logger.info("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))

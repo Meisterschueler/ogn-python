@@ -1,7 +1,7 @@
 from manager import Manager
-from ogn.collect.database import update_device_infos
+from ogn.collect.database import update_device_infos, update_country_code
 from ogn.commands.dbutils import engine, session
-from ogn.model import Base, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon
+from ogn.model import Base, DeviceInfoOrigin
 from ogn.utils import get_airports
 from sqlalchemy import distinct
 from sqlalchemy.sql import null, func
@@ -20,6 +20,7 @@ def init():
     from alembic import command
 
     session.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
+    session.execute('CREATE EXTENSION IF NOT EXISTS btree_gist;')
     session.commit()
     Base.metadata.create_all(engine)
     #alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
@@ -53,24 +54,29 @@ def import_ddb():
     """Import registered devices from the DDB."""
 
     print("Import registered devices fom the DDB...")
-    address_origin = DeviceInfoOrigin.ogn_ddb
-    counter = update_device_infos(session,
-                                  address_origin)
+    counter = update_device_infos(session, DeviceInfoOrigin.ogn_ddb)
     print("Imported %i devices." % counter)
 
 
 @manager.command
 def import_file(path='tests/custom_ddb.txt'):
     """Import registered devices from a local file."""
-    # (flushes previously manually imported entries)
 
     print("Import registered devices from '{}'...".format(path))
-    address_origin = DeviceInfoOrigin.user_defined
     counter = update_device_infos(session,
-                                  address_origin,
-                                  csvfile=path)
+                                  DeviceInfoOrigin.user_defined,
+                                  path=path)
     print("Imported %i devices." % counter)
 
+@manager.command
+def import_flarmnet(path='tests/data.fln'):
+    """Import registered devices from a local file."""
+
+    print("Import registered devices from '{}'...".format("internet" if path is None else path))
+    counter = update_device_infos(session,
+                                  DeviceInfoOrigin.flarmnet,
+                                  path=path)
+    print("Imported %i devices." % counter)
 
 @manager.command
 def import_airports(path='tests/SeeYou.cup'):
@@ -81,3 +87,9 @@ def import_airports(path='tests/SeeYou.cup'):
     session.bulk_save_objects(airports)
     session.commit()
     print("Imported {} airports.".format(len(airports)))
+
+@manager.command
+def update_country_codes():
+    """Update country codes of all receivers."""
+    
+    update_country_code(session=session)

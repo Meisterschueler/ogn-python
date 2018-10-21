@@ -25,7 +25,7 @@ def convert_logfile(path):
         convert(tail, path=head)
         logging.info("Finished converting single file {}".format(head))
     elif os.path.isdir(path):
-        for filename in os.listdir(path):
+        for filename in sorted(os.listdir(path)):
             convert(filename, path=path)
         logging.info("Finished converting file path {}".format(path))
     else:
@@ -60,10 +60,14 @@ def convert(sourcefile, path=''):
     fin = open_file(os.path.join(path, sourcefile))
 
     # get total lines of the input file
-    total_lines = 0
-    for line in fin:
-        total_lines += 1
-    fin.seek(0)
+    try:
+        total_lines = 0
+        for line in fin:    # Der Log vom 3.4.2018 und 24.6.2018 und 25.06.2018 und 24.07.2018 geht hier krachen
+            total_lines += 1
+        fin.seek(0)
+    except Exception as e:
+        print(e)
+        return
 
     progress = -1
     current_line = 0
@@ -80,8 +84,11 @@ def convert(sourcefile, path=''):
             print("=====")
             print(line.strip())
             continue
-        
-        merger.add_message(message)
+
+        try:
+            merger.add_message(message)
+        except Exception as e:
+            print(e)
 
     merger.flush()
     saver.close()
@@ -148,7 +155,7 @@ def import_csv_logfile(path, logfile='main.log', loglevel='INFO'):
         import_logfile(path)
     elif os.path.isdir(path):
         print("{}: Scanning path: {}".format(datetime.datetime.now(), path))
-        for filename in os.listdir(path):
+        for filename in sorted(os.listdir(path)):
             print("{}: Importing file: {}".format(datetime.datetime.now(), filename))
             import_logfile(os.path.join(path, filename))
     else:
@@ -177,15 +184,9 @@ def import_logfile(path):
     receiver_beacon_header = ','.join(ReceiverBeacon.get_csv_columns())
 
     if header == aircraft_beacon_header:
-        if check_no_beacons('aircraft_beacons', reference_date_string):
-            import_aircraft_beacon_logfile(path)
-        else:
-            print("For {} beacons already exist. Skipping".format(reference_date_string))
+        import_aircraft_beacon_logfile(path)
     elif header == receiver_beacon_header:
-        if check_no_beacons('receiver_beacons', reference_date_string):
-            import_receiver_beacon_logfile(path)
-        else:
-            print("For {} beacons already exist. Skipping".format(reference_date_string))
+        import_receiver_beacon_logfile(path)
     else:
         s1 = header
         s2 = ','.join(AircraftBeacon.get_csv_columns())
@@ -193,14 +194,6 @@ def import_logfile(path):
         print(s2)
         print([i for i in range(len(s1)) if s1[i] != s2[i]])
         print("Unknown file type: {}".format(tail))
-
-
-def check_no_beacons(tablename, reference_date_string):
-    result = session.execute("""SELECT * FROM {0} WHERE timestamp BETWEEN '{1} 00:00:00' AND '{1} 23:59:59' LIMIT 1""".format(tablename, reference_date_string))
-    if result.fetchall():
-        return False
-    else:
-        return True
 
 
 def import_aircraft_beacon_logfile(csv_logfile):
@@ -235,7 +228,7 @@ def import_aircraft_beacon_logfile(csv_logfile):
 
         distance real,
         radial smallint,
-        normalized_signal_quality real,
+        quality real,
         location_mgrs character varying(15)
         );
     """
@@ -284,11 +277,11 @@ def import_aircraft_beacon_logfile(csv_logfile):
     session.execute("""
         INSERT INTO aircraft_beacons(location, altitude, name, dstcall, relay, receiver_name, timestamp, track, ground_speed,
                                     address_type, aircraft_type, stealth, address, climb_rate, turn_rate, signal_quality, error_count, frequency_offset, gps_quality_horizontal, gps_quality_vertical, software_version, hardware_version, real_address, signal_power,
-                                    distance, radial, normalized_signal_quality, location_mgrs,
+                                    distance, radial, quality, location_mgrs,
                                     receiver_id, device_id)
         SELECT t.location, t.altitude, t.name, t.dstcall, t.relay, t.receiver_name, t.timestamp, t.track, t.ground_speed,
                t.address_type, t.aircraft_type, t.stealth, t.address, t.climb_rate, t.turn_rate, t.signal_quality, t.error_count, t.frequency_offset, t.gps_quality_horizontal, t.gps_quality_vertical, t.software_version, t.hardware_version, t.real_address, t.signal_power,
-               t.distance, t.radial, t.normalized_signal_quality, t.location_mgrs,
+               t.distance, t.radial, t.quality, t.location_mgrs,
                r.id, d.id
         FROM aircraft_beacons_temp t, receivers r, devices d
         WHERE t.receiver_name = r.name AND t.address = d.address

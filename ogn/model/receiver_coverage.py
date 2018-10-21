@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, SmallInteger, Float, Date, ForeignKey, Index
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 
 from .base import Base
@@ -20,4 +20,5 @@ class ReceiverCoverage(Base):
     device_count = Column(SmallInteger)
 
     # Relations
-    receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='receiver_coverages')
+    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'), index=True)
+    receiver = relationship('Receiver', foreign_keys=[receiver_id], backref=backref('receiver_coverages', order_by='ReceiverCoverage.date.asc()'))

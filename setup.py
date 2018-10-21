@@ -32,16 +32,16 @@ setup(
     keywords='gliding ogn',
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
-        'SQLAlchemy==1.1.15',
-        'geopy==1.11.0',
+        'SQLAlchemy==1.2.12',
+        'geopy==1.17.0',
         'manage.py==0.2.10',
         'celery[redis]>=3.1,<3.2',
-        'alembic==0.9.6',
-        'aerofiles==0.4',
-        'geoalchemy2==0.4.0',
+        'alembic==1.0.0',
+        'aerofiles==0.4.1',
+        'geoalchemy2==0.5.0',
         'shapely>=1.5.17,<1.6',
-        'ogn-client==0.9.0',
-        'psycopg2==2.7.3.2',
+        'ogn-client==0.9.1',
+        'psycopg2==2.7.5',
         'mgrs==1.3.5'
     ],
     extras_require={

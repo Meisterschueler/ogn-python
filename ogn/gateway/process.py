@@ -23,8 +23,8 @@ def _replace_lonlat_with_wkt(message, reference_receiver=None):
         distance,bearing = haversine(reference_receiver['latitude'], reference_receiver['longitude'], latitude, longitude)
         message['distance'] = distance
         message['radial'] = round(bearing)
-        if message['signal_quality'] is not None and distance >= 1:
-            message['normalized_signal_quality'] = message['signal_quality'] + 20 * log10(message['distance'] / 10000)  # normalized to 10km
+        if 'signal_quality' in message and message['signal_quality'] is not None and distance >= 1:
+            message['quality'] = message['signal_quality'] + 20 * log10(message['distance'] / 10000)  # normalized to 10km
 
     location = Location(longitude, latitude)
     message['location_wkt'] = location.to_wkt()

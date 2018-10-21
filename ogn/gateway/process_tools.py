@@ -37,13 +37,17 @@ class Merger:
         # release messages > max_lines
         if self.max_lines is not None:
             pass
-
+        
         # merge messages with same timestamp
-        if message['receiver_name'] in self.message_map:
-            if message['name'] in self.message_map[message['receiver_name']]:
-                messages = self.message_map[message['receiver_name']][message['name']]
-                if message['timestamp'] in messages:
-                    other = messages[message['timestamp']]
+        receiver_name = message['receiver_name']
+        name = message['name']
+        timestamp = message['timestamp']
+        
+        if receiver_name in self.message_map:
+            if name in self.message_map[receiver_name]:
+                timestamps = self.message_map[receiver_name][name]
+                if timestamp in timestamps:
+                    other = timestamps[timestamp]
                     params1 = dict( [(k,v) for k,v in message.items() if v is not None])
                     params2 = dict( [(k,v) for k,v in other.items() if v is not None])
                     merged = {**params1, **params2}
@@ -53,20 +57,20 @@ class Merger:
                         merged['raw_message'] = '"{}","{}"'.format(message['raw_message'], other['raw_message'])
                     
                     self.callback.add_message(merged)
-                    del self.message_map[message['receiver_name']][message['name']][message['timestamp']]
+                    del self.message_map[receiver_name][name][timestamp]
                 else:
-                    self.message_map[message['receiver_name']][message['name']][message['timestamp']] = message
+                    self.message_map[receiver_name][name][timestamp] = message
     
                 # release previous messages
-                for timestamp in list(messages):
-                    if timestamp < message['timestamp']:
-                        self.callback.add_message(messages[timestamp])
-                        del self.message_map[message['receiver_name']][message['name']][timestamp]
+                for ts in list(timestamps):
+                    if ts < timestamp:
+                        self.callback.add_message(timestamps[ts])
+                        del self.message_map[receiver_name][name][ts]
             else:
                 # add new message
-                self.message_map[message['receiver_name']].update({message['name']: {message['timestamp']: message}})
+                self.message_map[receiver_name].update({name: {timestamp: message}})
         else:
-            self.message_map.update({message['receiver_name']: {message['name']: {message['timestamp']: message}}})
+            self.message_map.update({receiver_name: {name: {timestamp: message}}})
 
     def flush(self):
         for receiver,v1 in self.message_map.items():

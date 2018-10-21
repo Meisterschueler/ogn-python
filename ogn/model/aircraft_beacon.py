@@ -44,11 +44,15 @@ class AircraftBeacon(Beacon):
     spider_id = None
     model = None
     status = None
+    
+    # Naviter stuff
+    do_not_track = None
+    reserved = None
 
     # Calculated values
     distance = Column(Float(precision=2))
     radial = Column(SmallInteger)
-    normalized_signal_quality = Column(Float(precision=2))
+    quality = Column(Float(precision=2))    # signal quality normalized to 10km
     location_mgrs = Column(String(15))
 
     # Relations
@@ -83,7 +87,7 @@ class AircraftBeacon(Beacon):
 
             self.distance,
             self.radial,
-            self.normalized_signal_quality,
+            self.quality,
             self.location_mgrs)
 
     @classmethod
@@ -119,7 +123,7 @@ class AircraftBeacon(Beacon):
 
                'distance',
                'radial',
-               'normalized_signal_quality',
+               'quality',
                'location_mgrs']
 
     def get_csv_values(self):
@@ -155,7 +159,7 @@ class AircraftBeacon(Beacon):
 
             self.distance,
             self.radial,
-            self.normalized_signal_quality,
+            self.quality,
             self.location_mgrs]
 
 

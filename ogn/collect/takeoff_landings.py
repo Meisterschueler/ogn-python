@@ -15,14 +15,14 @@ logger = get_task_logger(__name__)
 @app.task
 def update_takeoff_landings(session=None, date=None):
     """Compute takeoffs and landings."""
-
+    
     logger.info("Compute takeoffs and landings.")
 
     if session is None:
         session = app.session
 
     # check if we have any airport
-    airports_query = session.query(Airport)
+    airports_query = session.query(Airport).limit(1)
     if not airports_query.all():
         logger.warn("Cannot calculate takeoff and landings without any airport! Please import airports first.")
         return
@@ -38,30 +38,25 @@ def update_takeoff_landings(session=None, date=None):
     airport_delta = 100     # takeoff / landing must not exceed this altitude offset above/below the airport
 
     # 'wo' is the window order for the sql window function
-    wo = and_(AircraftBeacon.device_id,
-              AircraftBeacon.timestamp,
-              AircraftBeacon.receiver_id)
+    wo = and_(func.date(AircraftBeacon.timestamp),
+              AircraftBeacon.device_id,
+              AircraftBeacon.timestamp)
 
+    # get beacons for selected day and filter out duplicates (e.g. from multiple receivers)
+    sq = session.query(AircraftBeacon.id,
+                       func.row_number().over(partition_by=(func.date(AircraftBeacon.timestamp),
+                                                            AircraftBeacon.device_id,
+                                                            AircraftBeacon.timestamp),
+                                              order_by=AircraftBeacon.error_count).label('row')) \
+        .filter(func.date(AircraftBeacon.timestamp) == date) \
+        .subquery()
+    
+    sq2 = session.query(sq.c.id) \
+        .filter(sq.c.row == 1) \
+        .subquery()
+        
     # make a query with current, previous and next position
-    if date is None:
-        beacon_selection = session.query(AircraftBeacon.id) \
-            .filter(AircraftBeacon.status == 0) \
-            .order_by(AircraftBeacon.timestamp) \
-            .subquery()
-    else:
-        my_day = datetime.strptime(date, '%Y-%m-%d')
-        beacon_selection = session.query(AircraftBeacon.id) \
-            .filter(and_(AircraftBeacon.status == 0,
-                         AircraftBeacon.timestamp >= my_day - timedelta(minutes=5),
-                         AircraftBeacon.timestamp < my_day + timedelta(days=1, minutes=5))) \
-            .order_by(AircraftBeacon.timestamp) \
-            .limit(100000) \
-            .subquery()
-
-    sq = session.query(
-        AircraftBeacon.id,
-        func.lag(AircraftBeacon.id).over(order_by=wo).label('id_prev'),
-        func.lead(AircraftBeacon.id).over(order_by=wo).label('id_next'),
+    sq3 = session.query(
         AircraftBeacon.device_id,
         func.lag(AircraftBeacon.device_id).over(order_by=wo).label('device_id_prev'),
         func.lead(AircraftBeacon.device_id).over(order_by=wo).label('device_id_next'),
@@ -80,60 +75,56 @@ def update_takeoff_landings(session=None, date=None):
         AircraftBeacon.altitude,
         func.lag(AircraftBeacon.altitude).over(order_by=wo).label('altitude_prev'),
         func.lead(AircraftBeacon.altitude).over(order_by=wo).label('altitude_next')) \
-        .filter(AircraftBeacon.id == beacon_selection.c.id) \
+        .filter(AircraftBeacon.id == sq2.c.id) \
         .subquery()
-
+        
     # consider only positions with the same device id
-    sq2 = session.query(sq) \
-       .filter(sq.c.device_id_prev == sq.c.device_id == sq.c.device_id_next) \
+    sq4 = session.query(sq3) \
+       .filter(sq3.c.device_id_prev == sq3.c.device_id == sq3.c.device_id_next) \
        .subquery()
-
-    logger.warn(sq2)
-    return
-
+       
     # find possible takeoffs and landings
-    sq3 = session.query(
-        sq2.c.id,
-        sq2.c.timestamp,
-        case([(sq2.c.ground_speed > takeoff_speed, sq2.c.location_wkt_prev),  # on takeoff we take the location from the previous fix because it is nearer to the airport
-              (sq2.c.ground_speed < landing_speed, sq2.c.location)]).label('location'),
-        case([(sq2.c.ground_speed > takeoff_speed, sq2.c.track),
-              (sq2.c.ground_speed < landing_speed, sq2.c.track_prev)]).label('track'),    # on landing we take the track from the previous fix because gliders tend to leave the runway quickly
-        sq2.c.ground_speed,
-        sq2.c.altitude,
-        case([(sq2.c.ground_speed > takeoff_speed, True),
-              (sq2.c.ground_speed < landing_speed, False)]).label('is_takeoff'),
-        sq2.c.device_id) \
-        .filter(sq2.c.timestamp_next - sq2.c.timestamp_prev < timedelta(seconds=duration)) \
-        .filter(and_(func.ST_Distance_Sphere(sq2.c.location, sq2.c.location_wkt_prev) < radius,
-                     func.ST_Distance_Sphere(sq2.c.location, sq2.c.location_wkt_next) < radius)) \
-        .filter(or_(and_(sq2.c.ground_speed_prev < takeoff_speed,    # takeoff
-                         sq2.c.ground_speed > takeoff_speed,
-                         sq2.c.ground_speed_next > takeoff_speed),
-                    and_(sq2.c.ground_speed_prev > landing_speed,    # landing
-                         sq2.c.ground_speed < landing_speed,
-                         sq2.c.ground_speed_next < landing_speed))) \
+    sq5 = session.query(
+        sq4.c.timestamp,
+        case([(sq4.c.ground_speed > takeoff_speed, sq4.c.location_wkt_prev),  # on takeoff we take the location from the previous fix because it is nearer to the airport
+              (sq4.c.ground_speed < landing_speed, sq4.c.location)]).label('location'),
+        case([(sq4.c.ground_speed > takeoff_speed, sq4.c.track),
+              (sq4.c.ground_speed < landing_speed, sq4.c.track_prev)]).label('track'),    # on landing we take the track from the previous fix because gliders tend to leave the runway quickly
+        sq4.c.ground_speed,
+        sq4.c.altitude,
+        case([(sq4.c.ground_speed > takeoff_speed, True),
+              (sq4.c.ground_speed < landing_speed, False)]).label('is_takeoff'),
+        sq4.c.device_id) \
+        .filter(sq4.c.timestamp_next - sq4.c.timestamp_prev < timedelta(seconds=duration)) \
+        .filter(and_(func.ST_DistanceSphere(sq4.c.location, sq4.c.location_wkt_prev) < radius,
+                     func.ST_DistanceSphere(sq4.c.location, sq4.c.location_wkt_next) < radius)) \
+        .filter(or_(and_(sq4.c.ground_speed_prev < takeoff_speed,    # takeoff
+                         sq4.c.ground_speed > takeoff_speed,
+                         sq4.c.ground_speed_next > takeoff_speed),
+                    and_(sq4.c.ground_speed_prev > landing_speed,    # landing
+                         sq4.c.ground_speed < landing_speed,
+                         sq4.c.ground_speed_next < landing_speed))) \
         .subquery()
-
+    
     # consider them if they are near a airport
-    sq4 = session.query(
-        sq3.c.timestamp,
-        sq3.c.track,
-        sq3.c.is_takeoff,
-        sq3.c.device_id,
+    sq6 = session.query(
+        sq5.c.timestamp,
+        sq5.c.track,
+        sq5.c.is_takeoff,
+        sq5.c.device_id,
         Airport.id.label('airport_id')) \
-        .filter(and_(func.ST_Distance_Sphere(sq3.c.location, Airport.location_wkt) < airport_radius,
-                     between(sq3.c.altitude, Airport.altitude - airport_delta, Airport.altitude + airport_delta))) \
+        .filter(and_(func.ST_DistanceSphere(sq5.c.location, Airport.location_wkt) < airport_radius,
+                     between(sq5.c.altitude, Airport.altitude - airport_delta, Airport.altitude + airport_delta))) \
         .filter(between(Airport.style, 2, 5)) \
         .subquery()
-
+        
     # consider them only if they are not already existing in db
-    takeoff_landing_query = session.query(sq4) \
+    takeoff_landing_query = session.query(sq6) \
         .filter(~exists().where(
-            and_(TakeoffLanding.timestamp == sq4.c.timestamp,
-                 TakeoffLanding.device_id == sq4.c.device_id,
-                 TakeoffLanding.airport_id == sq4.c.airport_id)))
-
+            and_(TakeoffLanding.timestamp == sq6.c.timestamp,
+                 TakeoffLanding.device_id == sq6.c.device_id,
+                 TakeoffLanding.airport_id == sq6.c.airport_id)))
+        
     # ... and save them
     ins = insert(TakeoffLanding).from_select((TakeoffLanding.timestamp,
                                               TakeoffLanding.track,
@@ -141,18 +132,10 @@ def update_takeoff_landings(session=None, date=None):
                                               TakeoffLanding.device_id,
                                               TakeoffLanding.airport_id),
                                              takeoff_landing_query)
+
     result = session.execute(ins)
+    session.commit()
     insert_counter = result.rowcount
     logger.warn("Inserted {} TakeoffLandings".format(insert_counter))
 
-    # Set calculated beacons as 'used'
-    upd = update(AircraftBeacon) \
-        .where(AircraftBeacon.id == sq2.c.id) \
-        .values({"status": 1})
-
-    result = session.execute(upd)
-    update_counter = result.rowcount
-    session.commit()
-    logger.warn("Updated {} AircraftBeacons".format(update_counter))
-
-    return "Inserted {} TakeoffLandings, updated {} AircraftBeacons".format(insert_counter, update_counter)
+    return "Inserted {} TakeoffLandings".format(insert_counter)

@@ -15,10 +15,10 @@ class Receiver(Base):
     location_wkt = Column('location', Geometry('POINT', srid=4326))
     altitude = Column(Float(precision=2))
 
-    name = Column(String(9))
+    name = Column(String(9), index=True)
     firstseen = Column(DateTime, index=True)
     lastseen = Column(DateTime, index=True)
-    country_code = Column(String(2))
+    country_code = Column(String(2), index=True)
     version = Column(String)
     platform = Column(String)
 

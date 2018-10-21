@@ -14,5 +14,7 @@ from .takeoff_landing import TakeoffLanding
 from .airport import Airport
 from .logbook import Logbook
 from .receiver_coverage import ReceiverCoverage
+from .relation_stats import RelationStats
+from .flights2d import Flight2D
 
 from .geo import Location

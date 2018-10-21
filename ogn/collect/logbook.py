@@ -22,8 +22,12 @@ def update_logbook(session=None):
     # 'wo' is the window order for the sql window function
     wo = and_(func.date(TakeoffLanding.timestamp),
               TakeoffLanding.device_id,
-              TakeoffLanding.timestamp,
-              TakeoffLanding.airport_id)
+              TakeoffLanding.airport_id,
+              TakeoffLanding.timestamp)
+    
+    # 'pa' is the window partition for the sql window function
+    pa = (func.date(TakeoffLanding.timestamp),
+          TakeoffLanding.device_id)
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
