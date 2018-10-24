@@ -78,6 +78,7 @@ def convert(sourcefile, path=''):
         if int(1000 * current_line / total_lines) != progress:
             progress = round(1000 * current_line / total_lines)
             print("\rReading line {} ({}%)".format(current_line, progress / 10), end='')
+            saver.flush()
 
         message = string_to_message(line.strip(), reference_date=reference_date)
         if message is None:
