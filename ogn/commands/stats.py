@@ -34,27 +34,30 @@ def create_stats():
     
 
 @manager.command
-def update_receivers():
+def add_missing_receivers():
     """Update receivers with data from stats."""
-    
+
     result = update_receivers_stats(session=session)
     print(result)
-    
+
+
 @manager.command
-def update_devices():
+def add_missing_devices():
     """Update devices with data from stats."""
-    
+
     result = update_devices_stats(session=session)
     print(result)
+
 
 @manager.command
 def create_flights():
     """Create Flights."""
-    
+
     for single_date in (date(2016, 8, 10) + timedelta(days=n) for n in range(800)):
         result = _create_flights2d(session=session, date=single_date)
         #result = _create_flights3d(session=session, date=single_date)
         print(result)
+
 
 def _create_flights2d(session=None, date=None):
     SQL = """
@@ -66,7 +69,7 @@ def _create_flights2d(session=None, date=None):
             )
         SELECT   sq5.date,
                  sq5.device_id,
-                 st_collect(sq5.linestring order BY sq5.part) multilinestring
+                 st_collect(sq5.linestring ORDER BY sq5.part) multilinestring
         FROM     (
             SELECT   sq4.timestamp::date AS date,
                      sq4.device_id,
@@ -106,6 +109,7 @@ def _create_flights2d(session=None, date=None):
                                    sq4.part ) sq5
         GROUP BY sq5.date,
                  sq5.device_id
+        ON CONFLICT DO NOTHING;
     """
     
     result = session.execute(SQL.format(date.strftime("%Y-%m-%d")))

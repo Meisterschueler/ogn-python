@@ -21,8 +21,12 @@ def init():
 
     session.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
     session.execute('CREATE EXTENSION IF NOT EXISTS btree_gist;')
+    session.execute('CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;')
     session.commit()
     Base.metadata.create_all(engine)
+    session.execute("SELECT create_hypertable('aircraft_beacons', 'timestamp', chunk_target_size => '2GB');")
+    session.execute("SELECT create_hypertable('receiver_beacons', 'timestamp', chunk_target_size => '2GB');")
+    session.commit()
     #alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
     #command.stamp(alembic_cfg, "head")
     print("Done.")

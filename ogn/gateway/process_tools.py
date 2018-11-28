@@ -159,18 +159,18 @@ class FileSaver:
             raise FileExistsError
         
         self.aircraft_writer = csv.writer(self.fout_ab, delimiter=',')
-        self.aircraft_writer.writerow(AircraftBeacon.get_csv_columns())
+        self.aircraft_writer.writerow(AircraftBeacon.get_columns())
 
         self.receiver_writer = csv.writer(self.fout_rb, delimiter=',')
-        self.receiver_writer.writerow(ReceiverBeacon.get_csv_columns())
+        self.receiver_writer.writerow(ReceiverBeacon.get_columns())
         
         return 1
 
     def add_message(self, beacon):
         if isinstance(beacon, AircraftBeacon):
-            self.aircraft_messages.append(beacon.get_csv_values())
+            self.aircraft_messages.append(beacon.get_values())
         elif isinstance(beacon, ReceiverBeacon):
-            self.receiver_messages.append(beacon.get_csv_values())
+            self.receiver_messages.append(beacon.get_values())
 
     def flush(self):
         self.aircraft_writer.writerows(self.aircraft_messages)

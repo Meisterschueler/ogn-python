@@ -2,7 +2,7 @@ import unittest
 import os
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver, DeviceInfo
-from ogn.collect.database import update_devices, update_receivers, import_ddb_file
+from ogn.collect.database import add_missing_devices, add_missing_receivers, import_ddb_file
 
 
 class TestDB(unittest.TestCase):
@@ -37,8 +37,8 @@ class TestDB(unittest.TestCase):
         r01 = Receiver(name='Koenigsdf')
         session.bulk_save_objects([ab01, rb01, d01, r01])
 
-        update_devices(session)
-        update_receivers(session)
+        add_missing_devices(session)
+        add_missing_receivers(session)
 
         aircraft_beacons = session.query(AircraftBeacon).all()
         self.assertEqual(len(aircraft_beacons), 1)

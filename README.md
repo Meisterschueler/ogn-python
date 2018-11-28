@@ -6,7 +6,7 @@
 A database backend for the [Open Glider Network](http://wiki.glidernet.org/).
 The ogn-python module saves all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
 It connects to the OGN aprs servers with [python-ogn-client](https://github.com/glidernet/python-ogn-client).
-It requires [PostgreSQL](http://www.postgresql.org/) and [PostGIS](http://www.postgis.net/).
+It requires [TimescaleDB](https://www.timescale.com, based on PostgreSQL) and [PostGIS](http://www.postgis.net/).
 
 [Examples](https://github.com/glidernet/ogn-python/wiki/Examples)
 
@@ -91,17 +91,21 @@ optional arguments:
 available commands:
   
   [bulkimport]
-    convert_logfile        Convert ogn logfiles to csv logfiles (one for aircraft beacons and one for receiver beacons) <arg: path>. Logfile name: blablabla.txt_YYYY-MM-DD.
-    create_indices         Create indices for AircraftBeacon.
-    drop_indices           Drop indices of AircraftBeacon.
-    import_csv_logfile     Import csv logfile <arg: csv logfile>.
+    create_flights2d       Create complete flight traces from logfile tables.
+    create_gaps2d          Create 'gaps' from logfile tables.
+    file_export            Export separate logfile tables to csv files. They can be used for fast bulk import with sql COPY command.
+    file_import            Import APRS logfiles into separate logfile tables.
+    transfer               Transfer beacons from separate logfile tables to beacon table.
+    update                 Update beacons (add foreign keys, compute distance, bearing, ags, etc.) in separate logfile tables.
   
   [db]
     drop                   Drop all tables.
     import_airports        Import airports from a ".cup" file
     import_ddb             Import registered devices from the DDB.
-    import_ddb_file        Import registered devices from a local file.
+    import_file            Import registered devices from a local file.
+    import_flarmnet        Import registered devices from a local file.
     init                   Initialize the database.
+    update_country_codes   Update country codes of all receivers.
     upgrade                Upgrade database to the latest version.
   
   [gateway]
@@ -116,9 +120,10 @@ available commands:
     show                   Show a logbook for <airport_name>.
   
   [stats]
-    airports               Compute airport statistics.
-    devices                Compute device statistics
-    receivers              Compute receiver statistics.
+    add_missing_devices    Update devices with data from stats.
+    add_missing_receivers  Update receivers with data from stats.
+    create_flights         Create Flights.
+    create_stats           Create DeviceStats, ReceiverStats and RelationStats.
   
   [show.airport]
     list_all               Show a list of all airports.

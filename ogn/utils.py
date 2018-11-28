@@ -51,6 +51,7 @@ def get_ddb(csv_file=None, address_origin=DeviceInfoOrigin.unknown):
 
     return device_infos
 
+
 def get_flarmnet(fln_file=None, address_origin=DeviceInfoOrigin.flarmnet):
     if fln_file is None:
         r = requests.get(FLARMNET_URL)
@@ -58,7 +59,7 @@ def get_flarmnet(fln_file=None, address_origin=DeviceInfoOrigin.flarmnet):
     else:
         with open(fln_file, 'r') as file:
             rows = [bytes.fromhex(line.strip()).decode('latin1') for line in file.readlines() in len(line) == 172]
-            
+
     device_infos = list()
     for row in rows:
         device_info = DeviceInfo()
@@ -66,10 +67,11 @@ def get_flarmnet(fln_file=None, address_origin=DeviceInfoOrigin.flarmnet):
         device_info.aircraft = row[48:69].strip()
         device_info.registration = row[69:76].strip()
         device_info.competition = row[76:79].strip()
-        
+
         device_infos.append(device_info)
 
     return device_infos
+
 
 def get_trackable(ddb):
     l = []
@@ -77,6 +79,7 @@ def get_trackable(ddb):
         if i.tracked and i.address_type in address_prefixes:
             l.append("{}{}".format(address_prefixes[i.address_type], i.address))
     return l
+
 
 def get_geolocator():
     geolocator = Nominatim()
@@ -90,6 +93,7 @@ def get_geolocator():
     geolocator.urlopen = requester_hack
 
     return geolocator
+
 
 def get_country_code(latitude, longitude):
     geolocator = get_geolocator()
@@ -145,32 +149,8 @@ def open_file(filename):
     a = f.read(2)
     f.close()
     if (a == b'\x1f\x8b'):
-        f = gzip.open(filename, 'rt')
+        f = gzip.open(filename, 'rt', encoding="latin-1")
         return f
     else:
-        f = open(filename, 'rt')
+        f = open(filename, 'rt', encoding="latin-1")
         return f
-    
-from math import radians, cos, sin, asin, sqrt, atan2, degrees
-
-def haversine(lat1, lon1, lat2, lon2):
-    """
-    Calculate the great circle distance between two points 
-    on the earth (specified in decimal degrees)
-    """
-    # convert decimal degrees to radians 
-    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-
-    # haversine formula 
-    dlon = lon2 - lon1 
-    dlat = lat2 - lat1 
-    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a)) 
-    r = 6371000.785 # Radius of earth in meters
-    d = c * r
-    
-    # calculate bearing
-    bearing = atan2(sin(dlon)*cos(lat2), cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(dlon))
-    bearing = (degrees(bearing) + 360) % 360
-    
-    return d,bearing

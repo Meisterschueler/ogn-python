@@ -8,14 +8,12 @@ from .base import Base
 class Flight2D(Base):
     __tablename__ = "flights2d"
 
-    id = Column(Integer, primary_key=True)
-    
-    date = Column(Date)
+    date = Column(Date, primary_key=True)
 
     path_wkt = Column('path', Geometry('MULTILINESTRING', srid=4326))
 
     # Relations
-    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)
+    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), primary_key=True)
     device = relationship('Device', foreign_keys=[device_id], backref='flights2d')
 
     def __repr__(self):

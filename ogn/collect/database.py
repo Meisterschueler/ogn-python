@@ -47,7 +47,7 @@ def import_ddb(session=None):
 
 
 @app.task
-def update_devices(session=None):
+def add_missing_devices(session=None):
     """Add/update entries in devices table and update foreign keys in aircraft beacons."""
 
     if session is None:
@@ -75,16 +75,16 @@ def update_devices(session=None):
             synchronize_session='fetch')
 
     session.commit()
-    logger.info("Devices: {} inserted, {} updated".format(insert_count, update_receivers))
+    logger.info("Devices: {} inserted, {} updated".format(insert_count, add_missing_receivers))
     logger.info("Updated {} AircraftBeacons".format(upd))
 
     return "{} Devices inserted, {} Devices updated, {} AircraftBeacons updated" \
-        .format(insert_count, update_receivers, upd)
+        .format(insert_count, add_missing_receivers, upd)
 
 
 @app.task
-def update_receivers(session=None):
-    """Add/update_receivers entries in receiver table and update receivers foreign keys and distance in aircraft beacons and update foreign keys in receiver beacons."""
+def add_missing_receivers(session=None):
+    """Add/add_missing_receivers entries in receiver table and update receivers foreign keys and distance in aircraft beacons and update foreign keys in receiver beacons."""
 
     if session is None:
         session = app.session
@@ -116,11 +116,11 @@ def update_receivers(session=None):
 
     session.commit()
 
-    logger.info("Receivers: {} inserted, {} updated.".format(insert_count, update_receivers))
+    logger.info("Receivers: {} inserted, {} updated.".format(insert_count, add_missing_receivers))
     logger.info("Updated relations: {} aircraft beacons, {} receiver beacons".format(update_aircraft_beacons, update_receiver_beacons))
 
     return "{} Receivers inserted, {} Receivers updated, {} AircraftBeacons updated, {} ReceiverBeacons updated" \
-        .format(insert_count, update_receivers, update_aircraft_beacons, update_receiver_beacons)
+        .format(insert_count, add_missing_receivers, update_aircraft_beacons, update_receiver_beacons)
 
 
 @app.task

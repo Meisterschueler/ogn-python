@@ -24,36 +24,13 @@ class AircraftBeacon(Beacon):
     real_address = Column(String(6))
     signal_power = Column(Float(precision=2))
     proximity = None
-    
-    # Tracker stuff (position message)
-    flightlevel = None
-
-    # Tracker stuff (status message)
-    gps_satellites = None
-    gps_quality = None
-    gps_altitude = None
-    pressure = None
-    temperature = None
-    humidity = None
-    voltage = None
-    transmitter_power = None
-    noise_level = None
-    relays = None
-
-    # Spider stuff
-    spider_id = None
-    model = None
-    status = None
-    
-    # Naviter stuff
-    do_not_track = None
-    reserved = None
 
     # Calculated values
     distance = Column(Float(precision=2))
     radial = Column(SmallInteger)
     quality = Column(Float(precision=2))    # signal quality normalized to 10km
     location_mgrs = Column(String(15))
+    agl = Column(Float(precision=2))
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'))
@@ -63,8 +40,7 @@ class AircraftBeacon(Beacon):
     device = relationship('Device', foreign_keys=[device_id], backref='aircraft_beacons')
 
     # Multi-column indices
-    Index('ix_aircraft_beacons_receiver_id_receiver_name', 'receiver_id', 'receiver_name')
-    Index('ix_aircraft_beacons_device_id_address', 'device_id', 'address')
+    Index('ix_aircraft_beacons_receiver_id_distance', 'receiver_id', 'distance')
     Index('ix_aircraft_beacons_device_id_timestamp', 'device_id', 'timestamp')
 
     def __repr__(self):
@@ -91,42 +67,42 @@ class AircraftBeacon(Beacon):
             self.location_mgrs)
 
     @classmethod
-    def get_csv_columns(self):
-        return['location',
-               'altitude',
-               'name',
-               'dstcall',
-               'relay',
-               'receiver_name',
-               'timestamp',
-               'track',
-               'ground_speed',
-               
-               #'raw_message',
-               #'reference_timestamp',
+    def get_columns(self):
+        return ['location',
+                'altitude',
+                'name',
+                'dstcall',
+                'relay',
+                'receiver_name',
+                'timestamp',
+                'track',
+                'ground_speed',
+                
+                #'raw_message',
+                #'reference_timestamp',
+                
+                'address_type',
+                'aircraft_type',
+                'stealth',
+                'address',
+                'climb_rate',
+                'turn_rate',
+                'signal_quality',
+                'error_count',
+                'frequency_offset',
+                'gps_quality_horizontal',
+                'gps_quality_vertical',
+                'software_version',
+                'hardware_version',
+                'real_address',
+                'signal_power',
+                
+                'distance',
+                'radial',
+                'quality',
+                'location_mgrs']
 
-               'address_type',
-               'aircraft_type',
-               'stealth',
-               'address',
-               'climb_rate',
-               'turn_rate',
-               'signal_quality',
-               'error_count',
-               'frequency_offset',
-               'gps_quality_horizontal',
-               'gps_quality_vertical',
-               'software_version',
-               'hardware_version',
-               'real_address',
-               'signal_power',
-
-               'distance',
-               'radial',
-               'quality',
-               'location_mgrs']
-
-    def get_csv_values(self):
+    def get_values(self):
         return [
             self.location_wkt,
             int(self.altitude) if self.altitude else None,

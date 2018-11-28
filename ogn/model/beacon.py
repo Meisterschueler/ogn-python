@@ -1,6 +1,6 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, String, Integer, SmallInteger, Float, DateTime
+from sqlalchemy import Column, String, Integer, SmallInteger, Float, DateTime, BigInteger
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 
 from .base import Base
@@ -8,17 +8,15 @@ from .geo import Location
 
 
 class Beacon(AbstractConcreteBase, Base):
-    id = Column(Integer, primary_key=True)
-
     # APRS data
     location_wkt = Column('location', Geometry('POINT', srid=4326))
     altitude = Column(Float(precision=2))
 
-    name = Column(String)
+    name = Column(String, primary_key=True)
     dstcall = Column(String)
     relay = Column(String)
-    receiver_name = Column(String(9))
-    timestamp = Column(DateTime, index=True)
+    receiver_name = Column(String(9), primary_key=True)
+    timestamp = Column(DateTime, primary_key=True)
     symboltable = None
     symbolcode = None
     track = Column(SmallInteger)

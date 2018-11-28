@@ -63,37 +63,37 @@ class ReceiverBeacon(Beacon):
             self.good_and_bad_senders)
 
     @classmethod
-    def get_csv_columns(self):
-        return['location',
-               'altitude',
-               'name',
-               'dstcall',
-               'receiver_name',
-               'timestamp',
-               
-               # 'raw_message',
-               # 'reference_timestamp',
+    def get_columns(self):
+        return ['location',
+                'altitude',
+                'name',
+                'dstcall',
+                'receiver_name',
+                'timestamp',
+                
+                # 'raw_message',
+                # 'reference_timestamp',
+                
+                'version',
+                'platform',
+                'cpu_load',
+                'free_ram',
+                'total_ram',
+                'ntp_error',
+                'rt_crystal_correction',
+                'voltage',
+                'amperage',
+                'cpu_temp',
+                'senders_visible',
+                'senders_total',
+                'rec_input_noise',
+                'senders_signal',
+                'senders_messages',
+                'good_senders_signal',
+                'good_senders',
+                'good_and_bad_senders']
 
-               'version',
-               'platform',
-               'cpu_load',
-               'free_ram',
-               'total_ram',
-               'ntp_error',
-               'rt_crystal_correction',
-               'voltage',
-               'amperage',
-               'cpu_temp',
-               'senders_visible',
-               'senders_total',
-               'rec_input_noise',
-               'senders_signal',
-               'senders_messages',
-               'good_senders_signal',
-               'good_senders',
-               'good_and_bad_senders']
-
-    def get_csv_values(self):
+    def get_values(self):
         return [
             self.location_wkt,
             int(self.altitude) if self.altitude else None,
