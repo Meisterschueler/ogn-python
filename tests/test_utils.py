@@ -2,7 +2,7 @@ import os
 import unittest
 
 from ogn.model import AircraftType
-from ogn.utils import get_ddb, get_trackable, get_country_code, get_airports, haversine
+from ogn.utils import get_ddb, get_trackable, get_country_code, get_airports
 import unittest.mock as mock
 
 
@@ -57,8 +57,3 @@ class TestStringMethods(unittest.TestCase):
     def test_get_airports(self):
         airports = get_airports(os.path.dirname(__file__) + '/SeeYou.cup')
         self.assertGreater(len(airports), 1000)
-    
-    def test_haversine(self):
-        distance,bearing = haversine(45.7597, 4.8422, 48.8567, 2.3508)
-        self.assertAlmostEqual(distance, 392216.7, 0)
-        self.assertAlmostEqual(bearing, 332, 0)

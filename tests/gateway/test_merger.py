@@ -19,7 +19,7 @@ class MergerTest(unittest.TestCase):
 
         merger.add_message(b)
         callback.add_message.assert_not_called()
-        
+
         merger.add_message(c)
         callback.add_message.assert_not_called()
 
@@ -31,8 +31,8 @@ class MergerTest(unittest.TestCase):
         callback.add_message.assert_has_calls(calls, any_order=True)
 
     def test_pair(self):
-        a = {'name': 'Jeff', 'receiver_name': 'Observer1','timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45), 'field_a': None, 'field_b': 3.141}
-        b = {'name': 'Jeff', 'receiver_name': 'Observer1','timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45), 'field_a': 'WTF', 'field_c': None, 'field_d': 1.4142}
+        a = {'name': 'Jeff', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45), 'field_a': None, 'field_b': 3.141}
+        b = {'name': 'Jeff', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45), 'field_a': 'WTF', 'field_c': None, 'field_d': 1.4142}
 
         merged = {'name': 'Jeff', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45), 'field_a': 'WTF', 'field_b': 3.141, 'field_d': 1.4142}
 
@@ -83,16 +83,16 @@ class MergerTest(unittest.TestCase):
 
         merger.add_message(b)
         callback.add_message.assert_not_called()
-        
+
         merger.add_message(c)
         callback.add_message.assert_not_called()
-        
+
         merger.add_message(d)
         callback.add_message.assert_not_called()
-        
+
         merger.add_message(e)
         callback.add_message.assert_not_called()
-        
+
         merger.add_message(f)
         callback.add_message.assert_called_once_with(a)
 

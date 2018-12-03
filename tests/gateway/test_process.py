@@ -2,7 +2,7 @@ import datetime
 import unittest
 import unittest.mock as mock
 
-from ogn.gateway.process import process_raw_message, string_to_message
+from ogn.gateway.process import process_raw_message
 
 
 class ProcessManagerTest(unittest.TestCase):
