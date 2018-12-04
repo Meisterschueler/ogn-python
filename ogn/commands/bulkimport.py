@@ -431,24 +431,28 @@ class LogfileDbSaver():
         SELECT
            sq2.t1::DATE AS date,
            sq2.d1 device_id,
-           st_makeline(sq2.l1, sq2.l2) path
+           ST_MakeLine(sq2.l1, sq2.l2) path
         FROM
            (
               SELECT sq.timestamp t1,
-                 lag(sq.timestamp) over ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) t2,
+                 LAG(sq.timestamp) OVER ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) t2,
                  sq.location l1,
-                 lag(sq.location) over ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) l2,
+                 LAG(sq.location) OVER ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) l2,
                  sq.device_id d1,
-                 lag(sq.device_id) over ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) d2 
+                 LAG(sq.device_id) OVER ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) d2,
+                 sq.agl a1,
+                 LAG(sq.agl) over ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) a2 
               FROM
                  (
-                    SELECT timestamp, device_id, location,
-                       Row_number() over ( PARTITION BY timestamp::DATE, device_id, timestamp  ORDER BY error_count) message_number 
+                    SELECT timestamp, device_id, location, agl,
+                       Row_number() OVER ( PARTITION BY timestamp::DATE, device_id, timestamp  ORDER BY error_count) message_number 
                     FROM {}
                  ) sq 
               WHERE sq.message_number = 1
            ) sq2 
-        WHERE Extract(epoch FROM sq2.t1 - sq2.t2) > 300 AND st_distancesphere(sq2.l1, sq2.l2) / Extract(epoch FROM sq2.t1 - sq2.t2) BETWEEN 15 AND 50
+        WHERE EXTRACT(epoch FROM sq2.t1 - sq2.t2) > 300
+            AND ST_DistanceSphere(sq2.l1, sq2.l2) / EXTRACT(epoch FROM sq2.t1 - sq2.t2) BETWEEN 15 AND 50
+            AND sq2.a1 > 300 AND sq2.a2 > 300
         ) sq3
         GROUP BY sq3.date, sq3.device_id
         ON CONFLICT DO NOTHING;
