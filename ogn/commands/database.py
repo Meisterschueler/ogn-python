@@ -72,8 +72,9 @@ def import_file(path='tests/custom_ddb.txt'):
                                   path=path)
     print("Imported %i devices." % counter)
 
+
 @manager.command
-def import_flarmnet(path='tests/data.fln'):
+def import_flarmnet(path=None):
     """Import registered devices from a local file."""
 
     print("Import registered devices from '{}'...".format("internet" if path is None else path))
@@ -81,6 +82,7 @@ def import_flarmnet(path='tests/data.fln'):
                                   DeviceInfoOrigin.flarmnet,
                                   path=path)
     print("Imported %i devices." % counter)
+
 
 @manager.command
 def import_airports(path='tests/SeeYou.cup'):
@@ -91,6 +93,7 @@ def import_airports(path='tests/SeeYou.cup'):
     session.bulk_save_objects(airports)
     session.commit()
     print("Imported {} airports.".format(len(airports)))
+
 
 @manager.command
 def update_country_codes():

@@ -58,7 +58,7 @@ def get_flarmnet(fln_file=None, address_origin=DeviceInfoOrigin.flarmnet):
         rows = [bytes.fromhex(line).decode('latin1') for line in r.text.split('\n') if len(line) == 172]
     else:
         with open(fln_file, 'r') as file:
-            rows = [bytes.fromhex(line.strip()).decode('latin1') for line in file.readlines() in len(line) == 172]
+            rows = [bytes.fromhex(line.strip()).decode('latin1') for line in file.readlines() if len(line) == 172]
 
     device_infos = list()
     for row in rows:
