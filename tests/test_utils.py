@@ -33,27 +33,6 @@ class TestStringMethods(unittest.TestCase):
         self.assertIn('OGNDEADBE', trackable)
         self.assertIn('ICA999999', trackable)
 
-    def test_get_country_code(self):
-        latitude = 48.0
-        longitude = 11.0
-        country_code = get_country_code(latitude, longitude)
-        self.assertEquals(country_code, 'de')
-
-    def test_get_country_code_bad(self):
-        latitude = 0.0002274
-        longitude = -0.0009119
-        country_code = get_country_code(latitude, longitude)
-        self.assertEqual(country_code, None)
-
-    @mock.patch('ogn.utils.Nominatim')
-    def test_gec_country_code_exception(self, nominatim_mock):
-        from geopy.exc import GeocoderTimedOut
-        instance = nominatim_mock.return_value
-
-        instance.reverse.side_effect = GeocoderTimedOut('Too busy')
-        country_code = get_country_code(0, 0)
-        self.assertIsNone(country_code)
-
     def test_get_airports(self):
         airports = get_airports(os.path.dirname(__file__) + '/SeeYou.cup')
         self.assertGreater(len(airports), 1000)

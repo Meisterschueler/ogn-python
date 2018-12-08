@@ -5,8 +5,8 @@ from sqlalchemy.sql import null, and_, or_, func, not_
 from sqlalchemy.sql.expression import case
 
 from ogn.collect.celery import app
-from ogn.model import DeviceInfo, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
-from ogn.utils import get_ddb, get_country_code, get_flarmnet
+from ogn.model import Country, DeviceInfo, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver
+from ogn.utils import get_ddb, get_flarmnet
 
 
 logger = get_task_logger(__name__)
@@ -130,21 +130,12 @@ def update_country_code(session=None):
     if session is None:
         session = app.session
 
-    unknown_country_query = session.query(Receiver) \
-        .filter(Receiver.country_code == null()) \
-        .filter(Receiver.location_wkt != null()) \
-        .order_by(Receiver.name)
-
-    counter = 0
-    for receiver in unknown_country_query.all():
-        location = receiver.location
-        country_code = get_country_code(location.latitude, location.longitude)
-        print("{}: {}".format(receiver.name, country_code))
-        if country_code is not None:
-            receiver.country_code = country_code
-            logger.info("Updated country_code for {} to {}".format(receiver.name, receiver.country_code))
-            counter += 1
+    update_receivers = session.query(Receiver) \
+        .filter(and_(Receiver.country_id == null(), Receiver.location_wkt != null(), func.st_within(Receiver.location_wkt, Country.geom))) \
+        .update({Receiver.country_id: Country.gid},
+                synchronize_session='fetch')
 
     session.commit()
+    logger.info("Updated {} AircraftBeacons".format(update_receivers))
 
-    return "Updated country_code for {} Receivers".format(counter)
+    return "Updated country for {} Receivers".format(update_receivers)

@@ -1,7 +1,7 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, Float, String, Integer, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Float, String, Integer, DateTime, ForeignKey
+from sqlalchemy.orm import relationship, backref
 
 from .base import Base
 from .geo import Location
@@ -18,9 +18,12 @@ class Receiver(Base):
     name = Column(String(9), index=True)
     firstseen = Column(DateTime, index=True)
     lastseen = Column(DateTime, index=True)
-    country_code = Column(String(2), index=True)
     version = Column(String)
     platform = Column(String)
+
+    # Relations
+    country_id = Column(Integer, ForeignKey('countries.gid', ondelete='SET NULL'), index=True)
+    country = relationship('Country', foreign_keys=[country_id], backref=backref('receivers', order_by='Receiver.name.asc()'))
 
     @property
     def location(self):

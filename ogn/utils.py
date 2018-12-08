@@ -81,33 +81,6 @@ def get_trackable(ddb):
     return l
 
 
-def get_geolocator():
-    geolocator = Nominatim()
-
-    requester = geolocator.urlopen
-
-    def requester_hack(req, **kwargs):
-        req = Request(url=req, headers=geolocator.headers)
-        return requester(req, **kwargs)
-
-    geolocator.urlopen = requester_hack
-
-    return geolocator
-
-
-def get_country_code(latitude, longitude):
-    geolocator = get_geolocator()
-    try:
-        location = geolocator.reverse("{}, {}".format(latitude, longitude))
-        country_code = location.raw['address']['country_code']
-    except KeyError as e:
-        country_code = None
-    except GeopyError as e:
-        print(e)
-        country_code = None
-    return country_code
-
-
 def get_airports(cupfile):
     airports = list()
     with open(cupfile) as f:
