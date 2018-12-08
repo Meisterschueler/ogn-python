@@ -150,11 +150,11 @@ class LogfileDbSaver():
     def export_to_path(self, path):
         import os, gzip
         aircraft_beacons_file = os.path.join(path, self.aircraft_table + '.csv.gz')
-        with gzip.open(aircraft_beacons_file, 'wb') as gzip_file:
-            self.cur.copy_expert("COPY ({}) TO STDOUT WITH CSV HEADER;".format(self.get_merged_aircraft_beacons_subquery()), gzip_file)
+        with gzip.open(aircraft_beacons_file, 'wt', encoding='utf-8') as gzip_file:
+            self.cur.copy_expert("COPY ({}) TO STDOUT WITH (DELIMITER ',', FORMAT CSV, HEADER, ENCODING 'UTF-8');".format(self.get_merged_aircraft_beacons_subquery()), gzip_file)
         receiver_beacons_file = os.path.join(path, self.receiver_table + '.csv.gz')
-        with gzip.open(receiver_beacons_file, 'wb') as gzip_file:
-            self.cur.copy_expert("COPY ({}) TO STDOUT WITH CSV HEADER;".format(self.get_merged_receiver_beacons_subquery()), gzip_file)
+        with gzip.open(receiver_beacons_file, 'wt') as gzip_file:
+            self.cur.copy_expert("COPY ({}) TO STDOUT WITH (DELIMITER ',', FORMAT CSV, HEADER, ENCODING 'UTF-8');".format(self.get_merged_receiver_beacons_subquery()), gzip_file)
 
     def create_indices(self):
         """Creates indices for aircraft- and receiver-beacons. We need them for the beacon merging operation."""
@@ -265,7 +265,7 @@ class LogfileDbSaver():
 
         return """
         SELECT
-            MAX(location) AS location,
+            ST_AsEWKT(MAX(location)) AS location,
             MAX(altitude)  AS altitude,
             name,
             MAX(dstcall) AS dstcall,
@@ -309,7 +309,7 @@ class LogfileDbSaver():
 
         return """
         SELECT
-            MAX(location) AS location,
+            ST_AsEWKT(MAX(location)) AS location,
             MAX(altitude) AS altitude,
             name,
             receiver_name,
