@@ -95,7 +95,7 @@ available commands:
     create_gaps2d          Create 'gaps' from logfile tables.
     file_export            Export separate logfile tables to csv files. They can be used for fast bulk import with sql COPY command.
     file_import            Import APRS logfiles into separate logfile tables.
-    transfer               Transfer beacons from separate logfile tables to beacon table.
+    transfer_aircraft_beaconsTransfer beacons from separate logfile tables to beacon table.
     update                 Update beacons (add foreign keys, compute distance, bearing, ags, etc.) in separate logfile tables.
   
   [db]
@@ -107,6 +107,9 @@ available commands:
     init                   Initialize the database.
     update_country_codes   Update country codes of all receivers.
     upgrade                Upgrade database to the latest version.
+  
+  [flights]
+    flights2d              Compute flights.
   
   [gateway]
     run                    Run the aprs client.
@@ -124,23 +127,6 @@ available commands:
     add_missing_receivers  Update receivers with data from stats.
     create_flights         Create Flights.
     create_stats           Create DeviceStats, ReceiverStats and RelationStats.
-  
-  [show.airport]
-    list_all               Show a list of all airports.
-  
-  [show.deviceinfos]
-    stats                  Show some stats on registered devices.
-  
-  [show.devices]
-    aircraft_type_stats    Show stats about aircraft types used by devices.
-    hardware_stats         Show stats about hardware version used by devices.
-    software_stats         Show stats about software version used by devices.
-    stealth_stats          Show stats about stealth flag set by devices.
-  
-  [show.receiver]
-    hardware_stats         Show some statistics of receiver hardware.
-    list_all               Show a list of all receivers.
-    software_stats         Show some statistics of receiver software.
 ```
 
 Only the command `logbook.compute` requires a running task server (celery) at the moment.
