@@ -27,10 +27,10 @@ class DeviceStats(Base):
     jumps = Column(SmallInteger)
     ambiguous = Column(Boolean)
     quality = Column(Float(precision=2))
-    
+
     # Relation statistic data
     quality_offset = Column(Float(precision=2))
-    
+
     # Ranking data
     max_altitude_ranking_worldwide = Column(Integer)
     max_altitude_ranking_country = Column(Integer)
@@ -44,12 +44,13 @@ class DeviceStats(Base):
     # Relations
     device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)
     device = relationship('Device', foreign_keys=[device_id], backref=backref('stats', order_by='DeviceStats.date.asc()'))
-    
+
     def __repr__(self):
         return "<DeviceStats: %s,%s,%s,%s>" % (
             self.date,
             self.receiver_count,
             self.aircraft_beacon_count,
             self.max_altitude)
+
 
 Index('ix_device_stats_date_device_id', DeviceStats.date, DeviceStats.device_id)

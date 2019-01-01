@@ -18,6 +18,3 @@ class TakeoffLanding(Base):
     # Relations
     airport = relationship('Airport', foreign_keys=[airport_id], backref='takeoff_landings')
     device = relationship('Device', foreign_keys=[device_id], backref='takeoff_landings')
-
-Index('ix_takeoff_landings_date_device_id_airport_id_timestamp', func.date(TakeoffLanding.timestamp), TakeoffLanding.device_id, TakeoffLanding.airport_id, TakeoffLanding.timestamp)
-Index('ix_takeoff_landings_date_device_id_timestamp_airport_id', func.date(TakeoffLanding.timestamp), TakeoffLanding.device_id, TakeoffLanding.timestamp, TakeoffLanding.airport_id)

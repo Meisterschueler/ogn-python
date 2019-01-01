@@ -25,22 +25,19 @@ class ReceiverStats(Base):
     aircraft_count = Column(SmallInteger)
     max_distance = Column(Float)
     quality = Column(Float(precision=2))
-    
+
     # Relation statistic data
     quality_offset = Column(Float(precision=2))
-    
+
     # Ranking data
-    aircraft_beacon_count_ranking_worldwide = Column(SmallInteger)
-    aircraft_beacon_count_ranking_country = Column(SmallInteger)
-    aircraft_count_ranking_worldwide = Column(SmallInteger)
-    aircraft_count_ranking_country = Column(SmallInteger)
-    max_distance_ranking_worldwide = Column(SmallInteger)
-    max_distance_ranking_country = Column(SmallInteger)
-    quality_ranking_worldwide = Column(Integer)
-    quality_ranking_country = Column(Integer)
+    aircraft_beacon_count_ranking = Column(SmallInteger)
+    aircraft_count_ranking = Column(SmallInteger)
+    max_distance_ranking = Column(SmallInteger)
+    quality_ranking = Column(Integer)
 
     # Relations
     receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'), index=True)
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref=backref('stats', order_by='ReceiverStats.date.asc()'))
+
 
 Index('ix_receiver_stats_date_receiver_id', ReceiverStats.date, ReceiverStats.receiver_id)

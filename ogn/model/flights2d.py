@@ -11,6 +11,7 @@ class Flight2D(Base):
     date = Column(Date, primary_key=True)
 
     path_wkt = Column('path', Geometry('MULTILINESTRING', srid=4326))
+    path_simple_wkt = Column('path_simple', Geometry('MULTILINESTRING', srid=4326)) # this is the path simplified with ST_Simplify(path, 0.0001)
 
     # Relations
     device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), primary_key=True)

@@ -22,6 +22,8 @@ class Airport(Base):
     runway_length = Column(SmallInteger)
     frequency = Column(Float(precision=2))
 
+    border = Column('border', Geometry('POLYGON', srid=4326))
+
     def __repr__(self):
         return "<Airport %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (
             self.name,
