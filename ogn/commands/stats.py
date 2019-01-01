@@ -1,43 +1,42 @@
 from manager import Manager
 from ogn.commands.dbutils import session
-
-from datetime import date, timedelta
+from ogn.commands.database import get_database_days
 
 from ogn.collect.stats import create_device_stats, create_receiver_stats, create_relation_stats,\
-    update_qualities, update_receivers_stats, update_devices_stats,\
+    update_qualities, update_receivers, update_devices,\
     update_device_stats_jumps
 
 manager = Manager()
 
+
 @manager.command
-def create_stats():
+def create_stats(start=None, end=None):
     """Create DeviceStats, ReceiverStats and RelationStats."""
-    
-    for single_date in (date(2016, 1, 1) + timedelta(days=n) for n in range(800)):
+
+    days = get_database_days(start, end)
+
+    for single_date in days:
         result = create_device_stats(session=session, date=single_date)
         print(result)
-        
+
         result = update_device_stats_jumps(session=session, date=single_date)
         print(result)
-        
+
         result = create_receiver_stats(session=session, date=single_date)
         print(result)
-        
+
         result = create_relation_stats(session=session, date=single_date)
         print(result)
-        
+
         result = update_qualities(session=session, date=single_date)
         print(result)
-    
-    #result = update_device_stats(session=session, date=date)
-    #print(result)
-    
+
 
 @manager.command
 def add_missing_receivers():
     """Update receivers with data from stats."""
 
-    result = update_receivers_stats(session=session)
+    result = update_receivers(session=session)
     print(result)
 
 
@@ -45,17 +44,18 @@ def add_missing_receivers():
 def add_missing_devices():
     """Update devices with data from stats."""
 
-    result = update_devices_stats(session=session)
+    result = update_devices(session=session)
     print(result)
 
 
 @manager.command
-def create_flights():
+def create_flights(start=None, end=None):
     """Create Flights."""
 
-    for single_date in (date(2016, 8, 10) + timedelta(days=n) for n in range(800)):
+    days = get_database_days(start, end)
+
+    for single_date in days:
         result = _create_flights2d(session=session, date=single_date)
-        #result = _create_flights3d(session=session, date=single_date)
         print(result)
 
 
@@ -111,7 +111,7 @@ def _create_flights2d(session=None, date=None):
                  sq5.device_id
         ON CONFLICT DO NOTHING;
     """
-    
+
     result = session.execute(SQL.format(date.strftime("%Y-%m-%d")))
     insert_counter = result.rowcount
     session.commit()

@@ -1,8 +1,7 @@
 from celery.utils.log import get_task_logger
 
 from sqlalchemy import insert, distinct
-from sqlalchemy.sql import null, and_, or_, func, not_
-from sqlalchemy.sql.expression import case
+from sqlalchemy.sql import null, and_, func, not_
 
 from ogn.collect.celery import app
 from ogn.model import Country, DeviceInfo, DeviceInfoOrigin, AircraftBeacon, ReceiverBeacon, Device, Receiver

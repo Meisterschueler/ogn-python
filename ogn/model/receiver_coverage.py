@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, SmallInteger, Float, Date, ForeignKey, Index
+from sqlalchemy import Column, String, Integer, SmallInteger, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
 

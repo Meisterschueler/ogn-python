@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Date, DateTime, Float, ForeignKey, SmallInteger, Boolean, String, Index
+from sqlalchemy import Column, Integer, Date, Float, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -26,6 +26,7 @@ class RelationStats(Base):
             self.date,
             self.normalized_signal_quality,
             self.beacon_count)
+
 
 Index('ix_relation_stats_date_device_id', RelationStats.date, RelationStats.device_id, RelationStats.receiver_id)
 Index('ix_relation_stats_date_receiver_id', RelationStats.date, RelationStats.receiver_id, RelationStats.device_id)

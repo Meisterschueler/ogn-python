@@ -77,10 +77,10 @@ class AircraftBeacon(Beacon):
                 'timestamp',
                 'track',
                 'ground_speed',
-                
+
                 #'raw_message',
                 #'reference_timestamp',
-                
+
                 'address_type',
                 'aircraft_type',
                 'stealth',
@@ -96,7 +96,7 @@ class AircraftBeacon(Beacon):
                 'hardware_version',
                 'real_address',
                 'signal_power',
-                
+
                 'distance',
                 'radial',
                 'quality',
@@ -113,7 +113,7 @@ class AircraftBeacon(Beacon):
             self.timestamp,
             self.track,
             self.ground_speed,
-            
+
             #self.raw_message,
             #self.reference_timestamp,
 

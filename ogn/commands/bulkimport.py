@@ -6,15 +6,17 @@ from io import StringIO
 
 from ogn.model import AircraftBeacon, ReceiverBeacon
 from ogn.utils import open_file
+from ogn.commands.database import get_database_days
 
 manager = Manager()
+
 
 class LogfileDbSaver():
     def __init__(self):
         """Establish the database connection."""
         try:
-            self.conn = psycopg2.connect(database = "ogn", user = "postgres", password = "postgres", host = "localhost", port = "5432")
-        except:
+            self.conn = psycopg2.connect(database="ogn", user="postgres", password="postgres", host="localhost", port="5432")
+        except Exception as e:
             raise Exception("I am unable to connect to the database")
         self.cur = self.conn.cursor()
 
@@ -41,10 +43,12 @@ class LogfileDbSaver():
 
         index_clause = " AND hasindexes = FALSE" if no_index_only == True else ""
 
-        self.cur.execute(("SELECT DISTINCT(RIGHT(tablename, 10))"
-                          "    FROM pg_catalog.pg_tables"
-                          "    WHERE schemaname = 'public' AND tablename LIKE 'aircraft_beacons_%'{}"
-                          "    ORDER BY RIGHT(tablename, 10);".format(index_clause)))
+        self.cur.execute(("""
+            SELECT DISTINCT(RIGHT(tablename, 10))
+            FROM pg_catalog.pg_tables
+            WHERE schemaname = 'public' AND tablename LIKE 'aircraft_beacons_%'{}
+            ORDER BY RIGHT(tablename, 10);
+        """.format(index_clause)))
 
         return [datestr[0].replace('_', '-') for datestr in self.cur.fetchall()]
 
@@ -124,7 +128,7 @@ class LogfileDbSaver():
                     receiver_id int);
             """.format(self.receiver_table))
             self.conn.commit()
-        except:
+        except Exception as e:
             raise Exception("I can't create the tables")
 
     def add(self, beacon):
@@ -157,10 +161,11 @@ class LogfileDbSaver():
             self.cur.copy_expert("COPY ({}) TO STDOUT WITH (DELIMITER ',', FORMAT CSV, HEADER, ENCODING 'UTF-8');".format(self.get_merged_receiver_beacons_subquery()), gzip_file)
 
     def create_indices(self):
-        """Creates indices for aircraft- and receiver-beacons. We need them for the beacon merging operation."""
+        """Creates indices for aircraft- and receiver-beacons."""
 
         self.cur.execute("""
             CREATE INDEX IF NOT EXISTS ix_{0}_timestamp_name_receiver_name ON "{0}" (timestamp, name, receiver_name);
+            CREATE INDEX IF NOT EXISTS ix_{0}_device_id_timestamp_error_count ON "{0}" (device_id, timestamp, error_count);
             CREATE INDEX IF NOT EXISTS ix_{1}_timestamp_name_receiver_name ON "{1}" (timestamp, name, receiver_name);
         """.format(self.aircraft_table, self.receiver_table))
         self.conn.commit()
@@ -194,14 +199,15 @@ class LogfileDbSaver():
 
         self.cur.execute("""
             UPDATE receivers AS r
-            SET location = sq.location
+            SET location = sq.location,
+            altitude = sq.altitude
             FROM
-                (SELECT rb.receiver_id,
-                        ROW_NUMBER() OVER (PARTITION BY receiver_id),
-                        FIRST_VALUE(rb.location) OVER (PARTITION BY receiver_id ORDER BY CASE WHEN location IS NOT NULL THEN timestamp ELSE NULL END NULLS LAST) AS location
+                (SELECT DISTINCT ON (rb.receiver_id) rb.receiver_id, rb.location, rb.altitude
                 FROM "{1}" AS rb
+                WHERE rb.location IS NOT NULL
+                ORDER BY rb.receiver_id, rb.timestamp
                 ) AS sq
-            WHERE r.id = sq.receiver_id AND sq.row_number = 1;
+            WHERE r.id = sq.receiver_id;
         """.format(self.aircraft_table, self.receiver_table))
         self.conn.commit()
 
@@ -250,7 +256,7 @@ class LogfileDbSaver():
                  ELSE NULL
             END AS quality,
             CAST(ab.altitude - ST_Value(e.rast, ab.location) AS REAL) AS agl
-            
+
             INTO "{0}_temp"
             FROM "{0}" AS ab, devices AS d, receivers AS r, elevation AS e
             WHERE ab.address = d.address AND receiver_name = r.name AND ST_Intersects(e.rast, ab.location);
@@ -352,7 +358,7 @@ class LogfileDbSaver():
         self.cur.execute(query)
         return len(self.cur.fetchall()) == 1
 
-    def transfer(self):
+    def transfer_aircraft_beacons(self):
         query = """
         INSERT INTO aircraft_beacons(location, altitude, name, dstcall, relay, receiver_name, timestamp, track, ground_speed,
             address_type, aircraft_type, stealth, address, climb_rate, turn_rate, signal_quality, error_count, frequency_offset, gps_quality_horizontal, gps_quality_vertical, software_version, hardware_version, real_address, signal_power,
@@ -361,6 +367,22 @@ class LogfileDbSaver():
         {}
         ON CONFLICT DO NOTHING;
         """.format(self.get_merged_aircraft_beacons_subquery())
+
+        self.cur.execute(query)
+        self.conn.commit()
+
+    def transfer_receiver_beacons(self):
+        query = """
+        INSERT INTO receiver_beacons(location, altitude, name, receiver_name, dstcall, timestamp,
+
+            version, platform, cpu_load, free_ram, total_ram, ntp_error, rt_crystal_correction, voltage,
+            amperage, cpu_temp, senders_visible, senders_total, rec_input_noise, senders_signal,
+            senders_messages, good_senders_signal, good_senders, good_and_bad_senders,
+
+            receiver_id)
+        {}
+        ON CONFLICT DO NOTHING;
+        """.format(self.get_merged_receiver_beacons_subquery())
 
         self.cur.execute(query)
         self.conn.commit()
@@ -396,20 +418,17 @@ class LogfileDbSaver():
                                     ELSE 1
                              END AS ping
                       FROM   (
-                          SELECT   sq.timestamp                                                                                 t1,
-                                   lag(sq.timestamp) OVER (partition BY sq.timestamp::date, sq.device_id ORDER BY sq.timestamp) t2,
-                                   sq.location                                                                                  l1,
-                                   lag(sq.location) OVER (partition BY sq.timestamp::date, sq.device_id ORDER BY sq.timestamp)  l2,
-                                   sq.device_id                                                                                 d1,
-                                   lag(sq.device_id) OVER (partition BY sq.timestamp::date, sq.device_id ORDER BY sq.timestamp) d2
+                          SELECT   sq.timestamp                                                             t1,
+                                   lag(sq.timestamp) OVER (partition BY sq.device_id ORDER BY sq.timestamp) t2,
+                                   sq.location                                                              l1,
+                                   lag(sq.location) OVER (partition BY sq.device_id ORDER BY sq.timestamp)  l2,
+                                   sq.device_id                                                             d1,
+                                   lag(sq.device_id) OVER (partition BY sq.device_id ORDER BY sq.timestamp) d2
                           FROM     (
-                                SELECT   timestamp,
-                                         device_id,
-                                         location,
-                                         row_number() OVER (partition BY timestamp::date, device_id, timestamp ORDER BY error_count) message_number
+                                SELECT   DISTINCT ON (device_id, timestamp) timestamp, device_id, location
                                 FROM     {}
-                                WHERE    device_id IS NOT NULL) sq
-                          WHERE    sq.message_number = 1 ) sq2 ) sq3 ) sq4
+                                WHERE    device_id IS NOT NULL AND ground_speed > 250 AND agl < 100
+                                ORDER BY device_id, timestamp, error_count) sq) sq2 ) sq3 ) sq4
                           GROUP BY sq4.timestamp::date,
                                    sq4.device_id,
                                    sq4.part ) sq5
@@ -441,15 +460,14 @@ class LogfileDbSaver():
                  sq.device_id d1,
                  LAG(sq.device_id) OVER ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) d2,
                  sq.agl a1,
-                 LAG(sq.agl) over ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) a2 
+                 LAG(sq.agl) over ( PARTITION BY sq.timestamp::DATE, sq.device_id ORDER BY sq.timestamp) a2
               FROM
                  (
-                    SELECT timestamp, device_id, location, agl,
-                       Row_number() OVER ( PARTITION BY timestamp::DATE, device_id, timestamp  ORDER BY error_count) message_number 
+                    SELECT DISTINCT ON (device_id, timestamp) timestamp, device_id, location, agl
                     FROM {}
-                 ) sq 
-              WHERE sq.message_number = 1
-           ) sq2 
+                    ORDER BY device_id, timestamp, error_count
+                 ) sq
+           ) sq2
         WHERE EXTRACT(epoch FROM sq2.t1 - sq2.t2) > 300
             AND ST_DistanceSphere(sq2.l1, sq2.l2) / EXTRACT(epoch FROM sq2.t1 - sq2.t2) BETWEEN 15 AND 50
             AND sq2.a1 > 300 AND sq2.a2 > 300
@@ -460,6 +478,7 @@ class LogfileDbSaver():
 
         self.cur.execute(query)
         self.conn.commit()
+
 
 def convert(sourcefile, datestr, saver):
     from ogn.gateway.process import string_to_message
@@ -490,7 +509,7 @@ def convert(sourcefile, datestr, saver):
         if message is None:
             continue
 
-        dictfilt = lambda x, y: dict([ (i,x[i]) for i in x if i in set(y) ])
+        dictfilt = lambda x, y: dict([(i, x[i]) for i in x if i in set(y)])
 
         try:
             if message['beacon_type'] in AIRCRAFT_TYPES:
@@ -562,18 +581,25 @@ def update():
             saver.update_receiver_location()
             saver.create_indices()
 
+
 @manager.command
-def transfer():
+def transfer(start=None, end=None):
     """Transfer beacons from separate logfile tables to beacon table."""
 
     with LogfileDbSaver() as saver:
-        datestrs = saver.get_datestrs()
+        if start is not None and end is not None:
+            dates = get_database_days(start, end)
+            datestrs = [date.strftime('%Y_%m_%d') for date in dates]
+        else:
+            datestrs = saver.get_datestrs()
         pbar = tqdm(datestrs)
         for datestr in pbar:
             pbar.set_description("Transfer beacons for {}".format(datestr))
             saver.set_datestr(datestr)
             if not saver.is_transfered():
-                saver.transfer()
+                saver.transfer_aircraft_beacons()
+                saver.transfer_receiver_beacons()
+
 
 @manager.command
 def create_flights2d():
@@ -587,6 +613,7 @@ def create_flights2d():
             saver.set_datestr(datestr)
             saver.create_flights2d()
 
+
 @manager.command
 def create_gaps2d():
     """Create 'gaps' from logfile tables."""
@@ -599,6 +626,7 @@ def create_gaps2d():
             saver.set_datestr(datestr)
             saver.create_gaps2d()
 
+
 @manager.command
 def file_export(path):
     """Export separate logfile tables to csv files. They can be used for fast bulk import with sql COPY command."""
@@ -610,6 +638,7 @@ def file_export(path):
 
     with LogfileDbSaver() as saver:
         datestrs = saver.get_datestrs()
+        datestrs = filter(lambda x: x.startswith('2018-12'), datestrs)
         pbar = tqdm(datestrs)
         for datestr in pbar:
             pbar.set_description("Exporting data for {}".format(datestr))

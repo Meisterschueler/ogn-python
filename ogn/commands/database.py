@@ -1,15 +1,31 @@
+from datetime import datetime, timedelta
+
 from manager import Manager
 from ogn.collect.database import update_device_infos, update_country_code
 from ogn.commands.dbutils import engine, session
-from ogn.model import Base, DeviceInfoOrigin
-from ogn.utils import get_airports
-from sqlalchemy import distinct
-from sqlalchemy.sql import null, func
-
+from ogn.model import Base, DeviceInfoOrigin, AircraftBeacon
+from ogn.utils import get_airports, get_days
+from sqlalchemy.sql import func
 
 manager = Manager()
 
 ALEMBIC_CONFIG_FILE = "alembic.ini"
+
+
+def get_database_days(start, end):
+    """Returns the first and the last day in aircraft_beacons table."""
+
+    if start is None and end is None:
+        days_from_db = session.query(func.min(AircraftBeacon.timestamp).label('first_day'), func.max(AircraftBeacon.timestamp).label('last_day')).one()
+        start = days_from_db[0].date()
+        end = days_from_db[1].date()
+    else:
+        start = datetime.strptime(start, "%Y-%m-%d")
+        end = datetime.strptime(end, "%Y-%m-%d")
+
+    days = get_days(start, end)
+
+    return days
 
 
 @manager.command
@@ -24,8 +40,8 @@ def init():
     session.execute('CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;')
     session.commit()
     Base.metadata.create_all(engine)
-    session.execute("SELECT create_hypertable('aircraft_beacons', 'timestamp', chunk_target_size => '2GB');")
-    session.execute("SELECT create_hypertable('receiver_beacons', 'timestamp', chunk_target_size => '2GB');")
+    session.execute("SELECT create_hypertable('aircraft_beacons', 'timestamp', chunk_target_size => '2GB', if_not_exists => TRUE);")
+    session.execute("SELECT create_hypertable('receiver_beacons', 'timestamp', chunk_target_size => '2GB', if_not_exists => TRUE);")
     session.commit()
     #alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
     #command.stamp(alembic_cfg, "head")
@@ -92,11 +108,13 @@ def import_airports(path='tests/SeeYou.cup'):
     airports = get_airports(path)
     session.bulk_save_objects(airports)
     session.commit()
+    session.execute("UPDATE airports SET border = ST_Expand(location, 0.05)")
+    session.commit()
     print("Imported {} airports.".format(len(airports)))
 
 
 @manager.command
 def update_country_codes():
     """Update country codes of all receivers."""
-    
+
     update_country_code(session=session)

@@ -1,15 +1,14 @@
-from datetime import datetime
-
 from celery.utils.log import get_task_logger
 
-from sqlalchemy import insert, distinct
+from sqlalchemy import insert, distinct, between
 from sqlalchemy.sql import null, and_, func, or_, update
-from sqlalchemy.sql.expression import literal_column, case
+from sqlalchemy.sql.expression import case
 
 from ogn.model import AircraftBeacon, DeviceStats, ReceiverStats, RelationStats, Receiver, Device
 
 from .celery import app
 from ogn.model.receiver_beacon import ReceiverBeacon
+from ogn.utils import date_to_timestamps
 
 logger = get_task_logger(__name__)
 
@@ -24,6 +23,8 @@ def create_device_stats(session=None, date=None):
     if not date:
         logger.warn("A date is needed for calculating stats. Exiting")
         return None
+    else:
+        (start, end) = date_to_timestamps(date)
 
     # First kill the stats for the selected date
     deleted_counter = session.query(DeviceStats) \
@@ -35,7 +36,7 @@ def create_device_stats(session=None, date=None):
             func.dense_rank()
                 .over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.receiver_id)
                 .label('dr')) \
-        .filter(and_(func.date(AircraftBeacon.timestamp) == date, AircraftBeacon.device_id != null())) \
+        .filter(and_(between(AircraftBeacon.timestamp, start, end), AircraftBeacon.device_id != null())) \
         .filter(or_(AircraftBeacon.error_count == 0, AircraftBeacon.error_count == null())) \
         .subquery()
 
@@ -49,7 +50,7 @@ def create_device_stats(session=None, date=None):
             func.max(sq.c.altitude)
                 .over(partition_by=sq.c.device_id)
                 .label('max_altitude'),
-            func.count(sq.c.id)
+            func.count(sq.c.device_id)
                 .over(partition_by=sq.c.device_id)
                 .label('aircraft_beacon_count'),
             func.first_value(sq.c.timestamp)
@@ -98,6 +99,8 @@ def create_receiver_stats(session=None, date=None):
     if not date:
         logger.warn("A date is needed for calculating stats. Exiting")
         return None
+    else:
+        (start, end) = date_to_timestamps(date)
 
     # First kill the stats for the selected date
     deleted_counter = session.query(ReceiverStats) \
@@ -106,7 +109,7 @@ def create_receiver_stats(session=None, date=None):
 
     # Select one day
     sq = session.query(ReceiverBeacon) \
-        .filter(func.date(ReceiverBeacon.timestamp) == date) \
+        .filter(between(ReceiverBeacon.timestamp, start, end)) \
         .subquery()
 
     # Calculate stats, firstseen, lastseen and last values != NULL
@@ -132,7 +135,7 @@ def create_receiver_stats(session=None, date=None):
                 .over(partition_by=sq.c.receiver_id, order_by=case([(sq.c.platform == null(), None)], else_=sq.c.timestamp).desc().nullslast())
                 .label('platform')) \
         .subquery()
-        
+
     # And insert them
     ins = insert(ReceiverStats).from_select(
         [ReceiverStats.receiver_id, ReceiverStats.date, ReceiverStats.firstseen, ReceiverStats.lastseen, ReceiverStats.location_wkt, ReceiverStats.altitude, ReceiverStats.version, ReceiverStats.platform],
@@ -145,27 +148,27 @@ def create_receiver_stats(session=None, date=None):
     # Update aircraft_beacon_count, aircraft_count and max_distance (without any error and max quality of 36dB@10km which is enough for 640km ... )
     aircraft_beacon_stats = session.query(func.date(AircraftBeacon.timestamp).label('date'),
                                           AircraftBeacon.receiver_id,
-                                          func.count(AircraftBeacon.id).label('aircraft_beacon_count'),
+                                          func.count(AircraftBeacon.timestamp).label('aircraft_beacon_count'),
                                           func.count(func.distinct(AircraftBeacon.device_id)).label('aircraft_count'),
                                           func.max(AircraftBeacon.distance).label('max_distance')) \
-        .filter(and_(func.date(AircraftBeacon.timestamp) == date,
+        .filter(and_(between(AircraftBeacon.timestamp, start, end),
                      AircraftBeacon.error_count == 0,
                      AircraftBeacon.quality <= 40)) \
         .group_by(func.date(AircraftBeacon.timestamp),
                   AircraftBeacon.receiver_id) \
         .subquery()
-    
+
     upd = update(ReceiverStats) \
         .where(and_(ReceiverStats.date == aircraft_beacon_stats.c.date,
                     ReceiverStats.receiver_id == aircraft_beacon_stats.c.receiver_id)) \
         .values({'aircraft_beacon_count': aircraft_beacon_stats.c.aircraft_beacon_count,
                  'aircraft_count': aircraft_beacon_stats.c.aircraft_count,
                  'max_distance': aircraft_beacon_stats.c.max_distance})
-        
+
     result = session.execute(upd)
     update_counter = result.rowcount
     session.commit()
-    logger.warn("Updated {} ReceiverStats".format(update_counter)) 
+    logger.warn("Updated {} ReceiverStats".format(update_counter))
 
     return "ReceiverStats for {}: {} deleted, {} inserted, {} updated".format(date, deleted_counter, insert_counter, update_counter)
 
@@ -178,8 +181,10 @@ def update_device_stats_jumps(session=None, date=None):
         session = app.session
 
     if not date:
-        logger.warn("A date is needed for calculating device stats jumps. Exiting")
+        logger.warn("A date is needed for calculating stats. Exiting")
         return None
+    else:
+        (start, end) = date_to_timestamps(date)
 
     sq = session.query(AircraftBeacon.device_id,
                        AircraftBeacon.timestamp.label('t0'),
@@ -188,10 +193,10 @@ def update_device_stats_jumps(session=None, date=None):
                        func.lead(AircraftBeacon.location_wkt).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('l1'),
                        AircraftBeacon.altitude.label('a0'),
                        func.lead(AircraftBeacon.altitude).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('a1')) \
-        .filter(and_(func.date(AircraftBeacon.timestamp) == date,
+        .filter(and_(between(AircraftBeacon.timestamp, start, end),
                      AircraftBeacon.error_count == 0)) \
         .subquery()
-        
+
     sq2 = session.query(sq.c.device_id,
                         (func.st_distancesphere(sq.c.l1, sq.c.l0) / (func.extract('epoch', sq.c.t1) - func.extract('epoch', sq.c.t0))).label('horizontal_speed'),
                         ((sq.c.a1 - sq.c.a0) / (func.extract('epoch', sq.c.t1) - func.extract('epoch', sq.c.t0))).label('vertical_speed')) \
@@ -199,28 +204,29 @@ def update_device_stats_jumps(session=None, date=None):
                      sq.c.t1 != null(),
                      sq.c.t0 < sq.c.t1)) \
         .subquery()
-    
+
     sq3 = session.query(sq2.c.device_id,
                         case([(or_(func.abs(sq2.c.horizontal_speed) > 1000, func.abs(sq2.c.vertical_speed) > 100), 1)], else_=0).label('jump')) \
         .subquery()
-        
+
     sq4 = session.query(sq3.c.device_id,
                         func.sum(sq3.c.jump).label('jumps')) \
         .group_by(sq3.c.device_id) \
         .subquery()
-    
+
     upd = update(DeviceStats) \
         .where(and_(DeviceStats.date == date,
                     DeviceStats.device_id == sq4.c.device_id)) \
         .values({'ambiguous': sq4.c.jumps > 10,
                  'jumps': sq4.c.jumps})
-        
+
     result = session.execute(upd)
     update_counter = result.rowcount
     session.commit()
     logger.warn("Updated {} DeviceStats jumps".format(update_counter))
 
     return "DeviceStats jumps for {}: {} updated".format(date, update_counter)
+
 
 @app.task
 def create_relation_stats(session=None, date=None):
@@ -232,6 +238,8 @@ def create_relation_stats(session=None, date=None):
     if not date:
         logger.warn("A date is needed for calculating stats. Exiting")
         return None
+    else:
+        (start, end) = date_to_timestamps(date)
 
     # First kill the stats for the selected date
     deleted_counter = session.query(RelationStats) \
@@ -244,9 +252,9 @@ def create_relation_stats(session=None, date=None):
             AircraftBeacon.device_id,
             AircraftBeacon.receiver_id,
             func.max(AircraftBeacon.quality),
-            func.count(AircraftBeacon.id)
-            ) \
-        .filter(and_(func.date(AircraftBeacon.timestamp) == date,
+            func.count(AircraftBeacon.timestamp)
+        ) \
+        .filter(and_(between(AircraftBeacon.timestamp, start, end),
                      AircraftBeacon.distance > 1000,
                      AircraftBeacon.error_count == 0,
                      AircraftBeacon.quality <= 40,
@@ -265,104 +273,105 @@ def create_relation_stats(session=None, date=None):
 
     return "RelationStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
 
+
 @app.task
 def update_qualities(session=None, date=None):
     """Calculate relative qualities of receivers and devices."""
-    
+
     if session is None:
         session = app.session
-        
+
     if not date:
-        logger.warn("A date is needed for update stats. Exiting")
+        logger.warn("A date is needed for calculating stats. Exiting")
         return None
 
     # Calculate avg quality of devices
     dev_sq = session.query(RelationStats.date,
-                        RelationStats.device_id,
-                        func.avg(RelationStats.quality).label('quality')) \
+                           RelationStats.device_id,
+                           func.avg(RelationStats.quality).label('quality')) \
         .filter(RelationStats.date == date) \
         .group_by(RelationStats.date,
                   RelationStats.device_id) \
         .subquery()
-        
+
     dev_upd = update(DeviceStats) \
         .where(and_(DeviceStats.date == dev_sq.c.date,
                     DeviceStats.device_id == dev_sq.c.device_id)) \
         .values({'quality': dev_sq.c.quality})
-    
+
     dev_result = session.execute(dev_upd)
     dev_update_counter = dev_result.rowcount
     session.commit()
-    logger.warn("Updated {} DeviceStats: quality".format(dev_update_counter)) 
+    logger.warn("Updated {} DeviceStats: quality".format(dev_update_counter))
 
     # Calculate avg quality of receivers
     rec_sq = session.query(RelationStats.date,
-                        RelationStats.receiver_id,
-                        func.avg(RelationStats.quality).label('quality')) \
+                           RelationStats.receiver_id,
+                           func.avg(RelationStats.quality).label('quality')) \
         .filter(RelationStats.date == date) \
         .group_by(RelationStats.date,
                   RelationStats.receiver_id) \
         .subquery()
-    
+
     rec_upd = update(ReceiverStats) \
         .where(and_(ReceiverStats.date == rec_sq.c.date,
                     ReceiverStats.receiver_id == rec_sq.c.receiver_id)) \
         .values({'quality': rec_sq.c.quality})
-    
+
     rec_result = session.execute(rec_upd)
     rec_update_counter = rec_result.rowcount
     session.commit()
-    logger.warn("Updated {} ReceiverStats: quality".format(rec_update_counter))   
-    
+    logger.warn("Updated {} ReceiverStats: quality".format(rec_update_counter))
+
     # Calculate quality_offset of devices
     dev_sq = session.query(RelationStats.date,
                         RelationStats.device_id,
-                        (func.sum(RelationStats.beacon_count*(RelationStats.quality - ReceiverStats.quality))/(func.sum(RelationStats.beacon_count))).label('quality_offset')) \
+                        (func.sum(RelationStats.beacon_count * (RelationStats.quality - ReceiverStats.quality)) / (func.sum(RelationStats.beacon_count))).label('quality_offset')) \
         .filter(RelationStats.date == date) \
         .filter(and_(RelationStats.receiver_id == ReceiverStats.receiver_id,
                      RelationStats.date == ReceiverStats.date)) \
         .group_by(RelationStats.date,
                   RelationStats.device_id) \
         .subquery()
-        
+
     dev_upd = update(DeviceStats) \
         .where(and_(DeviceStats.date == dev_sq.c.date,
                     DeviceStats.device_id == dev_sq.c.device_id)) \
         .values({'quality_offset': dev_sq.c.quality_offset})
-    
+
     dev_result = session.execute(dev_upd)
     dev_update_counter = dev_result.rowcount
     session.commit()
-    logger.warn("Updated {} DeviceStats: quality_offset".format(dev_update_counter)) 
-    
+    logger.warn("Updated {} DeviceStats: quality_offset".format(dev_update_counter))
+
     # Calculate quality_offset of receivers
     rec_sq = session.query(RelationStats.date,
                         RelationStats.receiver_id,
-                        (func.sum(RelationStats.beacon_count*(RelationStats.quality - DeviceStats.quality))/(func.sum(RelationStats.beacon_count))).label('quality_offset')) \
+                        (func.sum(RelationStats.beacon_count * (RelationStats.quality - DeviceStats.quality)) / (func.sum(RelationStats.beacon_count))).label('quality_offset')) \
         .filter(RelationStats.date == date) \
         .filter(and_(RelationStats.device_id == DeviceStats.device_id,
                      RelationStats.date == DeviceStats.date)) \
         .group_by(RelationStats.date,
                   RelationStats.receiver_id) \
         .subquery()
-    
+
     rec_upd = update(ReceiverStats) \
         .where(and_(ReceiverStats.date == rec_sq.c.date,
                     ReceiverStats.receiver_id == rec_sq.c.receiver_id)) \
         .values({'quality_offset': rec_sq.c.quality_offset})
-    
+
     rec_result = session.execute(rec_upd)
     rec_update_counter = rec_result.rowcount
     session.commit()
-    logger.warn("Updated {} ReceiverStats: quality_offset".format(rec_update_counter))   
-    
+    logger.warn("Updated {} ReceiverStats: quality_offset".format(rec_update_counter))
+
     return "Updated {} DeviceStats and {} ReceiverStats".format(dev_update_counter, rec_update_counter)
 
 
 @app.task
-def update_receivers_stats(session=None):
+def update_receivers(session=None):
     """Update receivers with stats."""
-    
+
     if session is None:
         session = app.session
 
@@ -388,7 +397,7 @@ def update_receivers_stats(session=None):
                 .label('platform')) \
         .order_by(ReceiverStats.receiver_id) \
         .subquery()
-    
+
     upd = update(Receiver) \
         .where(and_(Receiver.id == receiver_stats.c.receiver_id)) \
         .values({'firstseen': receiver_stats.c.firstseen,
@@ -397,18 +406,19 @@ def update_receivers_stats(session=None):
                  'altitude': receiver_stats.c.altitude,
                  'version': receiver_stats.c.version,
                  'platform': receiver_stats.c.platform})
-    
+
     result = session.execute(upd)
     update_counter = result.rowcount
     session.commit()
-    logger.warn("Updated {} Receivers".format(update_counter))   
-    
+    logger.warn("Updated {} Receivers".format(update_counter))
+
     return "Updated {} Receivers".format(update_counter)
 
+
 @app.task
-def update_devices_stats(session=None):
+def update_devices(session=None):
     """Update devices with stats."""
-    
+
     if session is None:
         session = app.session
 
@@ -437,7 +447,7 @@ def update_devices_stats(session=None):
                 .label('real_address')) \
         .order_by(DeviceStats.device_id) \
         .subquery()
-    
+
     upd = update(Device) \
         .where(and_(Device.id == device_stats.c.device_id)) \
         .values({'firstseen': device_stats.c.firstseen,
@@ -447,10 +457,10 @@ def update_devices_stats(session=None):
                  'software_version': device_stats.c.software_version,
                  'hardware_version': device_stats.c.hardware_version,
                  'real_address': device_stats.c.real_address})
-    
+
     result = session.execute(upd)
     update_counter = result.rowcount
     session.commit()
-    logger.warn("Updated {} Devices".format(update_counter))   
-    
+    logger.warn("Updated {} Devices".format(update_counter))
+
     return "Updated {} Devices".format(update_counter)

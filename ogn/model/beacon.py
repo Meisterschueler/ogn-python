@@ -1,6 +1,6 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, String, Integer, SmallInteger, Float, DateTime, BigInteger
+from sqlalchemy import Column, String, SmallInteger, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 
 from .base import Base

@@ -1,6 +1,5 @@
-from sqlalchemy import Boolean, Column, Integer, SmallInteger, DateTime, ForeignKey, Index
+from sqlalchemy import Boolean, Column, Integer, SmallInteger, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from .base import Base
 

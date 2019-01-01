@@ -4,6 +4,7 @@ from ogn.model import AircraftBeacon, ReceiverBeacon
 AIRCRAFT_TYPES = ['aprs_aircraft', 'flarm', 'tracker', 'fanet', 'lt24', 'naviter', 'skylines', 'spider', 'spot']
 RECEIVER_TYPES = ['aprs_receiver', 'receiver']
 
+
 class DummyMerger:
     def __init__(self, callback):
         self.callback = callback
@@ -13,6 +14,7 @@ class DummyMerger:
 
     def flush(self):
         pass
+
 
 class Merger:
     def __init__(self, callback, max_timedelta=None, max_lines=None):
@@ -27,8 +29,8 @@ class Merger:
 
         # release old messages
         if self.max_timedelta is not None:
-            for receiver,v1 in self.message_map.items():
-                for name,v2 in v1.items():
+            for receiver, v1 in self.message_map.items():
+                for name, v2 in v1.items():
                     for timestamp,message in v2.items():
                         if message['timestamp'] - timestamp > self.max_timedelta:
                             self.callback.add_message(message)
@@ -37,30 +39,30 @@ class Merger:
         # release messages > max_lines
         if self.max_lines is not None:
             pass
-        
+
         # merge messages with same timestamp
         receiver_name = message['receiver_name']
         name = message['name']
         timestamp = message['timestamp']
-        
+
         if receiver_name in self.message_map:
             if name in self.message_map[receiver_name]:
                 timestamps = self.message_map[receiver_name][name]
                 if timestamp in timestamps:
                     other = timestamps[timestamp]
-                    params1 = dict( [(k,v) for k,v in message.items() if v is not None])
-                    params2 = dict( [(k,v) for k,v in other.items() if v is not None])
+                    params1 = dict([(k, v) for k, v in message.items() if v is not None])
+                    params2 = dict([(k, v) for k, v in other.items() if v is not None])
                     merged = {**params1, **params2}
-                    
+
                     # zum debuggen
                     if 'raw_message' in message and 'raw_message' in other:
                         merged['raw_message'] = '"{}","{}"'.format(message['raw_message'], other['raw_message'])
-                    
+
                     self.callback.add_message(merged)
                     del self.message_map[receiver_name][name][timestamp]
                 else:
                     self.message_map[receiver_name][name][timestamp] = message
-    
+
                 # release previous messages
                 for ts in list(timestamps):
                     if ts < timestamp:
@@ -73,18 +75,19 @@ class Merger:
             self.message_map.update({receiver_name: {name: {timestamp: message}}})
 
     def flush(self):
-        for receiver,v1 in self.message_map.items():
-            for name,v2 in v1.items():
+        for receiver, v1 in self.message_map.items():
+            for name, v2 in v1.items():
                 for timestamp in v2:
                     self.callback.add_message(self.message_map[receiver][name][timestamp])
 
         self.callback.flush()
         self.message_map = dict()
 
+
 class Converter:
     def __init__(self, callback):
         self.callback = callback
-    
+
     def add_message(self, message):
         if message['aprs_type'] in ['status', 'position']:
             beacon = self.message_to_beacon(message)
@@ -101,11 +104,12 @@ class Converter:
             beacon = ReceiverBeacon(**message)
         else:
             print("Whoops: what is this: {}".format(message))
-    
+
         return beacon
-    
+
     def flush(self):
         self.callback.flush()
+
 
 class DummySaver:
     def add_message(self, message):
@@ -113,6 +117,7 @@ class DummySaver:
 
     def flush(self):
         print("========== flush ==========")
+
 
 class DbSaver:
     def __init__(self, session):
@@ -141,7 +146,9 @@ class DbSaver:
             print(e)
             return
 
+
 import os, gzip, csv
+
 
 class FileSaver:
     def __init__(self):
@@ -157,13 +164,13 @@ class FileSaver:
             self.fout_rb = gzip.open(receiver_beacon_filename, 'wt')
         else:
             raise FileExistsError
-        
+
         self.aircraft_writer = csv.writer(self.fout_ab, delimiter=',')
         self.aircraft_writer.writerow(AircraftBeacon.get_columns())
 
         self.receiver_writer = csv.writer(self.fout_rb, delimiter=',')
         self.receiver_writer.writerow(ReceiverBeacon.get_columns())
-        
+
         return 1
 
     def add_message(self, beacon):
@@ -177,7 +184,7 @@ class FileSaver:
         self.receiver_writer.writerows(self.receiver_messages)
         self.aircraft_messages = list()
         self.receiver_messages = list()
-        
+
     def close(self):
         self.fout_ab.close()
         self.fout_rb.close()

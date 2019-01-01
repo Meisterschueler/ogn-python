@@ -1,36 +1,42 @@
 # -*- coding: utf-8 -*-
 
-from datetime import timedelta, datetime, date
+from datetime import datetime
 
 from manager import Manager
 from ogn.collect.logbook import update_logbook
 from ogn.collect.takeoff_landings import update_takeoff_landings
 from ogn.commands.dbutils import session
-from ogn.model import Device, DeviceInfo, TakeoffLanding, Airport, Logbook
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import aliased
+from ogn.model import Airport, Logbook
+from sqlalchemy import or_
 from sqlalchemy.sql import func
-
+from tqdm import tqdm
+from ogn.commands.database import get_database_days
 
 manager = Manager()
 
 
 @manager.command
-def compute_takeoff_landing():
+def compute_takeoff_landing(start=None, end=None):
     """Compute takeoffs and landings."""
-    
-    for single_date in (date(2017, 6, 14) + timedelta(days=n) for n in range(800)):
-        print("Berechne für den {}".format(single_date.strftime("%Y-%m-%d")))
+
+    days = get_database_days(start, end)
+
+    pbar = tqdm(days)
+    for single_date in pbar:
+        pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
         result = update_takeoff_landings(session=session, date=single_date)
-        print(result)
-    
+
+
 @manager.command
-def compute_logbook():
+def compute_logbook(start=None, end=None):
     """Compute logbook."""
-    print("Compute logbook...")
-    result = update_logbook(session=session)#.delay()
-    #counter = result.get()
-    #print("New logbook entries: {}".format(counter))
+
+    days = get_database_days(start, end)
+
+    pbar = tqdm(days)
+    for single_date in pbar:
+        pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
+        result = update_logbook(session=session, date=single_date)
 
 
 @manager.arg('date', help='date (format: yyyy-mm-dd)')

@@ -1,6 +1,5 @@
 from geoalchemy2.types import Geometry
 from sqlalchemy import Column, String, Integer, Float, SmallInteger, BigInteger
-from sqlalchemy.orm import relationship
 
 from .base import Base
 

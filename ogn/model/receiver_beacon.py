@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, String, Integer, SmallInteger, ForeignKey, Index
+from sqlalchemy import Column, Float, String, Integer, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .beacon import Beacon
@@ -70,10 +70,10 @@ class ReceiverBeacon(Beacon):
                 'dstcall',
                 'receiver_name',
                 'timestamp',
-                
+
                 # 'raw_message',
                 # 'reference_timestamp',
-                
+
                 'version',
                 'platform',
                 'cpu_load',
@@ -101,7 +101,7 @@ class ReceiverBeacon(Beacon):
             self.dstcall,
             self.receiver_name,
             self.timestamp,
-            
+
             # self.raw_message,
             # self.reference_timestamp,
 
@@ -123,5 +123,6 @@ class ReceiverBeacon(Beacon):
             self.good_senders_signal,
             int(self.good_senders) if self.good_senders else None,
             int(self.good_and_bad_senders) if self.good_and_bad_senders else None]
+
 
 Index('ix_receiver_beacons_date_receiver_id', func.date(ReceiverBeacon.timestamp), ReceiverBeacon.receiver_id)

@@ -1,17 +1,18 @@
 from celery.utils.log import get_task_logger
 
-from sqlalchemy import and_, or_, insert, update, exists
+from sqlalchemy import and_, or_, insert, update, exists, between
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import true, false
 
 from ogn.collect.celery import app
 from ogn.model import TakeoffLanding, Logbook, AircraftBeacon
+from ogn.utils import date_to_timestamps
 
 logger = get_task_logger(__name__)
 
 
 @app.task
-def update_logbook(session=None):
+def update_logbook(session=None, date=None):
     """Add/update logbook entries."""
 
     logger.info("Compute logbook.")
@@ -24,10 +25,12 @@ def update_logbook(session=None):
               TakeoffLanding.device_id,
               TakeoffLanding.airport_id,
               TakeoffLanding.timestamp)
-    
+
     # 'pa' is the window partition for the sql window function
     pa = (func.date(TakeoffLanding.timestamp),
           TakeoffLanding.device_id)
+
+    (start, end) = date_to_timestamps(date)
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
@@ -46,6 +49,7 @@ def update_logbook(session=None):
             TakeoffLanding.airport_id,
             func.lag(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_prev'),
             func.lead(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_next')) \
+        .filter(between(TakeoffLanding.timestamp, start, end)) \
         .subquery()
 
     # find complete flights (with takeoff and landing on the same day)

@@ -2,7 +2,7 @@ import unittest
 import os
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver, DeviceInfo
-from ogn.collect.database import add_missing_devices, add_missing_receivers, import_ddb_file
+from ogn.collect.database import add_missing_devices, add_missing_receivers, import_ddb
 
 
 class TestDB(unittest.TestCase):
@@ -31,8 +31,8 @@ class TestDB(unittest.TestCase):
     def test_update_devices(self):
         session = self.session
 
-        ab01 = AircraftBeacon(receiver_name='Koenigsdf', address='DD4711', timestamp='2017-12-10 10:00:00')
-        rb01 = ReceiverBeacon(name='Bene', timestamp='2017-12-10 09:59:50')
+        ab01 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', address='DD4711', timestamp='2017-12-10 10:00:00')
+        rb01 = ReceiverBeacon(name='Bene', receiver_name='GLIDERN1', timestamp='2017-12-10 09:59:50')
         d01 = Device(address='DD4711')
         r01 = Receiver(name='Koenigsdf')
         session.bulk_save_objects([ab01, rb01, d01, r01])
@@ -54,7 +54,7 @@ class TestDB(unittest.TestCase):
     def test_import_ddb_file(self):
         session = self.session
 
-        import_ddb_file(session, path=os.path.dirname(__file__) + '/../custom_ddb.txt')
+        import_ddb(session, path=os.path.dirname(__file__) + '/../custom_ddb.txt')
 
         device_infos = session.query(DeviceInfo).all()
         self.assertEqual(len(device_infos), 6)

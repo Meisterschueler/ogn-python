@@ -1,10 +1,10 @@
 import unittest
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
 
-from ogn.collect.stats import update_device_stats
+from ogn.collect.stats import update_devices
 
 
 class TestDB(unittest.TestCase):
@@ -22,16 +22,16 @@ class TestDB(unittest.TestCase):
         init()
 
         # Prepare Beacons
-        self.ab01 = AircraftBeacon(timestamp='2017-12-10 10:00:01')
-        self.ab02 = AircraftBeacon(timestamp='2017-12-10 10:00:02')
-        self.ab03 = AircraftBeacon(timestamp='2017-12-10 10:00:03')
-        self.ab04 = AircraftBeacon(timestamp='2017-12-10 10:00:04')
-        self.ab05 = AircraftBeacon(timestamp='2017-12-10 10:00:05')
-        self.ab06 = AircraftBeacon(timestamp='2017-12-10 10:00:05')
+        self.ab01 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:01')
+        self.ab02 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:02')
+        self.ab03 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:03')
+        self.ab04 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:04')
+        self.ab05 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:05')
+        self.ab06 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:05')
 
-        self.rb01 = ReceiverBeacon(timestamp='2017-12-10 09:55:00', altitude=601, version='0.2.5', platform='ARM')
-        self.rb02 = ReceiverBeacon(timestamp='2017-12-10 10:00:00', altitude=601, version='0.2.7', platform='ARM')
-        self.rb03 = ReceiverBeacon(timestamp='2017-12-10 10:05:00', altitude=601, version='0.2.6', platform='ARM')
+        self.rb01 = ReceiverBeacon(name='Koenigsdf', receiver_name='GLIDERN1', timestamp='2017-12-10 09:55:00', altitude=601, version='0.2.5', platform='ARM')
+        self.rb02 = ReceiverBeacon(name='Koenigsdf', receiver_name='GLIDERN1', timestamp='2017-12-10 10:00:00', altitude=601, version='0.2.7', platform='ARM')
+        self.rb03 = ReceiverBeacon(name='Koenigsdf', receiver_name='GLIDERN1', timestamp='2017-12-10 10:05:00', altitude=601, version='0.2.6', platform='ARM')
 
         self.r01 = Receiver(name='Koenigsdf')
         self.r02 = Receiver(name='Bene')
@@ -61,7 +61,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab01)
         session.commit()
 
-        update_device_stats(session, date='2017-12-10')
+        update_devices(session)
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -88,7 +88,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab02)
         session.commit()
 
-        update_device_stats(session, date='2017-12-10')
+        update_devices(session, date='2017-12-10')
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -114,7 +114,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab03)
         session.commit()
 
-        update_device_stats(session, date='2017-12-10')
+        update_devices(session, date='2017-12-10')
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -142,7 +142,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab04)
         session.commit()
 
-        update_device_stats(session, date='2017-12-10')
+        update_devices(session, date='2017-12-10')
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -168,7 +168,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab05)
         session.commit()
 
-        update_device_stats(session, date='2017-12-10')
+        update_devices(session, date='2017-12-10')
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -195,7 +195,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab06)
         session.commit()
 
-        update_device_stats(session, date='2017-12-10')
+        update_devices(session, date='2017-12-10')
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)

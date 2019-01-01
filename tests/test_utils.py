@@ -1,12 +1,19 @@
 import os
 import unittest
+from datetime import date
 
 from ogn.model import AircraftType
-from ogn.utils import get_ddb, get_trackable, get_country_code, get_airports
+from ogn.utils import get_days, get_ddb, get_trackable, get_airports
 import unittest.mock as mock
 
 
 class TestStringMethods(unittest.TestCase):
+    def test_get_days(self):
+        start = date(2018, 2, 27)
+        end = date(2018, 3, 2)
+        days = get_days(start, end)
+        self.assertEqual(days, [date(2018, 2, 27), date(2018, 2, 28), date(2018, 3, 1), date(2018, 3, 2)])
+
     def test_get_devices(self):
         devices = get_ddb()
         self.assertGreater(len(devices), 1000)

@@ -3,7 +3,7 @@ import logging
 from mgrs import MGRS
 
 from ogn.commands.dbutils import session
-from ogn.model import AircraftBeacon, ReceiverBeacon, Location
+from ogn.model import Location
 from ogn.parser import parse, ParseError
 from ogn.gateway.process_tools import DbSaver, Converter, DummyMerger, AIRCRAFT_TYPES, RECEIVER_TYPES
 

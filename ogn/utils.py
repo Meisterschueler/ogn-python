@@ -1,13 +1,11 @@
 import csv
 import gzip
 from io import StringIO
+from datetime import datetime, timedelta
 
 from aerofiles.seeyou import Reader
-from geopy.exc import GeopyError
-from geopy.geocoders import Nominatim
 from ogn.parser.utils import FEETS_TO_METER
 import requests
-from urllib.request import Request
 
 from .model import DeviceInfoOrigin, DeviceInfo, Airport, Location
 
@@ -22,6 +20,17 @@ address_prefixes = {'F': 'FLR',
 
 nm2m = 1852
 mi2m = 1609.34
+
+
+def get_days(start, end):
+    days = [start + timedelta(days=x) for x in range(0, (end - start).days + 1)]
+    return days
+
+
+def date_to_timestamps(date):
+    start = datetime(date.year, date.month, date.day, 0, 0, 0)
+    end = datetime(date.year, date.month, date.day, 23, 59, 59)
+    return (start, end)
 
 
 def get_ddb(csv_file=None, address_origin=DeviceInfoOrigin.unknown):
@@ -74,11 +83,11 @@ def get_flarmnet(fln_file=None, address_origin=DeviceInfoOrigin.flarmnet):
 
 
 def get_trackable(ddb):
-    l = []
+    result = []
     for i in ddb:
         if i.tracked and i.address_type in address_prefixes:
-            l.append("{}{}".format(address_prefixes[i.address_type], i.address))
-    return l
+            result.append("{}{}".format(address_prefixes[i.address_type], i.address))
+    return result
 
 
 def get_airports(cupfile):
