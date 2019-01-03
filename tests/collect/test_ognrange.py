@@ -34,8 +34,8 @@ class TestDB(unittest.TestCase):
         session.commit()
 
         # Create beacons and insert
-        self.ab01 = AircraftBeacon(device_id=self.dd0815.id, receiver_id=self.r01.id, timestamp='2017-12-10 10:00:00', location_mgrs='89ABC1234567890', altitude=800)
-        self.ab02 = AircraftBeacon(device_id=self.dd0815.id, receiver_id=self.r01.id, timestamp='2017-12-10 10:00:01', location_mgrs='89ABC1299967999', altitude=850)
+        self.ab01 = AircraftBeacon(name='FLRDD0815', receiver_name='Koenigsdf', device_id=self.dd0815.id, receiver_id=self.r01.id, timestamp='2017-12-10 10:00:00', location_mgrs='89ABC1234567890', altitude=800)
+        self.ab02 = AircraftBeacon(name='FLRDD0815', receiver_name='Koenigsdf', device_id=self.dd0815.id, receiver_id=self.r01.id, timestamp='2017-12-10 10:00:01', location_mgrs='89ABC1299967999', altitude=850)
         session.add(self.ab01)
         session.add(self.ab02)
         session.commit()

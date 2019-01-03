@@ -4,7 +4,6 @@ from datetime import date
 
 from ogn.model import AircraftType
 from ogn.utils import get_days, get_ddb, get_trackable, get_airports
-import unittest.mock as mock
 
 
 class TestStringMethods(unittest.TestCase):

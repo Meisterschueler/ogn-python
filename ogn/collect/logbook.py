@@ -30,7 +30,12 @@ def update_logbook(session=None, date=None):
     pa = (func.date(TakeoffLanding.timestamp),
           TakeoffLanding.device_id)
 
-    (start, end) = date_to_timestamps(date)
+    # limit time range to given date
+    if date is not None:
+        (start, end) = date_to_timestamps(date)
+        filters = (between(TakeoffLanding.timestamp, start, end))
+    else:
+        filters = ()
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
@@ -49,7 +54,7 @@ def update_logbook(session=None, date=None):
             TakeoffLanding.airport_id,
             func.lag(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_prev'),
             func.lead(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_next')) \
-        .filter(between(TakeoffLanding.timestamp, start, end)) \
+        .filter(*filters) \
         .subquery()
 
     # find complete flights (with takeoff and landing on the same day)

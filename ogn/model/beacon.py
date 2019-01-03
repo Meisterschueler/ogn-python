@@ -12,11 +12,11 @@ class Beacon(AbstractConcreteBase, Base):
     location_wkt = Column('location', Geometry('POINT', srid=4326))
     altitude = Column(Float(precision=2))
 
-    name = Column(String, primary_key=True)
+    name = Column(String, primary_key=True, nullable=True)
     dstcall = Column(String)
     relay = Column(String)
-    receiver_name = Column(String(9), primary_key=True)
-    timestamp = Column(DateTime, primary_key=True)
+    receiver_name = Column(String(9), primary_key=True, nullable=True)
+    timestamp = Column(DateTime, primary_key=True, nullable=True)
     symboltable = None
     symbolcode = None
     track = Column(SmallInteger)

@@ -42,7 +42,9 @@ setup(
         'shapely>=1.5.17,<1.6',
         'ogn-client==0.9.1',
         'psycopg2==2.7.5',
-        'mgrs==1.3.5'
+        'mgrs==1.3.5',
+        'xmlunittest==0.5.0',
+        'tqdm==4.28.1'
     ],
     extras_require={
         'dev': [

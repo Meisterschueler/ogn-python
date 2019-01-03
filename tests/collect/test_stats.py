@@ -1,6 +1,6 @@
 import unittest
 import os
-from datetime import datetime, date
+from datetime import datetime
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
 

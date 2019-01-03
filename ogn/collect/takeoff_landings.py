@@ -35,15 +35,19 @@ def update_takeoff_landings(session=None, date=None):
     radius = 5000       # the points must not exceed this radius around the 2nd point
     max_agl = 100       # takeoff / landing must not exceed this altitude AGL
 
-    # calculate from - to timestamps
-    (start, end) = date_to_timestamps(date)
+    # limit time range to given date
+    if date is not None:
+        (start, end) = date_to_timestamps(date)
+        filters = (between(TakeoffLanding.timestamp, start, end))
+    else:
+        filters = ()
 
     # get beacons for selected day, one per device_id and timestamp
     sq = session.query(AircraftBeacon) \
         .distinct(AircraftBeacon.device_id, AircraftBeacon.timestamp) \
         .order_by(AircraftBeacon.device_id, AircraftBeacon.timestamp, AircraftBeacon.error_count) \
         .filter(AircraftBeacon.agl < max_agl) \
-        .filter(between(AircraftBeacon.timestamp, start, end)) \
+        .filter(*filters) \
         .subquery()
 
     # make a query with current, previous and next position
