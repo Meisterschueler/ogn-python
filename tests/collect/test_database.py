@@ -1,8 +1,8 @@
 import unittest
 import os
 
-from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver, DeviceInfo
-from ogn.collect.database import add_missing_devices, add_missing_receivers, import_ddb
+from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver
+from ogn.collect.database import add_missing_devices, add_missing_receivers
 
 
 class TestDB(unittest.TestCase):
@@ -50,14 +50,6 @@ class TestDB(unittest.TestCase):
         self.assertEqual(len(receiver_beacons), 1)
         receiver_beacon = receiver_beacons[0]
         self.assertEqual(receiver_beacon.receiver.name, 'Bene')
-
-    def test_import_ddb_file(self):
-        session = self.session
-
-        import_ddb(session, path=os.path.dirname(__file__) + '/../custom_ddb.txt')
-
-        device_infos = session.query(DeviceInfo).all()
-        self.assertEqual(len(device_infos), 6)
 
 
 if __name__ == '__main__':
