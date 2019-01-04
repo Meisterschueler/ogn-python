@@ -22,9 +22,9 @@ class RelationStats(Base):
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='relation_stats')
 
     def __repr__(self):
-        return "<RelationStats: %s,%s,%s,%s>" % (
+        return "<RelationStats: %s,%s,%s>" % (
             self.date,
-            self.normalized_signal_quality,
+            self.quality,
             self.beacon_count)
 
 

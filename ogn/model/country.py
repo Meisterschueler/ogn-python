@@ -25,15 +25,15 @@ class Country(Base):
     geom = Column('geom', Geometry('MULTIPOLYGON', srid=4326))
 
     def __repr__(self):
-        return "<Country %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (
+        return "<Country %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+            self.fips,
+            self.iso2,
+            self.iso3,
+            self.un,
             self.name,
-            self.code,
-            self.country_code,
-            self.style,
-            self.description,
-            self.location_wkt.latitude if self.location_wkt else None,
-            self.location_wkt.longitude if self.location_wkt else None,
-            self.altitude,
-            self.runway_direction,
-            self.runway_length,
-            self.frequency)
+            self.area,
+            self.pop2005,
+            self.region,
+            self.subregion,
+            self.lon,
+            self.lat)

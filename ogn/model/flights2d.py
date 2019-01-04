@@ -18,9 +18,10 @@ class Flight2D(Base):
     device = relationship('Device', foreign_keys=[device_id], backref='flights2d')
 
     def __repr__(self):
-        return "<Flight %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (
+        return "<Flight %s: %s,%s>" % (
             self.date,
-            self.path_wkt)
+            self.path_wkt,
+            self.path_simple_wkt)
 
 
 Index('ix_flights2d_date_device_id', Flight2D.date, Flight2D.device_id)
