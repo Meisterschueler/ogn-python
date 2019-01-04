@@ -95,7 +95,7 @@ available commands:
     create_gaps2d          Create 'gaps' from logfile tables.
     file_export            Export separate logfile tables to csv files. They can be used for fast bulk import with sql COPY command.
     file_import            Import APRS logfiles into separate logfile tables.
-    transfer_aircraft_beaconsTransfer beacons from separate logfile tables to beacon table.
+    transfer               Transfer beacons from separate logfile tables to beacon table.
     update                 Update beacons (add foreign keys, compute distance, bearing, ags, etc.) in separate logfile tables.
   
   [db]
@@ -105,6 +105,7 @@ available commands:
     import_file            Import registered devices from a local file.
     import_flarmnet        Import registered devices from a local file.
     init                   Initialize the database.
+    init_timescaledb       Initialize TimescaleDB features.
     update_country_codes   Update country codes of all receivers.
     upgrade                Upgrade database to the latest version.
   
