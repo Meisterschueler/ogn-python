@@ -23,6 +23,7 @@ class TestDB(unittest.TestCase):
         session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Benediktbeuren','0101000020E6100000D5E76A2BF6C72640D4063A6DA0DB4740',609,4)")
         session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Koenigsdorf','0101000020E610000061E8FED7A6EE26407F20661C10EA4740',600,5)")
         session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Ohlstadt','0101000020E6100000057E678EBF772640A142883E32D44740',655,5)")
+        session.execute("UPDATE airports SET border = ST_Expand(location, 0.05)")
 
         session.execute("INSERT INTO devices(address) VALUES('DDEFF7')")
 
@@ -94,7 +95,7 @@ class TestDB(unittest.TestCase):
         session.execute("INSERT INTO aircraft_beacons(name, receiver_name, address, location, altitude, timestamp, track, ground_speed, climb_rate, turn_rate) VALUES('FLRDDEFF7', 'Koenigsdf', 'DDEFF7','0101000020E61000001B5A643BDFEF264045DB1EAA16EA4740',604,'2016-07-02 10:50:04',302,25.92799056,0.203200406,0)")
         session.execute("INSERT INTO aircraft_beacons(name, receiver_name, address, location, altitude, timestamp, track, ground_speed, climb_rate, turn_rate) VALUES('FLRDDEFF7', 'Koenigsdf', 'DDEFF7','0101000020E610000042D2948AB3EF264074029A081BEA4740',604,'2016-07-02 10:50:10',300,5.555997978,0.101600203,0)")
         session.execute("INSERT INTO aircraft_beacons(name, receiver_name, address, location, altitude, timestamp, track, ground_speed, climb_rate, turn_rate) VALUES('FLRDDEFF7', 'Koenigsdf', 'DDEFF7','0101000020E610000013AB192CAFEF264074029A081BEA4740',603,'2016-07-02 10:50:16',0,0,-0.096520193,0)")
-        session.execute("UPDATE aircraft_beacons SET device_id = d.id FROM devices d WHERE d.address='DDEFF7'")
+        session.execute("UPDATE aircraft_beacons SET device_id = d.id, agl = altitude - 600 FROM devices d WHERE d.address='DDEFF7'")
         session.commit()
 
         # find the takeoff and the landing
