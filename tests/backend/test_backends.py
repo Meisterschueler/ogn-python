@@ -100,8 +100,8 @@ class TestDB(unittest.TestCase, XmlTestMixin):
         # Check the complete document
         expected = """<?xml version="1.0" encoding="UTF-8"?>
         <markers>
-            <m a="47.8258833,11.4636167,Hi,D-4711,209,10:00:02,3,123,55,-0.4,1,Koenigsdf,DD4711,xxDD4711"/>
             <m a="47.8280667,11.4726500,_15,xxDD0815,543,09:56:00,245,270,77,-1.5,8,Bene,0,xxDD0815"/>
+            <m a="47.8258833,11.4636167,Hi,D-4711,209,10:00:02,3,123,55,-0.4,1,Koenigsdf,DD4711,xxDD4711"/>
         </markers>
         """.encode(encoding='utf-8')
 

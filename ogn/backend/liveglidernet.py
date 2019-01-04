@@ -50,7 +50,8 @@ def lxml(session, show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_
                      between(func.ST_X(AircraftBeacon.location_wkt), lon_min, lon_max))) \
         .filter(Device.lastseen > observation_start) \
         .filter(Device.lastseen == AircraftBeacon.timestamp) \
-        .filter(Device.id == AircraftBeacon.device_id)
+        .filter(Device.id == AircraftBeacon.device_id) \
+        .order_by(AircraftBeacon.timestamp)
 
     lines = list()
     lines.append('<?xml version="1.0" encoding="UTF-8"?>')
@@ -90,7 +91,7 @@ def lxml(session, show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_
                              aircraft_beacon.location.longitude,
                              competition,
                              registration,
-                             aircraft_beacon.altitude,
+                             int(aircraft_beacon.altitude),
                              utc_to_local(aircraft_beacon.timestamp).strftime("%H:%M:%S"),
                              elapsed_seconds,
                              int(aircraft_beacon.track),
