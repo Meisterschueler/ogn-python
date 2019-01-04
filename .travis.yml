@@ -4,15 +4,15 @@ env:
   - OGN_CONFIG_MODULE='config.test'
 
 python:
-  - 3.4
   - 3.5
   - 3.6
+  - 3.7-dev
 
 addons:
-  postgresql: "9.5"
+  postgresql: "9.6"
   apt:
     packages:
-      - postgresql-9.5-postgis-2.3
+      - postgresql-9.6-postgis-2.3
 
 before_script:
   - flake8 tests ogn_test
