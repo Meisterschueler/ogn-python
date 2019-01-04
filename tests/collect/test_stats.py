@@ -1,10 +1,10 @@
 import unittest
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
 
-from ogn.collect.stats import update_devices
+from ogn.collect.stats import create_device_stats
 
 
 class TestDB(unittest.TestCase):
@@ -52,7 +52,7 @@ class TestDB(unittest.TestCase):
         session.execute("DELETE FROM receiver_beacons")
         session.commit()
 
-    def test_update_devices(self):
+    def test_create_device_stats(self):
         session = self.session
 
         # Compute 1st beacon
@@ -61,7 +61,8 @@ class TestDB(unittest.TestCase):
         session.add(self.ab01)
         session.commit()
 
-        update_devices(session)
+        today = date(2017, 12, 10)
+        create_device_stats(session, date=today)
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -88,7 +89,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab02)
         session.commit()
 
-        update_devices(session, date='2017-12-10')
+        create_device_stats(session, date=today)
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -114,7 +115,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab03)
         session.commit()
 
-        update_devices(session, date='2017-12-10')
+        create_device_stats(session, date=today)
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -142,7 +143,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab04)
         session.commit()
 
-        update_devices(session, date='2017-12-10')
+        create_device_stats(session, date=today)
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -168,7 +169,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab05)
         session.commit()
 
-        update_devices(session, date='2017-12-10')
+        create_device_stats(session, date=today)
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
@@ -195,7 +196,7 @@ class TestDB(unittest.TestCase):
         session.add(self.ab06)
         session.commit()
 
-        update_devices(session, date='2017-12-10')
+        create_device_stats(session, date=today)
 
         devicestats = session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
