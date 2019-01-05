@@ -186,39 +186,43 @@ def update_device_stats_jumps(session=None, date=None):
     else:
         (start, end) = date_to_timestamps(date)
 
+    # speed limits in m/s (values above indicates a unplausible position / jump)
+    max_horizontal_speed = 1000
+    max_vertical_speed = 100
+    max_jumps = 10  # threshold for an 'ambiguous' device
+
+    # find consecutive positions for a device
     sq = session.query(AircraftBeacon.device_id,
-                       AircraftBeacon.timestamp.label('t0'),
-                       func.lead(AircraftBeacon.timestamp).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('t1'),
-                       AircraftBeacon.location_wkt.label('l0'),
-                       func.lead(AircraftBeacon.location_wkt).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('l1'),
-                       AircraftBeacon.altitude.label('a0'),
-                       func.lead(AircraftBeacon.altitude).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('a1')) \
+                       AircraftBeacon.timestamp,
+                       func.lead(AircraftBeacon.timestamp).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('timestamp_next'),
+                       AircraftBeacon.location_wkt,
+                       func.lead(AircraftBeacon.location_wkt).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('location_next'),
+                       AircraftBeacon.altitude,
+                       func.lead(AircraftBeacon.altitude).over(partition_by=AircraftBeacon.device_id, order_by=AircraftBeacon.timestamp).label('altitude_next')) \
         .filter(and_(between(AircraftBeacon.timestamp, start, end),
                      AircraftBeacon.error_count == 0)) \
         .subquery()
 
+    # calc vertial and horizontal speed between points
     sq2 = session.query(sq.c.device_id,
-                        (func.st_distancesphere(sq.c.l1, sq.c.l0) / (func.extract('epoch', sq.c.t1) - func.extract('epoch', sq.c.t0))).label('horizontal_speed'),
-                        ((sq.c.a1 - sq.c.a0) / (func.extract('epoch', sq.c.t1) - func.extract('epoch', sq.c.t0))).label('vertical_speed')) \
-        .filter(and_(sq.c.t0 != null(),
-                     sq.c.t1 != null(),
-                     sq.c.t0 < sq.c.t1)) \
+                        (func.st_distancesphere(sq.c.location_next, sq.c.location) / (func.extract('epoch', sq.c.timestamp_next) - func.extract('epoch', sq.c.timestamp))).label('horizontal_speed'),
+                        ((sq.c.altitude_next - sq.c.altitude) / (func.extract('epoch', sq.c.timestamp_next) - func.extract('epoch', sq.c.timestamp))).label('vertical_speed')) \
+        .filter(and_(sq.c.timestamp != null(),
+                     sq.c.timestamp_next != null(),
+                     sq.c.timestamp < sq.c.timestamp_next)) \
         .subquery()
 
+    # ... and find and count 'jumps'
     sq3 = session.query(sq2.c.device_id,
-                        case([(or_(func.abs(sq2.c.horizontal_speed) > 1000, func.abs(sq2.c.vertical_speed) > 100), 1)], else_=0).label('jump')) \
-        .subquery()
-
-    sq4 = session.query(sq3.c.device_id,
-                        func.sum(sq3.c.jump).label('jumps')) \
-        .group_by(sq3.c.device_id) \
+                        func.sum(case([(or_(func.abs(sq2.c.horizontal_speed) > max_horizontal_speed, func.abs(sq2.c.vertical_speed) > max_vertical_speed), 1)], else_=0)).label('jumps')) \
+        .group_by(sq2.c.device_id) \
         .subquery()
 
     upd = update(DeviceStats) \
         .where(and_(DeviceStats.date == date,
-                    DeviceStats.device_id == sq4.c.device_id)) \
-        .values({'ambiguous': sq4.c.jumps > 10,
-                 'jumps': sq4.c.jumps})
+                    DeviceStats.device_id == sq3.c.device_id)) \
+        .values({'ambiguous': sq3.c.jumps > max_jumps,
+                 'jumps': sq3.c.jumps})
 
     result = session.execute(upd)
     update_counter = result.rowcount

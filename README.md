@@ -124,10 +124,10 @@ available commands:
     show                   Show a logbook for <airport_name>.
   
   [stats]
-    add_missing_devices    Update devices with data from stats.
-    add_missing_receivers  Update receivers with data from stats.
     create_flights         Create Flights.
     create_stats           Create DeviceStats, ReceiverStats and RelationStats.
+    update_devices         Update devices with data from stats.
+    update_receivers       Update receivers with data from stats.
 ```
 
 Only the command `logbook.compute` requires a running task server (celery) at the moment.

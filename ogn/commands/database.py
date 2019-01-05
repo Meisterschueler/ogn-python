@@ -20,8 +20,8 @@ def get_database_days(start, end):
         start = days_from_db[0].date()
         end = days_from_db[1].date()
     else:
-        start = datetime.strptime(start, "%Y-%m-%d")
-        end = datetime.strptime(end, "%Y-%m-%d")
+        start = datetime.strptime(start, "%Y-%m-%d").date()
+        end = datetime.strptime(end, "%Y-%m-%d").date()
 
     days = get_days(start, end)
 

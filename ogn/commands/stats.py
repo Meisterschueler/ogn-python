@@ -1,9 +1,11 @@
+from datetime import datetime
+from tqdm import tqdm
 from manager import Manager
 from ogn.commands.dbutils import session
 from ogn.commands.database import get_database_days
 
 from ogn.collect.stats import create_device_stats, create_receiver_stats, create_relation_stats,\
-    update_qualities, update_receivers, update_devices,\
+    update_qualities, update_receivers as update_receivers_command, update_devices as update_devices_command,\
     update_device_stats_jumps
 
 manager = Manager()
@@ -15,36 +17,29 @@ def create_stats(start=None, end=None):
 
     days = get_database_days(start, end)
 
-    for single_date in days:
+    pbar = tqdm(days)
+    for single_date in pbar:
+        pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
         result = create_device_stats(session=session, date=single_date)
-        print(result)
-
         result = update_device_stats_jumps(session=session, date=single_date)
-        print(result)
-
         result = create_receiver_stats(session=session, date=single_date)
-        print(result)
-
         result = create_relation_stats(session=session, date=single_date)
-        print(result)
-
         result = update_qualities(session=session, date=single_date)
-        print(result)
 
 
 @manager.command
-def add_missing_receivers():
+def update_receivers():
     """Update receivers with data from stats."""
 
-    result = update_receivers(session=session)
+    result = update_receivers_command(session=session)
     print(result)
 
 
 @manager.command
-def add_missing_devices():
+def update_devices():
     """Update devices with data from stats."""
 
-    result = update_devices(session=session)
+    result = update_devices_command(session=session)
     print(result)
 
 
@@ -54,9 +49,10 @@ def create_flights(start=None, end=None):
 
     days = get_database_days(start, end)
 
-    for single_date in days:
+    pbar = tqdm(days)
+    for single_date in pbar:
+        pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
         result = _create_flights2d(session=session, date=single_date)
-        print(result)
 
 
 def _create_flights2d(session=None, date=None):
