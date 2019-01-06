@@ -6,7 +6,8 @@
 A database backend for the [Open Glider Network](http://wiki.glidernet.org/).
 The ogn-python module saves all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
 It connects to the OGN aprs servers with [python-ogn-client](https://github.com/glidernet/python-ogn-client).
-It requires [TimescaleDB](https://www.timescale.com, based on PostgreSQL) and [PostGIS](http://www.postgis.net/).
+It requires [PostgreSQL](http://www.postgresql.org/) and [PostGIS](http://www.postgis.net/).
+For best performance you should use [TimescaleDB](https://www.timescale.com), which is based on PostgreSQL.
 
 [Examples](https://github.com/glidernet/ogn-python/wiki/Examples)
 
@@ -37,6 +38,12 @@ It requires [TimescaleDB](https://www.timescale.com, based on PostgreSQL) and [P
 
     ```
     ./manage.py db.init
+    ```
+
+6. Optional: Prepare tables for TimescaleDB
+
+    ```
+    ./manage.py db.init_timescaledb
     ```
 
 There is also a [Vagrant](https://www.vagrantup.com/) environment for the development of ogn-python.
