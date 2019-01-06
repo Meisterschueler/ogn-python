@@ -132,6 +132,7 @@ available commands:
   
   [stats]
     create                 Create DeviceStats, ReceiverStats and RelationStats.
+    create_ognrange        Create stats for Melissa's ognrange.
     update_devices         Update devices with data from stats.
     update_receivers       Update receivers with data from stats.
 ```

@@ -1,23 +1,30 @@
 from celery.utils.log import get_task_logger
 
 from sqlalchemy import String
-from sqlalchemy import and_, insert, update, exists
+from sqlalchemy import and_, insert, update, exists, between
 from sqlalchemy.sql import func, null
 
 from ogn.collect.celery import app
 from ogn.model import AircraftBeacon, ReceiverCoverage
+from ogn.utils import date_to_timestamps
 
 logger = get_task_logger(__name__)
 
 
 @app.task
-def update_receiver_coverage(session=None):
-    """Add/update receiver coverages."""
+def create_receiver_coverage(session=None, date=None):
+    """Create receiver coverages."""
 
     logger.info("Compute receiver coverages.")
 
     if session is None:
         session = app.session
+
+    if not date:
+        logger.warn("A date is needed for calculating stats. Exiting")
+        return None
+    else:
+        (start, end) = date_to_timestamps(date)
 
     # Filter aircraft beacons and shrink precision of MGRS from 1m to 1km resolution: 30UXC 00061 18429 -> 30UXC 00 18
     sq = session.query((func.left(AircraftBeacon.location_mgrs, 5, type_=String) + func.substring(AircraftBeacon.location_mgrs, 6, 2, type_=String) + func.substring(AircraftBeacon.location_mgrs, 11, 2, type_=String)).label('reduced_mgrs'),
@@ -26,7 +33,8 @@ def update_receiver_coverage(session=None):
                        AircraftBeacon.signal_quality,
                        AircraftBeacon.altitude,
                        AircraftBeacon.device_id) \
-        .filter(and_(AircraftBeacon.location_mgrs != null(),
+        .filter(and_(between(AircraftBeacon.timestamp, start, end),
+                     AircraftBeacon.location_mgrs != null(),
                      AircraftBeacon.receiver_id != null(),
                      AircraftBeacon.device_id != null())) \
         .subquery()

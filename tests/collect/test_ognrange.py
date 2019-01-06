@@ -1,8 +1,9 @@
 import unittest
 import os
+from datetime import date
 
 from ogn.model import AircraftBeacon, Receiver, ReceiverCoverage, Device
-from ogn.collect.ognrange import update_receiver_coverage
+from ogn.collect.ognrange import create_receiver_coverage
 
 
 class TestDB(unittest.TestCase):
@@ -51,7 +52,7 @@ class TestDB(unittest.TestCase):
     def test_update_receiver_coverage(self):
         session = self.session
 
-        update_receiver_coverage(session)
+        create_receiver_coverage(session, date=date(2017, 12, 10))
 
         coverages = session.query(ReceiverCoverage).all()
         self.assertEqual(len(coverages), 1)

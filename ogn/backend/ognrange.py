@@ -7,9 +7,10 @@ from ogn.model import Receiver
 
 
 def alchemyencoder(obj):
+    """JSON encoder function for SQLAlchemy special classes."""
+
     import decimal
     from datetime import datetime
-    """JSON encoder function for SQLAlchemy special classes."""
     if isinstance(obj, datetime):
         return obj.strftime('%Y-%m-%d %H:%M')
     elif isinstance(obj, decimal.Decimal):

@@ -8,6 +8,8 @@ from ogn.collect.stats import create_device_stats, create_receiver_stats, create
     update_qualities, update_receivers as update_receivers_command, update_devices as update_devices_command,\
     update_device_stats_jumps
 
+from ogn.collect.ognrange import create_receiver_coverage
+
 manager = Manager()
 
 
@@ -41,3 +43,15 @@ def update_devices():
 
     result = update_devices_command(session=session)
     print(result)
+
+
+@manager.command
+def create_ognrange(start=None, end=None):
+    """Create stats for Melissas ognrange."""
+
+    days = get_database_days(start, end)
+
+    pbar = tqdm(days)
+    for single_date in pbar:
+        pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
+        result = create_receiver_coverage(session=session, date=single_date)
