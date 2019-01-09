@@ -1,12 +1,13 @@
 SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost:5432/ogn'
 
-BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# Celery stuff
+broker_url = 'redis://localhost:6379/0'
+result_backend = 'redis://localhost:6379/0'
 
 
 from datetime import timedelta
 
-CELERYBEAT_SCHEDULE = {
+beat_schedule = {
     'update-ddb': {
         'task': 'ogn.collect.database.import_ddb',
         'schedule': timedelta(minutes=15),
@@ -37,4 +38,4 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 
-CELERY_TIMEZONE = 'UTC'
+timezone = 'UTC'

@@ -1,9 +1,10 @@
 SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost:5432/ogn_test'
 
-BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# Celery stuff
+broker_url = 'redis://localhost:6379/0'
+result_backend = 'redis://localhost:6379/0'
 
 
-CELERYBEAT_SCHEDULE = {}
+beat_schedule = {}
 
-CELERY_TIMEZONE = 'UTC'
+timezone = 'UTC'

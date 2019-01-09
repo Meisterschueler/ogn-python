@@ -35,7 +35,7 @@ setup(
         'SQLAlchemy==1.2.12',
         'geopy==1.17.0',
         'manage.py==0.2.10',
-        'celery[redis]>=3.1,<3.2',
+        'celery[redis]==4.2.1',
         'alembic==1.0.0',
         'aerofiles==0.4.1',
         'geoalchemy2==0.5.0',
