@@ -7,10 +7,11 @@ from ogn.collect.logbook import update_logbook
 from ogn.collect.takeoff_landings import update_takeoff_landings
 from ogn.commands.dbutils import session
 from ogn.model import Airport, Logbook
-from sqlalchemy import or_
+from sqlalchemy import or_, between
 from sqlalchemy.sql import func
 from tqdm import tqdm
 from ogn.commands.database import get_database_days
+from ogn.utils import date_to_timestamps
 
 manager = Manager()
 
@@ -54,7 +55,8 @@ def show(airport_name, date=None):
     or_args = []
     if date is not None:
         date = datetime.strptime(date, "%Y-%m-%d")
-        or_args = [func.date(Logbook.reftime) == date]
+        (start, end) = date_to_timestamps(date)
+        or_args = [between(Logbook.reftime, start, end)]
 
     # get all logbook entries and add device and airport infos
     logbook_query = session.query(func.row_number().over(order_by=Logbook.reftime).label('row_number'),
