@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, Integer, SmallInteger, Float, Date, ForeignKey
+from sqlalchemy import Column, String, Integer, SmallInteger, Float, Date, ForeignKey, Index
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.sql import func
 
 
 from .base import Base
@@ -21,3 +22,7 @@ class ReceiverCoverage(Base):
     # Relations
     receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'), primary_key=True)
     receiver = relationship('Receiver', foreign_keys=[receiver_id], backref=backref('receiver_coverages', order_by='ReceiverCoverage.date.asc()'))
+
+
+Index('ix_receiver_coverages_date_receiver_id', ReceiverCoverage.date, ReceiverCoverage.receiver_id)
+Index('ix_receiver_coverages_receiver_id_date', ReceiverCoverage.receiver_id, ReceiverCoverage.date)

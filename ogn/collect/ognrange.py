@@ -3,6 +3,7 @@ from celery.utils.log import get_task_logger
 from sqlalchemy import String
 from sqlalchemy import and_, insert, update, exists, between
 from sqlalchemy.sql import func, null
+from sqlalchemy.sql.expression import literal_column
 
 from ogn.collect.celery import app
 from ogn.model import AircraftBeacon, ReceiverCoverage
@@ -29,7 +30,6 @@ def create_receiver_coverage(session=None, date=None):
     # Filter aircraft beacons and shrink precision of MGRS from 1m to 1km resolution: 30UXC 00061 18429 -> 30UXC 00 18
     sq = session.query((func.left(AircraftBeacon.location_mgrs, 5, type_=String) + func.substring(AircraftBeacon.location_mgrs, 6, 2, type_=String) + func.substring(AircraftBeacon.location_mgrs, 11, 2, type_=String)).label('reduced_mgrs'),
                        AircraftBeacon.receiver_id,
-                       func.date(AircraftBeacon.timestamp).label('date'),
                        AircraftBeacon.signal_quality,
                        AircraftBeacon.altitude,
                        AircraftBeacon.device_id) \
@@ -42,15 +42,14 @@ def create_receiver_coverage(session=None, date=None):
     # ... and group them by reduced MGRS, receiver and date
     query = session.query(sq.c.reduced_mgrs,
                           sq.c.receiver_id,
-                          sq.c.date,
+                          literal_column("'{}'".format(date.strftime('%Y-%m-%d'))).label('date'),
                           func.max(sq.c.signal_quality).label('max_signal_quality'),
                           func.min(sq.c.altitude).label('min_altitude'),
                           func.max(sq.c.altitude).label('max_altitude'),
                           func.count(sq.c.altitude).label('aircraft_beacon_count'),
                           func.count(func.distinct(sq.c.device_id)).label('device_count')) \
         .group_by(sq.c.reduced_mgrs,
-                  sq.c.receiver_id,
-                  sq.c.date) \
+                  sq.c.receiver_id) \
         .subquery()
 
     # if a receiver coverage entry exist --> update it
