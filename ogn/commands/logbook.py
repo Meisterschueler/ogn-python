@@ -36,7 +36,7 @@ def compute_logbook(start=None, end=None):
 
     pbar = tqdm(days)
     for single_date in pbar:
-        pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
+        pbar.set_description(single_date.strftime('%Y-%m-%d'))
         result = update_logbook(session=session, date=single_date)
 
 

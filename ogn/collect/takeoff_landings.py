@@ -38,9 +38,9 @@ def update_takeoff_landings(session=None, date=None):
     # limit time range to given date
     if date is not None:
         (start, end) = date_to_timestamps(date)
-        filters = (between(TakeoffLanding.timestamp, start, end))
+        filters = [between(TakeoffLanding.timestamp, start, end)]
     else:
-        filters = ()
+        filters = []
 
     # get beacons for selected day, one per device_id and timestamp
     sq = session.query(AircraftBeacon) \

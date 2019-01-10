@@ -20,71 +20,50 @@ def update_logbook(session=None, date=None):
     if session is None:
         session = app.session
 
-    # 'wo' is the window order for the sql window function
-    wo = and_(func.date(TakeoffLanding.timestamp),
-              TakeoffLanding.device_id,
-              TakeoffLanding.airport_id,
-              TakeoffLanding.timestamp)
-
-    # 'pa' is the window partition for the sql window function
-    pa = (func.date(TakeoffLanding.timestamp),
-          TakeoffLanding.device_id)
-
-    # limit time range to given date
+    # limit time range to given date and set window partition and window order
     if date is not None:
         (start, end) = date_to_timestamps(date)
-        filters = (between(TakeoffLanding.timestamp, start, end))
+        filters = [between(TakeoffLanding.timestamp, start, end)]
+        pa = (TakeoffLanding.device_id)
+        wo = and_(TakeoffLanding.device_id,
+                  TakeoffLanding.airport_id,
+                  TakeoffLanding.timestamp)
     else:
-        filters = ()
+        filters = []
+        pa = (func.date(TakeoffLanding.timestamp),
+              TakeoffLanding.device_id)
+        wo = and_(func.date(TakeoffLanding.timestamp),
+                  TakeoffLanding.device_id,
+                  TakeoffLanding.airport_id,
+                  TakeoffLanding.timestamp)
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
             TakeoffLanding.device_id,
-            func.lag(TakeoffLanding.device_id).over(order_by=wo).label('device_id_prev'),
-            func.lead(TakeoffLanding.device_id).over(order_by=wo).label('device_id_next'),
+            func.lag(TakeoffLanding.device_id).over(partition_by=pa, order_by=wo).label('device_id_prev'),
+            func.lead(TakeoffLanding.device_id).over(partition_by=pa, order_by=wo).label('device_id_next'),
             TakeoffLanding.timestamp,
-            func.lag(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_prev'),
-            func.lead(TakeoffLanding.timestamp).over(order_by=wo).label('timestamp_next'),
+            func.lag(TakeoffLanding.timestamp).over(partition_by=pa, order_by=wo).label('timestamp_prev'),
+            func.lead(TakeoffLanding.timestamp).over(partition_by=pa, order_by=wo).label('timestamp_next'),
             TakeoffLanding.track,
-            func.lag(TakeoffLanding.track).over(order_by=wo).label('track_prev'),
-            func.lead(TakeoffLanding.track).over(order_by=wo).label('track_next'),
+            func.lag(TakeoffLanding.track).over(partition_by=pa, order_by=wo).label('track_prev'),
+            func.lead(TakeoffLanding.track).over(partition_by=pa, order_by=wo).label('track_next'),
             TakeoffLanding.is_takeoff,
-            func.lag(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_prev'),
-            func.lead(TakeoffLanding.is_takeoff).over(order_by=wo).label('is_takeoff_next'),
+            func.lag(TakeoffLanding.is_takeoff).over(partition_by=pa, order_by=wo).label('is_takeoff_prev'),
+            func.lead(TakeoffLanding.is_takeoff).over(partition_by=pa, order_by=wo).label('is_takeoff_next'),
             TakeoffLanding.airport_id,
-            func.lag(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_prev'),
-            func.lead(TakeoffLanding.airport_id).over(order_by=wo).label('airport_id_next')) \
+            func.lag(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label('airport_id_prev'),
+            func.lead(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label('airport_id_next')) \
         .filter(*filters) \
         .subquery()
 
-    # find complete flights (with takeoff and landing on the same day)
+    # find complete flights
     complete_flight_query = session.query(
             sq.c.timestamp.label('reftime'),
             sq.c.device_id.label('device_id'),
             sq.c.timestamp.label('takeoff_timestamp'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
             sq.c.timestamp_next.label('landing_timestamp'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id')) \
-        .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
-        .filter(sq.c.device_id == sq.c.device_id_next) \
-        .filter(func.date(sq.c.timestamp_next) == func.date(sq.c.timestamp))
-
-    # split complete flights (with takeoff and landing on different days) into one takeoff and one landing
-    split_start_query = session.query(
-            sq.c.timestamp.label('reftime'),
-            sq.c.device_id.label('device_id'),
-            sq.c.timestamp.label('takeoff_timestamp'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
-            null().label('landing_timestamp'), null().label('landing_track'), null().label('landing_airport_id')) \
-        .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
-        .filter(sq.c.device_id == sq.c.device_id_next) \
-        .filter(func.date(sq.c.timestamp_next) != func.date(sq.c.timestamp))
-
-    split_landing_query = session.query(
-            sq.c.timestamp_next.label('reftime'),
-            sq.c.device_id.label('device_id'),
-            null().label('takeoff_timestamp'), null().label('takeoff_track'), null().label('takeoff_airport_id'),
-            sq.c.timestamp_next.label('landing_timestamp'), sq.c.track_next.label('landing_track'), sq.c.airport_id_next.label('landing_airport_id')) \
-        .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false())) \
-        .filter(sq.c.device_id == sq.c.device_id_next) \
-        .filter(func.date(sq.c.timestamp_next) != func.date(sq.c.timestamp))
+        .filter(and_(sq.c.is_takeoff == true(), sq.c.is_takeoff_next == false()))
 
     # find landings without start
     only_landings_query = session.query(
@@ -93,8 +72,7 @@ def update_logbook(session=None, date=None):
             null().label('takeoff_timestamp'), null().label('takeoff_track'), null().label('takeoff_airport_id'),
             sq.c.timestamp.label('landing_timestamp'), sq.c.track.label('landing_track'), sq.c.airport_id.label('landing_airport_id')) \
         .filter(sq.c.is_takeoff == false()) \
-        .filter(or_(sq.c.device_id != sq.c.device_id_prev,
-                    sq.c.is_takeoff_prev == false(),
+        .filter(or_(sq.c.is_takeoff_prev == false(),
                     sq.c.is_takeoff_prev == null()))
 
     # find starts without landing
@@ -104,14 +82,11 @@ def update_logbook(session=None, date=None):
             sq.c.timestamp.label('takeoff_timestamp'), sq.c.track.label('takeoff_track'), sq.c.airport_id.label('takeoff_airport_id'),
             null().label('landing_timestamp'), null().label('landing_track'), null().label('landing_airport_id')) \
         .filter(sq.c.is_takeoff == true()) \
-        .filter(or_(sq.c.device_id != sq.c.device_id_next,
-                    sq.c.is_takeoff_next == true(),
+        .filter(or_(sq.c.is_takeoff_next == true(),
                     sq.c.is_takeoff_next == null()))
 
     # unite all computated flights
     union_query = complete_flight_query.union(
-            split_start_query,
-            split_landing_query,
             only_landings_query,
             only_starts_query) \
         .subquery()
