@@ -1,6 +1,6 @@
 from celery.utils.log import get_task_logger
 
-from sqlalchemy import String
+from sqlalchemy import String, Date
 from sqlalchemy import and_, insert, update, exists, between
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import literal_column
@@ -42,7 +42,7 @@ def create_receiver_coverage(session=None, date=None):
     # ... and group them by reduced MGRS, receiver and date
     query = session.query(sq.c.reduced_mgrs,
                           sq.c.receiver_id,
-                          literal_column("'{}'".format(date.strftime('%Y-%m-%d'))).label('date'),
+                          func.cast(date, Date).label('date'),
                           func.max(sq.c.signal_quality).label('max_signal_quality'),
                           func.min(sq.c.altitude).label('min_altitude'),
                           func.max(sq.c.altitude).label('max_altitude'),
@@ -56,7 +56,7 @@ def create_receiver_coverage(session=None, date=None):
     upd = update(ReceiverCoverage) \
         .where(and_(ReceiverCoverage.location_mgrs == query.c.reduced_mgrs,
                     ReceiverCoverage.receiver_id == query.c.receiver_id,
-                    ReceiverCoverage.date == query.c.date)) \
+                    ReceiverCoverage.date == date)) \
         .values({"max_signal_quality": query.c.max_signal_quality,
                  "min_altitude": query.c.min_altitude,
                  "max_altitude": query.c.max_altitude,
@@ -73,7 +73,7 @@ def create_receiver_coverage(session=None, date=None):
         .filter(~exists().where(
             and_(ReceiverCoverage.location_mgrs == query.c.reduced_mgrs,
                  ReceiverCoverage.receiver_id == query.c.receiver_id,
-                 ReceiverCoverage.date == query.c.date)))
+                 ReceiverCoverage.date == date)))
 
     ins = insert(ReceiverCoverage).from_select((
             ReceiverCoverage.location_mgrs,
