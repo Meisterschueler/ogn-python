@@ -92,6 +92,7 @@ class LogfileDbSaver():
                     radial smallint,
                     quality real,
                     location_mgrs character varying(15),
+                    location_mgrs_short character varying(9),
 
                     receiver_id int,
                     device_id int);
@@ -246,6 +247,7 @@ class LogfileDbSaver():
             ab.frequency_offset, ab.gps_quality_horizontal, ab.gps_quality_vertical, ab.software_version, ab.hardware_version, ab.real_address, ab.signal_power,
 
             ab.location_mgrs,
+            ab.location_mgrs_short,
 
             d.id AS device_id,
             r.id AS receiver_id,
@@ -302,6 +304,7 @@ class LogfileDbSaver():
             CAST(MAX(quality) AS REAL) AS quality,
             CAST(MAX(agl) AS REAL) AS agl,
             MAX(location_mgrs) AS location_mgrs,
+            MAX(location_mgrs_short) AS location_mgrs_short,
 
             MAX(receiver_id) AS receiver_id,
             MAX(device_id) AS device_id
@@ -362,7 +365,7 @@ class LogfileDbSaver():
         query = """
         INSERT INTO aircraft_beacons(location, altitude, name, dstcall, relay, receiver_name, timestamp, track, ground_speed,
             address_type, aircraft_type, stealth, address, climb_rate, turn_rate, signal_quality, error_count, frequency_offset, gps_quality_horizontal, gps_quality_vertical, software_version, hardware_version, real_address, signal_power,
-            distance, radial, quality, agl, location_mgrs,
+            distance, radial, quality, agl, location_mgrs, location_mgrs_short,
             receiver_id, device_id)
         {}
         ON CONFLICT DO NOTHING;
@@ -515,7 +518,7 @@ def convert(sourcefile, datestr, saver):
             if message['beacon_type'] in AIRCRAFT_TYPES:
                 message = dictfilt(message, ('beacon_type', 'aprs_type', 'location_wkt', 'altitude', 'name', 'dstcall', 'relay', 'receiver_name', 'timestamp', 'track', 'ground_speed',
                     'address_type', 'aircraft_type', 'stealth', 'address', 'climb_rate', 'turn_rate', 'signal_quality', 'error_count', 'frequency_offset', 'gps_quality_horizontal', 'gps_quality_vertical', 'software_version', 'hardware_version', 'real_address', 'signal_power',
-                    'distance', 'radial', 'quality', 'agl', 'location_mgrs',
+                    'distance', 'radial', 'quality', 'agl', 'location_mgrs', 'location_mgrs_short',
                     'receiver_id', 'device_id'))
 
                 beacon = AircraftBeacon(**message)

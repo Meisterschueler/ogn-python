@@ -18,7 +18,9 @@ def _replace_lonlat_with_wkt(message):
 
     location = Location(longitude, latitude)
     message['location_wkt'] = location.to_wkt()
-    message['location_mgrs'] = myMGRS.toMGRS(latitude, longitude).decode('utf-8')
+    location_mgrs = myMGRS.toMGRS(latitude, longitude).decode('utf-8')
+    message['location_mgrs'] = location_mgrs
+    message['location_mgrs_short'] = location_mgrs[0:5] + location_mgrs[5:7] + location_mgrs[10:12]
     del message['latitude']
     del message['longitude']
     return message

@@ -27,20 +27,20 @@ def create_receiver_coverage(session=None, date=None):
     else:
         (start, end) = date_to_timestamps(date)
 
-    # Filter aircraft beacons and shrink precision of MGRS from 1m to 1km resolution: 30UXC 00061 18429 -> 30UXC 00 18
-    sq = session.query((func.left(AircraftBeacon.location_mgrs, 5, type_=String) + func.substring(AircraftBeacon.location_mgrs, 6, 2, type_=String) + func.substring(AircraftBeacon.location_mgrs, 11, 2, type_=String)).label('reduced_mgrs'),
+    # Filter aircraft beacons
+    sq = session.query(AircraftBeacon.location_mgrs_short.label('location_mgrs'),
                        AircraftBeacon.receiver_id,
                        AircraftBeacon.signal_quality,
                        AircraftBeacon.altitude,
                        AircraftBeacon.device_id) \
         .filter(and_(between(AircraftBeacon.timestamp, start, end),
-                     AircraftBeacon.location_mgrs != null(),
+                     AircraftBeacon.location_mgrs_short != null(),
                      AircraftBeacon.receiver_id != null(),
                      AircraftBeacon.device_id != null())) \
         .subquery()
 
     # ... and group them by reduced MGRS, receiver and date
-    query = session.query(sq.c.reduced_mgrs,
+    query = session.query(sq.c.location_mgrs,
                           sq.c.receiver_id,
                           func.cast(date, Date).label('date'),
                           func.max(sq.c.signal_quality).label('max_signal_quality'),
@@ -54,7 +54,7 @@ def create_receiver_coverage(session=None, date=None):
 
     # if a receiver coverage entry exist --> update it
     upd = update(ReceiverCoverage) \
-        .where(and_(ReceiverCoverage.location_mgrs == query.c.reduced_mgrs,
+        .where(and_(ReceiverCoverage.location_mgrs == query.c.location_mgrs,
                     ReceiverCoverage.receiver_id == query.c.receiver_id,
                     ReceiverCoverage.date == date)) \
         .values({"max_signal_quality": query.c.max_signal_quality,

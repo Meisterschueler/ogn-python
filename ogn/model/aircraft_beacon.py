@@ -29,7 +29,8 @@ class AircraftBeacon(Beacon):
     distance = Column(Float(precision=2))
     radial = Column(SmallInteger)
     quality = Column(Float(precision=2))    # signal quality normalized to 10km
-    location_mgrs = Column(String(15))
+    location_mgrs = Column(String(15))      # full mgrs (15 chars)
+    location_mgrs_short = Column(String(9)) # reduced mgrs (9 chars), e.g. used for melissas range tool
     agl = Column(Float(precision=2))
 
     # Relations
@@ -44,7 +45,7 @@ class AircraftBeacon(Beacon):
     Index('ix_aircraft_beacons_device_id_timestamp', 'device_id', 'timestamp')
 
     def __repr__(self):
-        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,
             self.aircraft_type,
             self.stealth,
@@ -64,7 +65,8 @@ class AircraftBeacon(Beacon):
             self.distance,
             self.radial,
             self.quality,
-            self.location_mgrs)
+            self.location_mgrs,
+            self.location_mgrs_short)
 
     @classmethod
     def get_columns(self):
@@ -100,7 +102,8 @@ class AircraftBeacon(Beacon):
                 'distance',
                 'radial',
                 'quality',
-                'location_mgrs']
+                'location_mgrs',
+                'location_mgrs_short']
 
     def get_values(self):
         return [
@@ -136,7 +139,8 @@ class AircraftBeacon(Beacon):
             self.distance,
             self.radial,
             self.quality,
-            self.location_mgrs]
+            self.location_mgrs,
+            self.location_mgrs_short]
 
 
 Index('ix_aircraft_beacons_date_device_id_address', func.date(AircraftBeacon.timestamp), AircraftBeacon.device_id, AircraftBeacon.address)
