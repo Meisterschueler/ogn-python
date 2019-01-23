@@ -57,7 +57,7 @@ class TestDB(unittest.TestCase):
         coverages = session.query(ReceiverCoverage).all()
         self.assertEqual(len(coverages), 1)
         coverage = coverages[0]
-        self.assertEqual(coverage.location_mgrs, '89ABC1267')
+        self.assertEqual(coverage.location_mgrs_short, '89ABC1267')
         self.assertEqual(coverage.receiver_id, self.r01.id)
         self.assertEqual(coverage.min_altitude, 800)
         self.assertEqual(coverage.max_altitude, 850)

@@ -9,7 +9,7 @@ from .base import Base
 class ReceiverCoverage(Base):
     __tablename__ = "receiver_coverages"
 
-    location_mgrs = Column(String(9), primary_key=True)
+    location_mgrs_short = Column(String(9), primary_key=True)
     date = Column(Date, primary_key=True)
 
     max_signal_quality = Column(Float)

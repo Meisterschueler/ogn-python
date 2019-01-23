@@ -28,7 +28,7 @@ def create_receiver_coverage(session=None, date=None):
         (start, end) = date_to_timestamps(date)
 
     # Filter aircraft beacons
-    sq = session.query(AircraftBeacon.location_mgrs_short.label('location_mgrs'),
+    sq = session.query(AircraftBeacon.location_mgrs_short,
                        AircraftBeacon.receiver_id,
                        AircraftBeacon.signal_quality,
                        AircraftBeacon.altitude,
@@ -40,7 +40,7 @@ def create_receiver_coverage(session=None, date=None):
         .subquery()
 
     # ... and group them by reduced MGRS, receiver and date
-    query = session.query(sq.c.location_mgrs,
+    query = session.query(sq.c.location_mgrs_short,
                           sq.c.receiver_id,
                           func.cast(date, Date).label('date'),
                           func.max(sq.c.signal_quality).label('max_signal_quality'),
@@ -54,7 +54,7 @@ def create_receiver_coverage(session=None, date=None):
 
     # if a receiver coverage entry exist --> update it
     upd = update(ReceiverCoverage) \
-        .where(and_(ReceiverCoverage.location_mgrs == query.c.location_mgrs,
+        .where(and_(ReceiverCoverage.location_mgrs_short == query.c.location_mgrs_short,
                     ReceiverCoverage.receiver_id == query.c.receiver_id,
                     ReceiverCoverage.date == date)) \
         .values({"max_signal_quality": query.c.max_signal_quality,
@@ -71,12 +71,12 @@ def create_receiver_coverage(session=None, date=None):
     # if a receiver coverage entry doesnt exist --> insert it
     new_coverage_entries = session.query(query) \
         .filter(~exists().where(
-            and_(ReceiverCoverage.location_mgrs == query.c.reduced_mgrs,
+            and_(ReceiverCoverage.location_mgrs_short == query.c.location_mgrs_short,
                  ReceiverCoverage.receiver_id == query.c.receiver_id,
                  ReceiverCoverage.date == date)))
 
     ins = insert(ReceiverCoverage).from_select((
-            ReceiverCoverage.location_mgrs,
+            ReceiverCoverage.location_mgrs_short,
             ReceiverCoverage.receiver_id,
             ReceiverCoverage.date,
             ReceiverCoverage.max_signal_quality,
