@@ -16,4 +16,4 @@ class TakeoffLanding(Base):
 
     # Relations
     airport = relationship('Airport', foreign_keys=[airport_id], backref='takeoff_landings')
-    device = relationship('Device', foreign_keys=[device_id], backref='takeoff_landings')
+    device = relationship('Device', foreign_keys=[device_id], backref='takeoff_landings', order_by='TakeoffLanding.timestamp')
