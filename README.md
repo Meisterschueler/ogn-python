@@ -15,20 +15,20 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
 ## Installation and Setup
 1. Checkout the repository
 
-   ```
-   git clone https://github.com/glidernet/ogn-python.git
-   ```
+    ```
+    git clone https://github.com/glidernet/ogn-python.git
+    ```
 
 2. Install python requirements
 
     ```
     pip install -r requirements.txt
     ```
+
 3. Install [PostgreSQL](http://www.postgresql.org/) with [PostGIS](http://www.postgis.net/) Extension.
-   Create a database (use "ogn" as default, otherwise you have to modify the configuration, see below)
+    Create a database (use "ogn" as default, otherwise you have to modify the configuration, see below)
 
-
-4. Optional: Install redis for asynchronous tasks (like takeoff/landing-detection)
+4.  Optional: Install redis for asynchronous tasks (like takeoff/landing-detection)
 
     ```
     apt-get install redis-server
@@ -46,6 +46,31 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     ./manage.py db.init_timescaledb
     ```
 
+7. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
+    Get the [World Borders Dataset](http://thematicmapping.org/downloads/world_borders.php) and unpack it.
+    Then import it into your database (we use "ogn" as database name).
+    
+    ```
+    shp2pgsql -s 4326 TM_WORLD_BORDERS-0.3.shp world_borders_temp | psql -d ogn
+    psql -d ogn -c "INSERT INTO countries SELECT * FROM world_borders_temp;"
+    psql -d ogn -c "DROP TABLE world_borders_temp;"
+    ```
+    
+8. Optional: Import world elevation data (needed for AGL calculation)
+    For Europe we can get the DEM as GeoTIFF files from the
+    [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
+    Because the spatial reference system (SRID) of these files is 3035 and we want 4326 we have to convert them:
+    
+    ```
+    gdalwarp -s_srs "EPSG:3035" -t_srs "EPSG:4326" source.tif target.tif
+    ```
+    
+    Then we can import the GeoTIFF into the elevation table:
+    
+    ```
+    raster2pgsql -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
+    ```
+    
 There is also a [Vagrant](https://www.vagrantup.com/) environment for the development of ogn-python.
 You can create and start this virtual machine with `vagrant up` and login with `vagrant ssh`.
 The code of ogn-python will be available in the shared folder `/vagrant`.
