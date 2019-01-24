@@ -1,6 +1,6 @@
 from sqlalchemy import Integer, SmallInteger, Float, DateTime, Column, ForeignKey, case, null
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from .base import Base
 
@@ -25,7 +25,7 @@ class Logbook(Base):
     landing_airport = relationship('Airport', foreign_keys=[landing_airport_id])
 
     device_id = Column(Integer, ForeignKey('devices.id', ondelete='CASCADE'), index=True)
-    device = relationship('Device', foreign_keys=[device_id])
+    device = relationship('Device', foreign_keys=[device_id], backref=backref('logbook', order_by='Logbook.reftime'))
 
     @hybrid_property
     def duration(self):
