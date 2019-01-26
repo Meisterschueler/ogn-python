@@ -48,7 +48,7 @@ def create_receiver_coverage(session=None, date=None):
                           func.max(sq.c.altitude).label('max_altitude'),
                           func.count(sq.c.altitude).label('aircraft_beacon_count'),
                           func.count(func.distinct(sq.c.device_id)).label('device_count')) \
-        .group_by(sq.c.reduced_mgrs,
+        .group_by(sq.c.location_mgrs_short,
                   sq.c.receiver_id) \
         .subquery()
 
