@@ -1,15 +1,15 @@
 import unittest
 
-from tests.base import TestCaseDB
+from tests.base import TestBaseDB
 
 from ogn.model import TakeoffLanding
 
 from ogn.collect.takeoff_landings import update_takeoff_landings
 
 
-class TestTakeoffLanding(TestCaseDB):
+class TestTakeoffLanding(TestBaseDB):
     def setUp(self):
-        super(TestTakeoffLanding, self).setUp()
+        super().setUp()
         session = self.session
 
         session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Benediktbeuren','0101000020E6100000D5E76A2BF6C72640D4063A6DA0DB4740',609,4)")

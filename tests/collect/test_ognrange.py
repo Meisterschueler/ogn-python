@@ -1,15 +1,15 @@
 import unittest
 from datetime import date
 
-from tests.base import TestCaseDB
+from tests.base import TestBaseDB
 
 from ogn.model import AircraftBeacon, Receiver, ReceiverCoverage, Device
 from ogn.collect.ognrange import create_receiver_coverage
 
 
-class TestOGNrange(TestCaseDB):
+class TestOGNrange(TestBaseDB):
     def setUp(self):
-        super(TestOGNrange, self).setUp()
+        super().setUp()
         session = self.session
 
         # Create basic data and insert

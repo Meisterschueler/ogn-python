@@ -1,13 +1,13 @@
 import unittest
 import os
 
-from tests.base import TestCaseDB
+from tests.base import TestBaseDB
 
 from ogn.model import DeviceInfo
 from ogn.commands.database import import_file
 
 
-class TestDatabase(TestCaseDB):
+class TestDatabase(TestBaseDB):
     def test_import_ddb_file(self):
         session = self.session
 

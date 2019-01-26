@@ -1,14 +1,14 @@
 import unittest
 
-from tests.base import TestCaseDB
+from tests.base import TestBaseDB
 
 from ogn.model import Logbook, Airport, Device, TakeoffLanding
 from ogn.collect.logbook import update_logbook
 
 
-class TestLogbook(TestCaseDB):
+class TestLogbook(TestBaseDB):
     def setUp(self):
-        super(TestLogbook, self).setUp()
+        super().setUp()
         session = self.session
 
         # Create basic data and insert

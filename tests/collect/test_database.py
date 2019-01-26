@@ -1,12 +1,12 @@
 import unittest
 
-from tests.base import TestCaseDB
+from tests.base import TestBaseDB
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver
 from ogn.collect.database import add_missing_devices, add_missing_receivers
 
 
-class TestDatabase(TestCaseDB):
+class TestDatabase(TestBaseDB):
     def test_update_devices(self):
         session = self.session
 

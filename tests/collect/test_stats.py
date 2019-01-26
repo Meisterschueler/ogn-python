@@ -1,16 +1,16 @@
 import unittest
 from datetime import datetime, date
 
-from tests.base import TestCaseDB
+from tests.base import TestBaseDB
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
 
 from ogn.collect.stats import create_device_stats
 
 
-class TestStats(TestCaseDB):
+class TestStats(TestBaseDB):
     def setUp(self):
-        super(TestStats, self).setUp()
+        super().setUp()
         session = self.session
 
         # Prepare Beacons

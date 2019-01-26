@@ -4,15 +4,15 @@ import os
 os.environ['OGN_CONFIG_MODULE'] = 'config.test'
 
 
-class TestCaseDB(unittest.TestCase):
+class TestBaseDB(unittest.TestCase):
     session = None
     engine = None
-    app = None
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         from ogn.commands.dbutils import engine, session
-        self.session = session
-        self.engine = engine
+        cls.session = session
+        cls.engine = engine
 
         from ogn.commands.database import drop
         drop(sure='y')
@@ -20,8 +20,16 @@ class TestCaseDB(unittest.TestCase):
         from ogn.commands.database import init
         init()
 
+    def setUp(self):
+        self.session.execute("""
+            DELETE FROM aircraft_beacons;
+            DELETE FROM receiver_beacons;
+            DELETE FROM takeoff_landings;
+            DELETE FROM logbook;
+        """)
+
     def tearDown(self):
-        pass
+        self.session.rollback()
 
 
 if __name__ == '__main__':
