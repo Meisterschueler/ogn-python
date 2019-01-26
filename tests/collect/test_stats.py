@@ -1,25 +1,17 @@
 import unittest
-import os
 from datetime import datetime, date
+
+from tests.base import TestCaseDB
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
 
 from ogn.collect.stats import create_device_stats
 
 
-class TestDB(unittest.TestCase):
-    session = None
-    engine = None
-    app = None
-
+class TestStats(TestCaseDB):
     def setUp(self):
-        os.environ['OGN_CONFIG_MODULE'] = 'config.test'
-        from ogn.commands.dbutils import engine, session
-        self.session = session
-        self.engine = engine
-
-        from ogn.commands.database import init
-        init()
+        super(TestStats, self).setUp()
+        session = self.session
 
         # Prepare Beacons
         self.ab01 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:01')
@@ -40,16 +32,6 @@ class TestDB(unittest.TestCase):
 
         session.add(self.r01)
         session.add(self.d01)
-        session.commit()
-
-    def tearDown(self):
-        session = self.session
-        session.execute("DELETE FROM device_infos")
-        session.execute("DELETE FROM device_stats")
-        session.execute("DELETE FROM devices")
-        session.execute("DELETE FROM receivers")
-        session.execute("DELETE FROM aircraft_beacons")
-        session.execute("DELETE FROM receiver_beacons")
         session.commit()
 
     def test_create_device_stats(self):

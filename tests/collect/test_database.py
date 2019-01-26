@@ -1,33 +1,12 @@
 import unittest
-import os
+
+from tests.base import TestCaseDB
 
 from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver
 from ogn.collect.database import add_missing_devices, add_missing_receivers
 
 
-class TestDB(unittest.TestCase):
-    session = None
-    engine = None
-    app = None
-
-    def setUp(self):
-        os.environ['OGN_CONFIG_MODULE'] = 'config.test'
-        from ogn.commands.dbutils import engine, session
-        self.session = session
-        self.engine = engine
-
-        from ogn.commands.database import init
-        init()
-
-    def tearDown(self):
-        session = self.session
-        session.execute("DELETE FROM device_infos")
-        session.execute("DELETE FROM devices")
-        session.execute("DELETE FROM receivers")
-        session.execute("DELETE FROM aircraft_beacons")
-        session.execute("DELETE FROM receiver_beacons")
-        session.commit()
-
+class TestDatabase(TestCaseDB):
     def test_update_devices(self):
         session = self.session
 

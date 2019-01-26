@@ -1,24 +1,16 @@
 import unittest
-import os
+
+from tests.base import TestCaseDB
 
 from ogn.model import TakeoffLanding
 
 from ogn.collect.takeoff_landings import update_takeoff_landings
 
 
-class TestDB(unittest.TestCase):
-    session = None
-    engine = None
-    app = None
-
+class TestTakeoffLanding(TestCaseDB):
     def setUp(self):
-        os.environ['OGN_CONFIG_MODULE'] = 'config.test'
-        from ogn.commands.dbutils import engine, session
-        self.session = session
-        self.engine = engine
-
-        from ogn.commands.database import init
-        init()
+        super(TestTakeoffLanding, self).setUp()
+        session = self.session
 
         session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Benediktbeuren','0101000020E6100000D5E76A2BF6C72640D4063A6DA0DB4740',609,4)")
         session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Koenigsdorf','0101000020E610000061E8FED7A6EE26407F20661C10EA4740',600,5)")
@@ -26,14 +18,6 @@ class TestDB(unittest.TestCase):
         session.execute("UPDATE airports SET border = ST_Expand(location, 0.05)")
 
         session.execute("INSERT INTO devices(address) VALUES('DDEFF7')")
-
-    def tearDown(self):
-        session = self.session
-        session.execute("DELETE FROM takeoff_landings")
-        session.execute("DELETE FROM aircraft_beacons")
-        session.execute("DELETE FROM airports")
-        session.commit()
-        pass
 
     def count_takeoff_and_landings(self):
         session = self.session

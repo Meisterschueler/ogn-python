@@ -1,23 +1,15 @@
 import unittest
-import os
+
+from tests.base import TestCaseDB
 
 from ogn.model import Logbook, Airport, Device, TakeoffLanding
 from ogn.collect.logbook import update_logbook
 
 
-class TestDB(unittest.TestCase):
-    session = None
-    engine = None
-    app = None
-
+class TestLogbook(TestCaseDB):
     def setUp(self):
-        os.environ['OGN_CONFIG_MODULE'] = 'config.test'
-        from ogn.commands.dbutils import engine, session
-        self.session = session
-        self.engine = engine
-
-        from ogn.commands.database import init
-        init()
+        super(TestLogbook, self).setUp()
+        session = self.session
 
         # Create basic data and insert
         self.dd0815 = Device(address='DD0815')
@@ -38,14 +30,6 @@ class TestDB(unittest.TestCase):
         self.landing_koenigsdorf_dd0815 = TakeoffLanding(is_takeoff=False, timestamp='2016-06-01 10:05:00', airport_id=self.koenigsdorf.id, device_id=self.dd0815.id)
         self.landing_koenigsdorf_dd0815_later = TakeoffLanding(is_takeoff=False, timestamp='2016-06-02 10:05:00', airport_id=self.koenigsdorf.id, device_id=self.dd0815.id)
         self.takeoff_ohlstadt_dd4711 = TakeoffLanding(is_takeoff=True, timestamp='2016-06-01 10:00:00', airport_id=self.ohlstadt.id, device_id=self.dd4711.id)
-
-    def tearDown(self):
-        session = self.session
-        session.execute("DELETE FROM takeoff_landings")
-        session.execute("DELETE FROM logbook")
-        session.execute("DELETE FROM devices")
-        session.execute("DELETE FROM airports")
-        session.commit()
 
     def get_logbook_entries(self):
         session = self.session

@@ -1,27 +1,13 @@
 import unittest
 import os
 
+from tests.base import TestCaseDB
+
 from ogn.model import DeviceInfo
 from ogn.commands.database import import_file
 
 
-class TestDB(unittest.TestCase):
-    session = None
-    engine = None
-    app = None
-
-    def setUp(self):
-        os.environ['OGN_CONFIG_MODULE'] = 'config.test'
-        from ogn.commands.dbutils import engine, session
-        self.session = session
-        self.engine = engine
-
-        from ogn.commands.database import init
-        init()
-
-    def tearDown(self):
-        pass
-
+class TestDatabase(TestCaseDB):
     def test_import_ddb_file(self):
         session = self.session
 
