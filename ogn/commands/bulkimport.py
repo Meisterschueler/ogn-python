@@ -485,7 +485,7 @@ class LogfileDbSaver():
 
 def convert(sourcefile, datestr, saver):
     from ogn.gateway.process import string_to_message
-    from ogn.gateway.process_tools import AIRCRAFT_TYPES, RECEIVER_TYPES
+    from ogn.gateway.process_tools import AIRCRAFT_BEACON_TYPES, RECEIVER_BEACON_TYPES
     from datetime import datetime
 
     fin = open_file(sourcefile)
@@ -515,14 +515,14 @@ def convert(sourcefile, datestr, saver):
         dictfilt = lambda x, y: dict([(i, x[i]) for i in x if i in set(y)])
 
         try:
-            if message['beacon_type'] in AIRCRAFT_TYPES:
+            if message['beacon_type'] in AIRCRAFT_BEACON_TYPES:
                 message = dictfilt(message, ('beacon_type', 'aprs_type', 'location_wkt', 'altitude', 'name', 'dstcall', 'relay', 'receiver_name', 'timestamp', 'track', 'ground_speed',
                     'address_type', 'aircraft_type', 'stealth', 'address', 'climb_rate', 'turn_rate', 'signal_quality', 'error_count', 'frequency_offset', 'gps_quality_horizontal', 'gps_quality_vertical', 'software_version', 'hardware_version', 'real_address', 'signal_power',
                     'distance', 'radial', 'quality', 'agl', 'location_mgrs', 'location_mgrs_short',
                     'receiver_id', 'device_id'))
 
                 beacon = AircraftBeacon(**message)
-            elif message['beacon_type'] in RECEIVER_TYPES:
+            elif message['beacon_type'] in RECEIVER_BEACON_TYPES:
                 if 'rec_crystal_correction' in message:
                     del message['rec_crystal_correction']
                     del message['rec_crystal_correction_fine']

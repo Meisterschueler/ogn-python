@@ -47,56 +47,6 @@ class MergerTest(unittest.TestCase):
         merger.flush()
         callback.add_message.assert_called_once_with(merged)
 
-    @unittest.skip('not finished yet')
-    def test_exceed_timedelta(self):
-        a = {'name': 'Jeff', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45)}
-        b = {'name': 'John', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45)}
-        c = {'name': 'Fred', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 59)}
-
-        callback = MagicMock()
-        merger = Merger(callback=callback, max_timedelta=datetime.timedelta(seconds=10))
-        merger.add_message(a)
-        callback.add_message.assert_not_called()
-
-        merger.add_message(b)
-        callback.add_message.assert_not_called()
-
-        merger.add_message(c)
-        calls = [call(a), call(b)]
-        callback.add_message.assert_has_calls(calls, any_order=True)
-
-        merger.flush()
-        calls = [call(a), call(b), call(c)]
-        callback.add_message.assert_has_calls(calls, any_order=True)
-
-    @unittest.skip('not finished yet')
-    def test_exceed_maxlines(self):
-        a = {'name': 'Albert', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 45)}
-        b = {'name': 'Bertram', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 46)}
-        c = {'name': 'Chlodwig', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 47)}
-        d = {'name': 'Dagobert', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 48)}
-        e = {'name': 'Erich', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 49)}
-        f = {'name': 'Frodo', 'receiver_name': 'Observer1', 'timestamp': datetime.datetime(2018, 5, 20, 18, 4, 50)}
-
-        callback = MagicMock()
-        merger = Merger(callback=callback, max_lines=5)
-        merger.add_message(a)
-        callback.add_message.assert_not_called()
-
-        merger.add_message(b)
-        callback.add_message.assert_not_called()
-
-        merger.add_message(c)
-        callback.add_message.assert_not_called()
-
-        merger.add_message(d)
-        callback.add_message.assert_not_called()
-
-        merger.add_message(e)
-        callback.add_message.assert_not_called()
-
-        merger.add_message(f)
-        callback.add_message.assert_called_once_with(a)
 
 
 if __name__ == '__main__':

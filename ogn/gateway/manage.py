@@ -4,7 +4,7 @@ from manager import Manager
 from ogn.client import AprsClient
 from ogn.gateway.process import string_to_message
 from datetime import datetime
-from ogn.gateway.process_tools import DummyMerger, Converter, DbSaver
+from ogn.gateway.process_tools import DbSaver
 from ogn.commands.dbutils import session
 
 manager = Manager()
@@ -12,16 +12,13 @@ manager = Manager()
 logging_formatstr = '%(asctime)s - %(levelname).4s - %(name)s - %(message)s'
 log_levels = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
 
-# Build the processing pipeline
 saver = DbSaver(session=session)
-converter = Converter(callback=saver)
-merger = DummyMerger(callback=converter)
 
 
 def asdf(raw_string):
     message = string_to_message(raw_string, reference_date=datetime.utcnow())
     if message is not None:
-        merger.add_message(message)
+        saver.add_message(message)
     else:
         print(message)
 
@@ -53,6 +50,6 @@ def run(aprs_user='anon-dev', logfile='main.log', loglevel='INFO'):
     except KeyboardInterrupt:
         print('\nStop ogn gateway')
 
-    merger.flush()
+    saver.flush()
     client.disconnect()
     logging.shutdown()

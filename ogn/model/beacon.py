@@ -1,7 +1,9 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
 from sqlalchemy import Column, String, SmallInteger, Float, DateTime
+from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import AbstractConcreteBase
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from .base import Base
 from .geo import Location
@@ -38,3 +40,4 @@ class Beacon(AbstractConcreteBase, Base):
 
         coords = to_shape(self.location_wkt)
         return Location(lat=coords.y, lon=coords.x)
+

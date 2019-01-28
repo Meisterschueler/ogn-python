@@ -5,7 +5,7 @@ from mgrs import MGRS
 from ogn.commands.dbutils import session
 from ogn.model import Location
 from ogn.parser import parse, ParseError
-from ogn.gateway.process_tools import DbSaver, Converter, DummyMerger, AIRCRAFT_TYPES, RECEIVER_TYPES
+from ogn.gateway.process_tools import DbSaver, AIRCRAFT_BEACON_TYPES, RECEIVER_BEACON_TYPES
 
 
 logger = logging.getLogger(__name__)
@@ -32,30 +32,29 @@ def string_to_message(raw_string, reference_date):
     try:
         message = parse(raw_string, reference_date)
     except NotImplementedError as e:
-        #logger.w('No parser implemented for message: {}'.format(raw_string))
+        logger.w('No parser implemented for message: {}'.format(raw_string))
         return None
     except ParseError as e:
-        #logger.error('Parsing error with message: {}'.format(raw_string))
+        logger.error('Parsing error with message: {}'.format(raw_string))
         return None
     except TypeError as e:
-        #logger.error('TypeError with message: {}'.format(raw_string))
+        logger.error('TypeError with message: {}'.format(raw_string))
         return None
     except Exception as e:
-        #logger.error(raw_string)
-        #logger.error(e)
+        logger.error(raw_string)
+        logger.error(e)
         return None
 
     # update reference receivers and distance to the receiver
     if message['aprs_type'] == 'position':
-        if message['beacon_type'] in RECEIVER_TYPES:
+        if message['beacon_type'] in AIRCRAFT_BEACON_TYPES + RECEIVER_BEACON_TYPES:
             message = _replace_lonlat_with_wkt(message)
-        elif message['beacon_type'] in AIRCRAFT_TYPES:
-            message = _replace_lonlat_with_wkt(message)
-            if 'gps_quality' in message:
-                if message['gps_quality'] is not None and 'horizontal' in message['gps_quality']:
-                    message['gps_quality_horizontal'] = message['gps_quality']['horizontal']
-                    message['gps_quality_vertical'] = message['gps_quality']['vertical']
-                del message['gps_quality']
+
+        if message['beacon_type'] in AIRCRAFT_BEACON_TYPES and 'gps_quality' in message:
+            if message['gps_quality'] is not None and 'horizontal' in message['gps_quality']:
+                message['gps_quality_horizontal'] = message['gps_quality']['horizontal']
+                message['gps_quality_vertical'] = message['gps_quality']['vertical']
+            del message['gps_quality']
 
     # update raw_message
     message['raw_message'] = raw_string
@@ -63,15 +62,12 @@ def string_to_message(raw_string, reference_date):
     return message
 
 
-# Build the processing pipeline
 saver = DbSaver(session=session)
-converter = Converter(callback=saver)
-merger = DummyMerger(callback=converter)
 
 
-def process_raw_message(raw_message, reference_date=None, merger=merger):
+def process_raw_message(raw_message, reference_date=None, saver=saver):
     logger.debug('Received message: {}'.format(raw_message))
     message = string_to_message(raw_message, reference_date)
-    merger.add_message(message)
+    saver.add_message(message)
 
 

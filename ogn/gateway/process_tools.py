@@ -1,8 +1,15 @@
 from datetime import datetime, timedelta
 from ogn.model import AircraftBeacon, ReceiverBeacon
+from ogn.collect.database import upsert
 
-AIRCRAFT_TYPES = ['aprs_aircraft', 'flarm', 'tracker', 'fanet', 'lt24', 'naviter', 'skylines', 'spider', 'spot']
-RECEIVER_TYPES = ['aprs_receiver', 'receiver']
+# define message types we want to proceed
+AIRCRAFT_BEACON_TYPES = ['aprs_aircraft', 'flarm', 'tracker', 'fanet', 'lt24', 'naviter', 'skylines', 'spider', 'spot']
+RECEIVER_BEACON_TYPES = ['aprs_receiver', 'receiver']
+
+# define fields we want to proceed
+BEACON_KEY_FIELDS = ['name', 'receiver_name', 'timestamp']
+AIRCRAFT_BEACON_FIELDS = ['location', 'altitude', 'dstcall', 'relay', 'track', 'ground_speed', 'address_type', 'aircraft_type', 'stealth', 'address', 'climb_rate', 'turn_rate', 'signal_quality', 'error_count', 'frequency_offset', 'gps_quality_horizontal', 'gps_quality_vertical', 'software_version', 'hardware_version', 'real_address', 'signal_power', 'distance', 'radial', 'quality', 'location_mgrs', 'location_mgrs_short', 'agl', 'receiver_id', 'device_id']
+RECEIVER_BEACON_FIELDS = ['location', 'altitude', 'dstcall', 'relay', 'version', 'platform', 'cpu_load', 'free_ram', 'total_ram', 'ntp_error', 'rt_crystal_correction', 'voltage', 'amperage', 'cpu_temp', 'senders_visible', 'senders_total', 'rec_input_noise', 'senders_signal', 'senders_messages', 'good_senders_signal', 'good_senders', 'good_and_bad_senders']
 
 
 class DummyMerger:
@@ -16,99 +23,58 @@ class DummyMerger:
         pass
 
 
-class Merger:
-    def __init__(self, callback, max_timedelta=None, max_lines=None):
-        self.callback = callback
-        self.max_timedelta = max_timedelta
-        self.max_lines = max_lines
-        self.message_map = dict()
+class DbSaver:
+    def __init__(self, session):
+        self.session = session
+        self.aircraft_message_map = dict()
+        self.receiver_message_map = dict()
+        self.last_commit = datetime.utcnow()
+
+    def _put_in_map(self, message, my_map):
+        key = message['name'] + message['receiver_name'] + message['timestamp'].strftime('%s')
+
+        if key in my_map:
+            other = my_map[key]
+            params1 = dict([(k, v) for k, v in message.items() if v is not None])
+            params2 = dict([(k, v) for k, v in other.items() if v is not None])
+            merged = {**params1, **params2}
+            my_map[key] = merged
+        else:
+            my_map[key] = message
 
     def add_message(self, message):
-        if message is None or ('raw_message' in message and message['raw_message'][0] == '#'):
+        if message is None or ('raw_message' in message and message['raw_message'][0] == '#') or 'beacon_type' not in message:
             return
 
-        # release old messages
-        if self.max_timedelta is not None:
-            for receiver, v1 in self.message_map.items():
-                for name, v2 in v1.items():
-                    for timestamp,message in v2.items():
-                        if message['timestamp'] - timestamp > self.max_timedelta:
-                            self.callback.add_message(message)
-                            del self.message_map[receiver][name][timestamp]
+        if 'location_wkt' in message:
+            message['location'] = message.pop('location_wkt')   # total_time_wasted_here = 3
 
-        # release messages > max_lines
-        if self.max_lines is not None:
-            pass
-
-        # merge messages with same timestamp
-        receiver_name = message['receiver_name']
-        name = message['name']
-        timestamp = message['timestamp']
-
-        if receiver_name in self.message_map:
-            if name in self.message_map[receiver_name]:
-                timestamps = self.message_map[receiver_name][name]
-                if timestamp in timestamps:
-                    other = timestamps[timestamp]
-                    params1 = dict([(k, v) for k, v in message.items() if v is not None])
-                    params2 = dict([(k, v) for k, v in other.items() if v is not None])
-                    merged = {**params1, **params2}
-
-                    # zum debuggen
-                    if 'raw_message' in message and 'raw_message' in other:
-                        merged['raw_message'] = '"{}","{}"'.format(message['raw_message'], other['raw_message'])
-
-                    self.callback.add_message(merged)
-                    del self.message_map[receiver_name][name][timestamp]
-                else:
-                    self.message_map[receiver_name][name][timestamp] = message
-
-                # release previous messages
-                for ts in list(timestamps):
-                    if ts < timestamp:
-                        self.callback.add_message(timestamps[ts])
-                        del self.message_map[receiver_name][name][ts]
-            else:
-                # add new message
-                self.message_map[receiver_name].update({name: {timestamp: message}})
+        if message['beacon_type'] in AIRCRAFT_BEACON_TYPES:
+            self._put_in_map(message=message, my_map=self.aircraft_message_map)
+        elif message['beacon_type'] in RECEIVER_BEACON_TYPES:
+            self._put_in_map(message=message, my_map=self.receiver_message_map)
         else:
-            self.message_map.update({receiver_name: {name: {timestamp: message}}})
+            print("Ignore beacon_type: {}".format(message['beacon_type']))
+            return
+
+        elapsed_time = datetime.utcnow() - self.last_commit
+        if elapsed_time >= timedelta(seconds=5):
+            self.flush()
 
     def flush(self):
-        for receiver, v1 in self.message_map.items():
-            for name, v2 in v1.items():
-                for timestamp in v2:
-                    self.callback.add_message(self.message_map[receiver][name][timestamp])
+        if len(self.aircraft_message_map) > 0:
+            messages = list(self.aircraft_message_map.values())
+            even_messages = [{k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + AIRCRAFT_BEACON_FIELDS} for message in messages]
+            upsert(session=self.session, model=AircraftBeacon, rows=even_messages, update_cols=AIRCRAFT_BEACON_FIELDS)
+        if len(self.receiver_message_map) > 0:
+            messages = list(self.receiver_message_map.values())
+            even_messages = [{k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + RECEIVER_BEACON_FIELDS} for message in messages]
+            upsert(session=self.session, model=ReceiverBeacon, rows=even_messages, update_cols=RECEIVER_BEACON_FIELDS)
+        self.session.commit()
 
-        self.callback.flush()
-        self.message_map = dict()
-
-
-class Converter:
-    def __init__(self, callback):
-        self.callback = callback
-
-    def add_message(self, message):
-        if message['aprs_type'] in ['status', 'position']:
-            beacon = self.message_to_beacon(message)
-            self.callback.add_message(beacon)
-
-    def message_to_beacon(self, message):
-        # create beacons
-        if message['beacon_type'] in AIRCRAFT_TYPES:
-            beacon = AircraftBeacon(**message)
-        elif message['beacon_type'] in RECEIVER_TYPES:
-            if 'rec_crystal_correction' in message:
-                del message['rec_crystal_correction']
-                del message['rec_crystal_correction_fine']
-            beacon = ReceiverBeacon(**message)
-        else:
-            print("Whoops: what is this: {}".format(message))
-
-        return beacon
-
-    def flush(self):
-        self.callback.flush()
+        self.aircraft_message_map = dict()
+        self.receiver_message_map = dict()
+        self.last_commit = datetime.utcnow()
 
 
 class DummySaver:
@@ -117,34 +83,6 @@ class DummySaver:
 
     def flush(self):
         print("========== flush ==========")
-
-
-class DbSaver:
-    def __init__(self, session):
-        self.session = session
-        self.beacons = list()
-        self.last_commit = datetime.utcnow()
-
-    def add_message(self, beacon):
-        global last_commit
-        global beacons
-
-        self.beacons.append(beacon)
-
-        elapsed_time = datetime.utcnow() - self.last_commit
-        if elapsed_time >= timedelta(seconds=1):
-            self.flush()
-
-    def flush(self):
-        try:
-            self.session.bulk_save_objects(self.beacons)
-            self.session.commit()
-            self.beacons = list()
-            self.last_commit = datetime.utcnow()
-        except Exception as e:
-            self.session.rollback()
-            print(e)
-            return
 
 
 import os, gzip, csv
