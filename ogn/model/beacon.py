@@ -33,7 +33,7 @@ class Beacon(AbstractConcreteBase, Base):
     raw_message = None #Column(String)
     reference_timestamp = None #Column(DateTime, index=True)
 
-    @property
+    @hybrid_property
     def location(self):
         if self.location_wkt is None:
             return None
@@ -41,3 +41,6 @@ class Beacon(AbstractConcreteBase, Base):
         coords = to_shape(self.location_wkt)
         return Location(lat=coords.y, lon=coords.x)
 
+    @location.expression
+    def location(cls):
+        return cls.location_wkt

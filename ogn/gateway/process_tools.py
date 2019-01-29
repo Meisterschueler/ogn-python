@@ -35,9 +35,7 @@ class DbSaver:
 
         if key in my_map:
             other = my_map[key]
-            params1 = dict([(k, v) for k, v in message.items() if v is not None])
-            params2 = dict([(k, v) for k, v in other.items() if v is not None])
-            merged = {**params1, **params2}
+            merged = {k: message[k] if message[k] is not None else other[k] for k in message.keys()}
             my_map[key] = merged
         else:
             my_map[key] = message
@@ -50,9 +48,11 @@ class DbSaver:
             message['location'] = message.pop('location_wkt')   # total_time_wasted_here = 3
 
         if message['beacon_type'] in AIRCRAFT_BEACON_TYPES:
-            self._put_in_map(message=message, my_map=self.aircraft_message_map)
+            even_messages = {k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + AIRCRAFT_BEACON_FIELDS}
+            self._put_in_map(message=even_messages, my_map=self.aircraft_message_map)
         elif message['beacon_type'] in RECEIVER_BEACON_TYPES:
-            self._put_in_map(message=message, my_map=self.receiver_message_map)
+            even_messages = {k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + RECEIVER_BEACON_FIELDS}
+            self._put_in_map(message=even_messages, my_map=self.receiver_message_map)
         else:
             print("Ignore beacon_type: {}".format(message['beacon_type']))
             return
@@ -64,12 +64,10 @@ class DbSaver:
     def flush(self):
         if len(self.aircraft_message_map) > 0:
             messages = list(self.aircraft_message_map.values())
-            even_messages = [{k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + AIRCRAFT_BEACON_FIELDS} for message in messages]
-            upsert(session=self.session, model=AircraftBeacon, rows=even_messages, update_cols=AIRCRAFT_BEACON_FIELDS)
+            upsert(session=self.session, model=AircraftBeacon, rows=messages, update_cols=AIRCRAFT_BEACON_FIELDS)
         if len(self.receiver_message_map) > 0:
             messages = list(self.receiver_message_map.values())
-            even_messages = [{k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + RECEIVER_BEACON_FIELDS} for message in messages]
-            upsert(session=self.session, model=ReceiverBeacon, rows=even_messages, update_cols=RECEIVER_BEACON_FIELDS)
+            upsert(session=self.session, model=ReceiverBeacon, rows=messages, update_cols=RECEIVER_BEACON_FIELDS)
         self.session.commit()
 
         self.aircraft_message_map = dict()
