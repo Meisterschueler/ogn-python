@@ -41,7 +41,7 @@ class LogfileDbSaver():
     def get_datestrs(self, no_index_only=False):
         """Get the date strings from imported log files."""
 
-        index_clause = " AND hasindexes = FALSE" if no_index_only == True else ""
+        index_clause = " AND hasindexes = FALSE" if no_index_only else ""
 
         self.cur.execute(("""
             SELECT DISTINCT(RIGHT(tablename, 10))
@@ -53,81 +53,13 @@ class LogfileDbSaver():
         return [datestr[0].replace('_', '-') for datestr in self.cur.fetchall()]
 
     def create_tables(self):
-        """Create date dependant tables for log file import."""
+        """Create date dependent tables for log file import."""
 
         try:
             self.cur.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
             self.cur.execute('CREATE EXTENSION IF NOT EXISTS btree_gist;')
-            self.cur.execute('DROP TABLE IF EXISTS "{}";'.format(self.aircraft_table))
-            self.cur.execute('DROP TABLE IF EXISTS "{}";'.format(self.receiver_table))
-            self.cur.execute("""
-                CREATE TABLE "{0}" (
-                    location geometry,
-                    altitude real,
-                    name character varying,
-                    dstcall character varying,
-                    relay character varying,
-                    receiver_name character varying(9),
-                    "timestamp" timestamp without time zone,
-                    track smallint,
-                    ground_speed real,
-
-                    address_type smallint,
-                    aircraft_type smallint,
-                    stealth boolean,
-                    address character varying,
-                    climb_rate real,
-                    turn_rate real,
-                    signal_quality real,
-                    error_count smallint,
-                    frequency_offset real,
-                    gps_quality_horizontal smallint,
-                    gps_quality_vertical smallint,
-                    software_version real,
-                    hardware_version smallint,
-                    real_address character varying(6),
-                    signal_power real,
-
-                    distance real,
-                    radial smallint,
-                    quality real,
-                    location_mgrs character varying(15),
-                    location_mgrs_short character varying(9),
-
-                    receiver_id int,
-                    device_id int);
-            """.format(self.aircraft_table))
-
-            self.cur.execute("""
-                CREATE TABLE "{0}" (
-                    location geometry,
-                    altitude real,
-                    name character varying,
-                    receiver_name character varying(9),
-                    dstcall character varying,
-                    "timestamp" timestamp without time zone,
-
-                    version character varying,
-                    platform character varying,
-                    cpu_load real,
-                    free_ram real,
-                    total_ram real,
-                    ntp_error real,
-                    rt_crystal_correction real,
-                    voltage real,
-                    amperage real,
-                    cpu_temp real,
-                    senders_visible integer,
-                    senders_total integer,
-                    rec_input_noise real,
-                    senders_signal real,
-                    senders_messages integer,
-                    good_senders_signal real,
-                    good_senders integer,
-                    good_and_bad_senders integer,
-
-                    receiver_id int);
-            """.format(self.receiver_table))
+            self.cur.execute('DROP TABLE IF EXISTS "{}"; SELECT INTO {} FROM aircraft_beacons WHERE 1 = 2;'.format(self.aircraft_table))
+            self.cur.execute('DROP TABLE IF EXISTS "{}"; SELECT INTO {} FROM receiver_beacons WHERE 1 = 2;'.format(self.receiver_table))
             self.conn.commit()
         except Exception as e:
             raise Exception("I can't create the tables")

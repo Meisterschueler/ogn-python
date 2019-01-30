@@ -1,9 +1,8 @@
 from celery.utils.log import get_task_logger
 
-from sqlalchemy import String, Date
+from sqlalchemy import Date
 from sqlalchemy import and_, insert, update, exists, between
 from sqlalchemy.sql import func, null
-from sqlalchemy.sql.expression import literal_column
 
 from ogn.collect.celery import app
 from ogn.model import AircraftBeacon, ReceiverCoverage

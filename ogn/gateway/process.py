@@ -69,5 +69,3 @@ def process_raw_message(raw_message, reference_date=None, saver=saver):
     logger.debug('Received message: {}'.format(raw_message))
     message = string_to_message(raw_message, reference_date)
     saver.add_message(message)
-
-

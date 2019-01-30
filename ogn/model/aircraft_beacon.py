@@ -28,9 +28,9 @@ class AircraftBeacon(Beacon):
     # Calculated values
     distance = Column(Float(precision=2))
     radial = Column(SmallInteger)
-    quality = Column(Float(precision=2))    # signal quality normalized to 10km
-    location_mgrs = Column(String(15))      # full mgrs (15 chars)
-    location_mgrs_short = Column(String(9)) # reduced mgrs (9 chars), e.g. used for melissas range tool
+    quality = Column(Float(precision=2))        # signal quality normalized to 10km
+    location_mgrs = Column(String(15))          # full mgrs (15 chars)
+    location_mgrs_short = Column(String(9))     # reduced mgrs (9 chars), e.g. used for melissas range tool
     agl = Column(Float(precision=2))
 
     # Relations

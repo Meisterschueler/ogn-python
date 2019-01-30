@@ -1,7 +1,6 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
 from sqlalchemy import Column, String, SmallInteger, Float, DateTime
-from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -30,8 +29,8 @@ class Beacon(AbstractConcreteBase, Base):
     aprs_type = None
 
     # Debug information
-    raw_message = None #Column(String)
-    reference_timestamp = None #Column(DateTime, index=True)
+    raw_message = None
+    reference_timestamp = None
 
     @hybrid_property
     def location(self):
