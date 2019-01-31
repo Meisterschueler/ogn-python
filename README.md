@@ -147,8 +147,9 @@ available commands:
   [gateway]
     run                    Run the aprs client.
   
-  [igcexport]
-    write                  Export igc file for <address> at <date>.
+  [export]
+    cup                    Export receiver waypoints as '.cup'.
+    igc                    Export igc file for <address> at <date>.
   
   [logbook]
     compute_logbook        Compute logbook.

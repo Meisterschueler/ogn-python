@@ -1,5 +1,6 @@
 import datetime
 import re
+import csv
 
 from aerofiles.igc import Writer
 from manager import Manager
@@ -10,10 +11,52 @@ from ogn.model import AircraftBeacon, Device
 manager = Manager()
 
 
+@manager.command
+def cup():
+    """Export receiver waypoints as '.cup'."""
+
+    sql = """
+        SELECT
+            'OGN-' || sq.name AS name,
+            sq.name AS code,
+            c.iso2 AS country,
+            CASE WHEN sq.lat_deg < 10 THEN '0' ELSE '' END || CAST((sq.lat_deg*100 + sq.lat_min) AS decimal(18, 5)) || sq.lat_sig AS lat,
+            CASE WHEN sq.lon_deg < 10 THEN '00' WHEN sq.lon_deg < 100 THEN '0' ELSE '' END || CAST(sq.lon_deg*100 + sq.lon_min AS decimal(18, 5)) || sq.lon_sig AS lon,
+            altitude || 'm' AS elev,
+            '8' AS style,
+            '' AS rwdir,
+            '' AS rwlen,
+            '' AS freq,
+            'lastseen: ' || sq.lastseen::date || ', version: ' || sq.version || ', platform: ' || sq.platform AS desc
+        FROM (
+            SELECT
+                st_y(location) as lat,
+                CASE WHEN ST_Y(location) > 0 THEN 'N' ELSE 'S' END AS lat_sig,
+                FLOOR(ABS(ST_Y(location))) AS lat_deg,
+                60*(ABS(ST_Y(location)) - FLOOR(ABS(ST_Y(location)))) AS lat_min,
+                st_x(location) AS lon,
+                CASE WHEN ST_X(location) > 0 THEN 'E' ELSE 'W' END AS lon_sig,
+                FLOOR(ABS(ST_X(location))) AS lon_deg,
+                60*(ABS(ST_X(location)) - FLOOR(ABS(ST_X(location)))) AS lon_min
+                , *
+            FROM receivers
+            WHERE lastseen - firstseen > INTERVAL'3 MONTH' AND lastseen > '2018-01-01 00:00:00' AND name NOT LIKE 'FNB%'
+            ) sq
+        INNER JOIN countries c ON c.gid = sq.country_id
+        ORDER BY sq.name;
+        """
+    results = session.execute(sql)
+
+    with open('receivers.cup', 'w') as outfile:
+        outcsv = csv.writer(outfile)
+        outcsv.writerow(results.keys())
+        outcsv.writerows(results.fetchall())
+
+
 @manager.arg('address', help='address (flarm id)')
 @manager.arg('date', help='date (format: yyyy-mm-dd)')
 @manager.command
-def write(address, date):
+def igc(address, date):
     """Export igc file for <address> at <date>."""
     if not re.match('.{6}', address):
         print("Address {} not valid.".format(address))
