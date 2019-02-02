@@ -58,8 +58,8 @@ class LogfileDbSaver():
         try:
             self.cur.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
             self.cur.execute('CREATE EXTENSION IF NOT EXISTS btree_gist;')
-            self.cur.execute('DROP TABLE IF EXISTS "{}"; SELECT INTO {} FROM aircraft_beacons WHERE 1 = 2;'.format(self.aircraft_table))
-            self.cur.execute('DROP TABLE IF EXISTS "{}"; SELECT INTO {} FROM receiver_beacons WHERE 1 = 2;'.format(self.receiver_table))
+            self.cur.execute('DROP TABLE IF EXISTS "{0}"; CREATE TABLE {0} AS TABLE aircraft_beacons WITH NO DATA;'.format(self.aircraft_table))
+            self.cur.execute('DROP TABLE IF EXISTS "{0}"; CREATE TABLE {0} AS TABLE receiver_beacons WITH NO DATA;'.format(self.receiver_table))
             self.conn.commit()
         except Exception as e:
             raise Exception("I can't create the tables")
