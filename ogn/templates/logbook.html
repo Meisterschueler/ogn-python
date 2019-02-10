@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Logbook</h3></div>
+<div class="panel-body">
+
+<form>
+<div class="well">
+<select name="country" onchange="this.form.submit();">
+	<option value="">(none)</option>
+    {% for country in countries %}
+    <option value="{{ country.iso2 }}"{% if sel_country == country.iso2 %} SELECTED{% endif %}>{{ country.iso2 }}</option>
+    {% endfor %}
+</select>
+<select name="airport" onchange="this.form.submit();">
+	<option value="">(none)</option>
+    {% for airport in airports %}
+    <option value="{{ airport.id }}"{% if sel_airport == airport.id|string() %} SELECTED{% endif %}>{{ airport.name }}</option>
+    {% endfor %}
+</select>
+<select name="date" onchange="this.form.submit();">
+	<option value="">(none)</option>
+    {% for date in dates %}
+    <option value="{{ date[0] }}"{% if sel_date|string() == date[0]|string() %} SELECTED{% endif %}>{{ date[0] }} ({{ date[1] }})</option>
+    {% endfor %}
+</select>
+</div>
+</form>
+
+
+{% if logbook is not none %}
+<table class="datatable table table-striped table-bordered">
+	<tr>
+		<th>Nr.</th>
+        <th>Aircraft</th>
+        <th>Type</th>
+        <th colspan="2">Takeoff</th>
+        <th colspan="2">Landing</th>
+        <th>AGL</th>
+	</tr>
+	{% for entry in logbook %}
+	<tr>
+		<td>{{ loop.index }}</td>
+        <td>{{ entry.registration }}</td>
+        <td>{{ entry.aircraft }}</td>
+        <td>{% if entry.takeoff_timestamp is not none %} {{ entry.takeoff_timestamp.strftime('%H:%M') }} {% endif %}</td>
+        <td>{% if entry.takeoff_track is not none %} {{ '%02d' | format(entry.takeoff_track) }} {% endif %}</td>
+        <td>{% if entry.landing_timestamp is not none %} {{ entry.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>
+        <td>{% if entry.landing_track is not none %} {{ '%02d' | format(entry.landing_track) }} {% endif %}</td>
+        <td>{% if entry.max_altitude is not none %} {{ entry.max_altitude }} {% endif %}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endif %}
+</div>
+</div>
+
+{% endblock %}

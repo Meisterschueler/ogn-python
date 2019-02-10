@@ -32,7 +32,10 @@ setup(
     keywords='gliding ogn',
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
+        'Flask==1.0.2',
+        'flask-bootstrap==3.3.7.1',
         'flask-sqlalchemy==2.3.2',
+        'flask-nav==0.6',
         'geopy==1.17.0',
         'manage.py==0.2.10',
         'celery[redis]==4.2.1',

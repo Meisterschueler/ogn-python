@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Airports</h3></div>
+<div class="panel-body">
+  <table class="datatable table table-striped table-bordered">
+    <tr>
+      <th>#</th>
+   	  <th>Name</th>
+   	  <th>Country</th>
+    </tr>
+
+    {% for airport in pagination.items %}
+	<tr>
+	  <td>{{ loop.index }}
+	  <td>{{ airport.name }}</td>
+	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/></td>
+	</tr>
+	{% endfor %}
+  </table>
+</div>
+</div>
+
+{% endblock %}
