@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, SmallInteger, DateTime
 
-from .base import Base
+from ogn import db
 
 
-class Device(Base):
+class Device(db.Model):
     __tablename__ = 'devices'
 
     id = Column(Integer, primary_key=True)

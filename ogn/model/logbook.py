@@ -2,10 +2,10 @@ from sqlalchemy import Integer, SmallInteger, Float, DateTime, Column, ForeignKe
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship, backref
 
-from .base import Base
+from ogn import db
 
 
-class Logbook(Base):
+class Logbook(db.Model):
     __tablename__ = 'logbook'
 
     id = Column(Integer, primary_key=True)

@@ -1,10 +1,10 @@
 from sqlalchemy import Column, String, Integer, SmallInteger, Float, Date, ForeignKey, Index
 from sqlalchemy.orm import relationship, backref
 
-from .base import Base
+from ogn import db
 
 
-class ReceiverCoverage(Base):
+class ReceiverCoverage(db.Model):
     __tablename__ = "receiver_coverages"
 
     location_mgrs_short = Column(String(9), primary_key=True)

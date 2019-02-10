@@ -32,7 +32,7 @@ setup(
     keywords='gliding ogn',
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
-        'SQLAlchemy==1.2.12',
+        'flask-sqlalchemy==2.3.2',
         'geopy==1.17.0',
         'manage.py==0.2.10',
         'celery[redis]==4.2.1',
@@ -44,7 +44,7 @@ setup(
         'psycopg2-binary==2.7.6.1',
         'mgrs==1.3.5',
         'xmlunittest==0.5.0',
-        'tqdm==4.28.1'
+        'tqdm==4.28.1',
     ],
     extras_require={
         'dev': [

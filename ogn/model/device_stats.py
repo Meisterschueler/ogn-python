@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, Date, DateTime, Float, ForeignKey, SmallInteger, Boolean, String, Index
 from sqlalchemy.orm import relationship, backref
 
-from .base import Base
+from ogn import db
 
 
-class DeviceStats(Base):
+class DeviceStats(db.Model):
     __tablename__ = "device_stats"
 
     id = Column(Integer, primary_key=True)

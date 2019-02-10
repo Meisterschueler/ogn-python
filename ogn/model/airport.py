@@ -1,10 +1,10 @@
 from geoalchemy2.types import Geometry
 from sqlalchemy import Column, String, Integer, Float, SmallInteger
 
-from .base import Base
+from ogn import db
 
 
-class Airport(Base):
+class Airport(db.Model):
     __tablename__ = "airports"
 
     id = Column(Integer, primary_key=True)

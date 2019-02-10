@@ -3,11 +3,12 @@ from geoalchemy2.types import Geometry
 from sqlalchemy import Column, Float, String, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
-from .base import Base
 from .geo import Location
 
+from ogn import db
 
-class Receiver(Base):
+
+class Receiver(db.Model):
     __tablename__ = "receivers"
 
     id = Column(Integer, primary_key=True)

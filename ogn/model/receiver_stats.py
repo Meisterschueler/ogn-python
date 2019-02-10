@@ -2,10 +2,10 @@ from sqlalchemy import Column, Integer, SmallInteger, Date, Float, ForeignKey, D
 from sqlalchemy.orm import relationship, backref
 from geoalchemy2.types import Geometry
 
-from .base import Base
+from ogn import db
 
 
-class ReceiverStats(Base):
+class ReceiverStats(db.Model):
     __tablename__ = "receiver_stats"
 
     id = Column(Integer, primary_key=True)

@@ -1,10 +1,10 @@
 from geoalchemy2.types import Geometry
 from sqlalchemy import Column, String, Integer, Float, SmallInteger, BigInteger
 
-from .base import Base
+from ogn import db
 
 
-class Country(Base):
+class Country(db.Model):
     __tablename__ = "countries"
 
     gid = Column(Integer, primary_key=True)

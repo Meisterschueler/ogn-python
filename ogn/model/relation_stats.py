@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, Date, Float, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from ogn import db
 
 
-class RelationStats(Base):
+class RelationStats(db.Model):
     __tablename__ = "relation_stats"
 
     id = Column(Integer, primary_key=True)

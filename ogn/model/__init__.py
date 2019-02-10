@@ -1,6 +1,5 @@
 # flake8: noqa
 from .aircraft_type import AircraftType
-from .base import Base
 from .beacon import Beacon
 from .country import Country
 from .device import Device

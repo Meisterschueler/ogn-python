@@ -2,10 +2,10 @@ from geoalchemy2.types import Geometry
 from sqlalchemy import Column, Integer, Date, Index, ForeignKey
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from ogn import db
 
 
-class Flight2D(Base):
+class Flight2D(db.Model):
     __tablename__ = "flights2d"
 
     date = Column(Date, primary_key=True)

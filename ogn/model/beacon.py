@@ -4,11 +4,12 @@ from sqlalchemy import Column, String, SmallInteger, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from .base import Base
 from .geo import Location
 
+from ogn import db
 
-class Beacon(AbstractConcreteBase, Base):
+
+class Beacon(AbstractConcreteBase, db.Model):
     # APRS data
     location_wkt = Column('location', Geometry('POINT', srid=4326))
     altitude = Column(Float(precision=2))

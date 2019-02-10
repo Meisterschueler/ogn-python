@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, String, Boolean, SmallInteger, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
-from .base import Base
+from ogn import db
 
 
-class DeviceInfo(Base):
+class DeviceInfo(db.Model):
     __tablename__ = 'device_infos'
 
     id = Column(Integer, primary_key=True)

@@ -1,10 +1,10 @@
 from sqlalchemy import Boolean, Column, Integer, SmallInteger, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-from .base import Base
+from ogn import db
 
 
-class TakeoffLanding(Base):
+class TakeoffLanding(db.Model):
     __tablename__ = 'takeoff_landings'
 
     device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), primary_key=True)
