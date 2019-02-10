@@ -1,6 +1,5 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, String, SmallInteger, Float, DateTime
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -11,18 +10,18 @@ from ogn import db
 
 class Beacon(AbstractConcreteBase, db.Model):
     # APRS data
-    location_wkt = Column('location', Geometry('POINT', srid=4326))
-    altitude = Column(Float(precision=2))
+    location_wkt = db.Column('location', Geometry('POINT', srid=4326))
+    altitude = db.Column(db.Float(precision=2))
 
-    name = Column(String, primary_key=True, nullable=True)
-    dstcall = Column(String)
-    relay = Column(String)
-    receiver_name = Column(String(9), primary_key=True, nullable=True)
-    timestamp = Column(DateTime, primary_key=True, nullable=True)
+    name = db.Column(db.String, primary_key=True, nullable=True)
+    dstcall = db.Column(db.String)
+    relay = db.Column(db.String)
+    receiver_name = db.Column(db.String(9), primary_key=True, nullable=True)
+    timestamp = db.Column(db.DateTime, primary_key=True, nullable=True)
     symboltable = None
     symbolcode = None
-    track = Column(SmallInteger)
-    ground_speed = Column(Float(precision=2))
+    track = db.Column(db.SmallInteger)
+    ground_speed = db.Column(db.Float(precision=2))
     comment = None
 
     # Type information

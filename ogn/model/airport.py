@@ -1,5 +1,4 @@
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, String, Integer, Float, SmallInteger
 
 from ogn import db
 
@@ -7,21 +6,21 @@ from ogn import db
 class Airport(db.Model):
     __tablename__ = "airports"
 
-    id = Column(Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
-    location_wkt = Column('location', Geometry('POINT', srid=4326))
-    altitude = Column(Float(precision=2))
+    location_wkt = db.Column('location', Geometry('POINT', srid=4326))
+    altitude = db.Column(db.Float(precision=2))
 
-    name = Column(String, index=True)
-    code = Column(String(6))
-    country_code = Column(String(2))
-    style = Column(SmallInteger)
-    description = Column(String)
-    runway_direction = Column(SmallInteger)
-    runway_length = Column(SmallInteger)
-    frequency = Column(Float(precision=2))
+    name = db.Column(db.String, index=True)
+    code = db.Column(db.String(6))
+    country_code = db.Column(db.String(2))
+    style = db.Column(db.SmallInteger)
+    description = db.Column(db.String)
+    runway_direction = db.Column(db.SmallInteger)
+    runway_length = db.Column(db.SmallInteger)
+    frequency = db.Column(db.Float(precision=2))
 
-    border = Column('border', Geometry('POLYGON', srid=4326))
+    border = db.Column('border', Geometry('POLYGON', srid=4326))
 
     def __repr__(self):
         return "<Airport %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,% s>" % (

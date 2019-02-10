@@ -1,5 +1,3 @@
-from sqlalchemy import Column, Integer, SmallInteger, Date, Float, ForeignKey, DateTime, String, Index
-from sqlalchemy.orm import relationship, backref
 from geoalchemy2.types import Geometry
 
 from ogn import db
@@ -8,36 +6,36 @@ from ogn import db
 class ReceiverStats(db.Model):
     __tablename__ = "receiver_stats"
 
-    id = Column(Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
-    date = Column(Date)
+    date = db.Column(db.Date)
 
     # Static data
-    firstseen = Column(DateTime, index=True)
-    lastseen = Column(DateTime, index=True)
-    location_wkt = Column('location', Geometry('POINT', srid=4326))
-    altitude = Column(Float(precision=2))
-    version = Column(String)
-    platform = Column(String)
+    firstseen = db.Column(db.DateTime, index=True)
+    lastseen = db.Column(db.DateTime, index=True)
+    location_wkt = db.Column('location', Geometry('POINT', srid=4326))
+    altitude = db.Column(db.Float(precision=2))
+    version = db.Column(db.String)
+    platform = db.Column(db.String)
 
     # Statistic data
-    aircraft_beacon_count = Column(Integer)
-    aircraft_count = Column(SmallInteger)
-    max_distance = Column(Float)
-    quality = Column(Float(precision=2))
+    aircraft_beacon_count = db.Column(db.Integer)
+    aircraft_count = db.Column(db.SmallInteger)
+    max_distance = db.Column(db.Float)
+    quality = db.Column(db.Float(precision=2))
 
     # Relation statistic data
-    quality_offset = Column(Float(precision=2))
+    quality_offset = db.Column(db.Float(precision=2))
 
     # Ranking data
-    aircraft_beacon_count_ranking = Column(SmallInteger)
-    aircraft_count_ranking = Column(SmallInteger)
-    max_distance_ranking = Column(SmallInteger)
-    quality_ranking = Column(Integer)
+    aircraft_beacon_count_ranking = db.Column(db.SmallInteger)
+    aircraft_count_ranking = db.Column(db.SmallInteger)
+    max_distance_ranking = db.Column(db.SmallInteger)
+    quality_ranking = db.Column(db.Integer)
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'), index=True)
-    receiver = relationship('Receiver', foreign_keys=[receiver_id], backref=backref('stats', order_by='ReceiverStats.date.asc()'))
+    receiver_id = db.Column(db.Integer, db.ForeignKey('receivers.id', ondelete='SET NULL'), index=True)
+    receiver = db.relationship('Receiver', foreign_keys=[receiver_id], backref=db.backref('stats', order_by='ReceiverStats.date.asc()'))
 
 
-Index('ix_receiver_stats_date_receiver_id', ReceiverStats.date, ReceiverStats.receiver_id)
+db.Index('ix_receiver_stats_date_receiver_id', ReceiverStats.date, ReceiverStats.receiver_id)

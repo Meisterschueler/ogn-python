@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Float, String, Integer, ForeignKey, Index
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .beacon import Beacon
+
+from ogn import db
 
 
 class ReceiverBeacon(Beacon):
@@ -12,34 +12,34 @@ class ReceiverBeacon(Beacon):
     ground_speed = None
 
     # ReceiverBeacon specific data
-    version = Column(String)
-    platform = Column(String)
-    cpu_load = Column(Float(precision=2))
-    free_ram = Column(Float(precision=2))
-    total_ram = Column(Float(precision=2))
-    ntp_error = Column(Float(precision=2))
-    rt_crystal_correction = Column(Float(precision=2))
-    voltage = Column(Float(precision=2))
-    amperage = Column(Float(precision=2))
-    cpu_temp = Column(Float(precision=2))
-    senders_visible = Column(Integer)
-    senders_total = Column(Integer)
-    rec_input_noise = Column(Float(precision=2))
-    senders_signal = Column(Float(precision=2))
-    senders_messages = Column(Integer)
-    good_senders_signal = Column(Float(precision=2))
-    good_senders = Column(Integer)
-    good_and_bad_senders = Column(Integer)
+    version = db.Column(db.String)
+    platform = db.Column(db.String)
+    cpu_load = db.Column(db.Float(precision=2))
+    free_ram = db.Column(db.Float(precision=2))
+    total_ram = db.Column(db.Float(precision=2))
+    ntp_error = db.Column(db.Float(precision=2))
+    rt_crystal_correction = db.Column(db.Float(precision=2))
+    voltage = db.Column(db.Float(precision=2))
+    amperage = db.Column(db.Float(precision=2))
+    cpu_temp = db.Column(db.Float(precision=2))
+    senders_visible = db.Column(db.Integer)
+    senders_total = db.Column(db.Integer)
+    rec_input_noise = db.Column(db.Float(precision=2))
+    senders_signal = db.Column(db.Float(precision=2))
+    senders_messages = db.Column(db.Integer)
+    good_senders_signal = db.Column(db.Float(precision=2))
+    good_senders = db.Column(db.Integer)
+    good_and_bad_senders = db.Column(db.Integer)
 
     # User comment: used for additional information like hardware configuration, web site, email address, ...
     user_comment = None
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'))
-    receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='receiver_beacons')
+    receiver_id = db.Column(db.Integer, db.ForeignKey('receivers.id', ondelete='SET NULL'))
+    receiver = db.relationship('Receiver', foreign_keys=[receiver_id], backref='receiver_beacons')
 
     # Multi-column indices
-    Index('ix_receiver_beacons_receiver_id_name', 'receiver_id', 'name')
+    db.Index('ix_receiver_beacons_receiver_id_name', 'receiver_id', 'name')
 
     def __repr__(self):
         return "<ReceiverBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
@@ -125,4 +125,4 @@ class ReceiverBeacon(Beacon):
             int(self.good_and_bad_senders) if self.good_and_bad_senders else None]
 
 
-Index('ix_receiver_beacons_date_receiver_id', func.date(ReceiverBeacon.timestamp), ReceiverBeacon.receiver_id)
+db.Index('ix_receiver_beacons_date_receiver_id', func.date(ReceiverBeacon.timestamp), ReceiverBeacon.receiver_id)

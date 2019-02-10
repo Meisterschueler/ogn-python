@@ -1,6 +1,4 @@
-from sqlalchemy import Integer, SmallInteger, Float, DateTime, Column, ForeignKey, case, null
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship, backref
 
 from ogn import db
 
@@ -8,24 +6,24 @@ from ogn import db
 class Logbook(db.Model):
     __tablename__ = 'logbook'
 
-    id = Column(Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
-    reftime = Column(DateTime, index=True)
-    takeoff_timestamp = Column(DateTime)
-    takeoff_track = Column(SmallInteger)
-    landing_timestamp = Column(DateTime)
-    landing_track = Column(SmallInteger)
-    max_altitude = Column(Float(precision=2))
+    reftime = db.Column(db.DateTime, index=True)
+    takeoff_timestamp = db.Column(db.DateTime)
+    takeoff_track = db.Column(db.SmallInteger)
+    landing_timestamp = db.Column(db.DateTime)
+    landing_track = db.Column(db.SmallInteger)
+    max_altitude = db.Column(db.Float(precision=2))
 
     # Relations
-    takeoff_airport_id = Column(Integer, ForeignKey('airports.id', ondelete='CASCADE'), index=True)
-    takeoff_airport = relationship('Airport', foreign_keys=[takeoff_airport_id])
+    takeoff_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id', ondelete='CASCADE'), index=True)
+    takeoff_airport = db.relationship('Airport', foreign_keys=[takeoff_airport_id])
 
-    landing_airport_id = Column(Integer, ForeignKey('airports.id', ondelete='CASCADE'), index=True)
-    landing_airport = relationship('Airport', foreign_keys=[landing_airport_id])
+    landing_airport_id = db.Column(db.Integer, db.ForeignKey('airports.id', ondelete='CASCADE'), index=True)
+    landing_airport = db.relationship('Airport', foreign_keys=[landing_airport_id])
 
-    device_id = Column(Integer, ForeignKey('devices.id', ondelete='CASCADE'), index=True)
-    device = relationship('Device', foreign_keys=[device_id], backref=backref('logbook', order_by='Logbook.reftime'))
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='CASCADE'), index=True)
+    device = db.relationship('Device', foreign_keys=[device_id], backref=db.backref('logbook', order_by='Logbook.reftime'))
 
     @hybrid_property
     def duration(self):

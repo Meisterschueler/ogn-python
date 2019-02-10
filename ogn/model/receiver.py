@@ -1,7 +1,5 @@
 from geoalchemy2.shape import to_shape
 from geoalchemy2.types import Geometry
-from sqlalchemy import Column, Float, String, Integer, DateTime, ForeignKey
-from sqlalchemy.orm import relationship, backref
 
 from .geo import Location
 
@@ -11,20 +9,20 @@ from ogn import db
 class Receiver(db.Model):
     __tablename__ = "receivers"
 
-    id = Column(Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
-    location_wkt = Column('location', Geometry('POINT', srid=4326))
-    altitude = Column(Float(precision=2))
+    location_wkt = db.Column('location', Geometry('POINT', srid=4326))
+    altitude = db.Column(db.Float(precision=2))
 
-    name = Column(String(9), index=True)
-    firstseen = Column(DateTime, index=True)
-    lastseen = Column(DateTime, index=True)
-    version = Column(String)
-    platform = Column(String)
+    name = db.Column(db.String(9), index=True)
+    firstseen = db.Column(db.DateTime, index=True)
+    lastseen = db.Column(db.DateTime, index=True)
+    version = db.Column(db.String)
+    platform = db.Column(db.String)
 
     # Relations
-    country_id = Column(Integer, ForeignKey('countries.gid', ondelete='SET NULL'), index=True)
-    country = relationship('Country', foreign_keys=[country_id], backref=backref('receivers', order_by='Receiver.name.asc()'))
+    country_id = db.Column(db.Integer, db.ForeignKey('countries.gid', ondelete='SET NULL'), index=True)
+    country = db.relationship('Country', foreign_keys=[country_id], backref=db.backref('receivers', order_by='Receiver.name.asc()'))
 
     @property
     def location(self):

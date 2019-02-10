@@ -1,28 +1,25 @@
-from sqlalchemy import Column, Integer, String, Boolean, SmallInteger, ForeignKey
-from sqlalchemy.orm import relationship, backref
-
 from ogn import db
 
 
 class DeviceInfo(db.Model):
     __tablename__ = 'device_infos'
 
-    id = Column(Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     address_type = None
-    #address = Column(String(6), index=True)
-    address = Column(String, index=True)
-    aircraft = Column(String)
-    registration = Column(String(7))
-    competition = Column(String(3))
-    tracked = Column(Boolean)
-    identified = Column(Boolean)
-    aircraft_type = Column(SmallInteger)
+    #address = db.Column(db.String(6), index=True)
+    address = db.Column(db.String, index=True)
+    aircraft = db.Column(db.String)
+    registration = db.Column(db.String(7))
+    competition = db.Column(db.String(3))
+    tracked = db.Column(db.Boolean)
+    identified = db.Column(db.Boolean)
+    aircraft_type = db.Column(db.SmallInteger)
 
-    address_origin = Column(SmallInteger)
+    address_origin = db.Column(db.SmallInteger)
 
     # Relations
-    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), index=True)
-    device = relationship('Device', foreign_keys=[device_id], backref=backref('infos', order_by='DeviceInfo.address_origin.asc()'))
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='SET NULL'), index=True)
+    device = db.relationship('Device', foreign_keys=[device_id], backref=db.backref('infos', order_by='DeviceInfo.address_origin.asc()'))
 
     def __repr__(self):
         return "<DeviceInfo: %s,%s,%s,%s,%s,%s,%s,%s,%s>" % (

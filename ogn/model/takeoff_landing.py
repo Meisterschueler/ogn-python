@@ -1,19 +1,16 @@
-from sqlalchemy import Boolean, Column, Integer, SmallInteger, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-
 from ogn import db
 
 
 class TakeoffLanding(db.Model):
     __tablename__ = 'takeoff_landings'
 
-    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'), primary_key=True)
-    airport_id = Column(Integer, ForeignKey('airports.id', ondelete='SET NULL'), primary_key=True)
-    timestamp = Column(DateTime, primary_key=True)
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='SET NULL'), primary_key=True)
+    airport_id = db.Column(db.Integer, db.ForeignKey('airports.id', ondelete='SET NULL'), primary_key=True)
+    timestamp = db.Column(db.DateTime, primary_key=True)
 
-    is_takeoff = Column(Boolean)
-    track = Column(SmallInteger)
+    is_takeoff = db.Column(db.Boolean)
+    track = db.Column(db.SmallInteger)
 
     # Relations
-    airport = relationship('Airport', foreign_keys=[airport_id], backref='takeoff_landings')
-    device = relationship('Device', foreign_keys=[device_id], backref='takeoff_landings', order_by='TakeoffLanding.timestamp')
+    airport = db.relationship('Airport', foreign_keys=[airport_id], backref='takeoff_landings')
+    device = db.relationship('Device', foreign_keys=[device_id], backref='takeoff_landings', order_by='TakeoffLanding.timestamp')

@@ -1,48 +1,48 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, SmallInteger, ForeignKey, Index
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .beacon import Beacon
+
+from ogn import db
 
 
 class AircraftBeacon(Beacon):
     __tablename__ = "aircraft_beacons"
 
     # Flarm specific data
-    address_type = Column(SmallInteger)
-    aircraft_type = Column(SmallInteger)
-    stealth = Column(Boolean)
-    address = Column(String)
-    climb_rate = Column(Float(precision=2))
-    turn_rate = Column(Float(precision=2))
-    signal_quality = Column(Float(precision=2))
-    error_count = Column(SmallInteger)
-    frequency_offset = Column(Float(precision=2))
-    gps_quality_horizontal = Column(SmallInteger)
-    gps_quality_vertical = Column(SmallInteger)
-    software_version = Column(Float(precision=2))
-    hardware_version = Column(SmallInteger)
-    real_address = Column(String(6))
-    signal_power = Column(Float(precision=2))
+    address_type = db.Column(db.SmallInteger)
+    aircraft_type = db.Column(db.SmallInteger)
+    stealth = db.Column(db.Boolean)
+    address = db.Column(db.String)
+    climb_rate = db.Column(db.Float(precision=2))
+    turn_rate = db.Column(db.Float(precision=2))
+    signal_quality = db.Column(db.Float(precision=2))
+    error_count = db.Column(db.SmallInteger)
+    frequency_offset = db.Column(db.Float(precision=2))
+    gps_quality_horizontal = db.Column(db.SmallInteger)
+    gps_quality_vertical = db.Column(db.SmallInteger)
+    software_version = db.Column(db.Float(precision=2))
+    hardware_version = db.Column(db.SmallInteger)
+    real_address = db.Column(db.String(6))
+    signal_power = db.Column(db.Float(precision=2))
     proximity = None
 
     # Calculated values
-    distance = Column(Float(precision=2))
-    radial = Column(SmallInteger)
-    quality = Column(Float(precision=2))        # signal quality normalized to 10km
-    location_mgrs = Column(String(15))          # full mgrs (15 chars)
-    location_mgrs_short = Column(String(9))     # reduced mgrs (9 chars), e.g. used for melissas range tool
-    agl = Column(Float(precision=2))
+    distance = db.Column(db.Float(precision=2))
+    radial = db.Column(db.SmallInteger)
+    quality = db.Column(db.Float(precision=2))        # signal quality normalized to 10km
+    location_mgrs = db.Column(db.String(15))          # full mgrs (15 chars)
+    location_mgrs_short = db.Column(db.String(9))     # reduced mgrs (9 chars), e.g. used for melissas range tool
+    agl = db.Column(db.Float(precision=2))
 
     # Relations
-    receiver_id = Column(Integer, ForeignKey('receivers.id', ondelete='SET NULL'))
-    receiver = relationship('Receiver', foreign_keys=[receiver_id], backref='aircraft_beacons')
+    receiver_id = db.Column(db.Integer, db.ForeignKey('receivers.id', ondelete='SET NULL'))
+    receiver = db.relationship('Receiver', foreign_keys=[receiver_id], backref='aircraft_beacons')
 
-    device_id = Column(Integer, ForeignKey('devices.id', ondelete='SET NULL'))
-    device = relationship('Device', foreign_keys=[device_id], backref='aircraft_beacons')
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='SET NULL'))
+    device = db.relationship('Device', foreign_keys=[device_id], backref='aircraft_beacons')
 
     # Multi-column indices
-    Index('ix_aircraft_beacons_receiver_id_distance', 'receiver_id', 'distance')
-    Index('ix_aircraft_beacons_device_id_timestamp', 'device_id', 'timestamp')
+    db.Index('ix_aircraft_beacons_receiver_id_distance', 'receiver_id', 'distance')
+    db.Index('ix_aircraft_beacons_device_id_timestamp', 'device_id', 'timestamp')
 
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
@@ -143,5 +143,5 @@ class AircraftBeacon(Beacon):
             self.location_mgrs_short]
 
 
-Index('ix_aircraft_beacons_date_device_id_address', func.date(AircraftBeacon.timestamp), AircraftBeacon.device_id, AircraftBeacon.address)
-Index('ix_aircraft_beacons_date_receiver_id_distance', func.date(AircraftBeacon.timestamp), AircraftBeacon.receiver_id, AircraftBeacon.distance)
+db.Index('ix_aircraft_beacons_date_device_id_address', func.date(AircraftBeacon.timestamp), AircraftBeacon.device_id, AircraftBeacon.address)
+db.Index('ix_aircraft_beacons_date_receiver_id_distance', func.date(AircraftBeacon.timestamp), AircraftBeacon.receiver_id, AircraftBeacon.distance)
