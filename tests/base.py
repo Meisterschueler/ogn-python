@@ -10,14 +10,14 @@ class TestBaseDB(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from ogn.commands.dbutils import engine, session
+        from ogn_python.commands.dbutils import engine, session
         cls.session = session
         cls.engine = engine
 
-        from ogn.commands.database import drop
+        from ogn_python.commands.database import drop
         drop(sure='y')
 
-        from ogn.commands.database import init
+        from ogn_python.commands.database import init
         init()
 
     def setUp(self):

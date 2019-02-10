@@ -2,8 +2,8 @@ import unittest
 
 from tests.base import TestBaseDB
 
-from ogn.model import Logbook, Airport, Device, TakeoffLanding
-from ogn.collect.logbook import update_logbook
+from ogn_python.model import Logbook, Airport, Device, TakeoffLanding
+from ogn_python.collect.logbook import update_logbook
 
 
 class TestLogbook(TestBaseDB):

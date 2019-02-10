@@ -2,8 +2,8 @@ import os
 import unittest
 from datetime import date
 
-from ogn.model import AircraftType
-from ogn.utils import get_days, get_ddb, get_trackable, get_airports
+from ogn_python.model import AircraftType
+from ogn_python.utils import get_days, get_ddb, get_trackable, get_airports
 
 
 class TestStringMethods(unittest.TestCase):

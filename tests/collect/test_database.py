@@ -2,8 +2,8 @@ import unittest
 
 from tests.base import TestBaseDB
 
-from ogn.model import AircraftBeacon, ReceiverBeacon, Device, Receiver
-from ogn.collect.database import add_missing_devices, add_missing_receivers, upsert
+from ogn_python.model import AircraftBeacon, ReceiverBeacon, Device, Receiver
+from ogn_python.collect.database import add_missing_devices, add_missing_receivers, upsert
 
 
 class TestDatabase(TestBaseDB):
