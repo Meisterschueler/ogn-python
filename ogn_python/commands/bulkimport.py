@@ -159,8 +159,8 @@ class LogfileDbSaver():
 
             rb.location, rb.altitude, rb.name, rb.receiver_name, rb.dstcall, rb.timestamp,
 
-            rb.version, rb.platform, rb.cpu_load, rb.free_ram, rb.total_ram, rb.ntp_error, rb.rt_crystal_correction, rb.voltage, rb.amperage real,
-            rb.cpu_temp, rb.senders_visible, rb.senders_total, rb.rec_input_noise, rb.senders_signal, rb.senders_messages, rb.good_senders_signal real,
+            rb.version, rb.platform, rb.cpu_load, rb.free_ram, rb.total_ram, rb.ntp_error, rb.rt_crystal_correction, rb.voltage, rb.amperage,
+            rb.cpu_temp, rb.senders_visible, rb.senders_total, rb.rec_input_noise, rb.senders_signal, rb.senders_messages, rb.good_senders_signal,
             rb.good_senders, rb.good_and_bad_senders,
 
             r.id AS receiver_id
@@ -515,13 +515,14 @@ def update():
 
     with LogfileDbSaver() as saver:
         datestrs = saver.get_datestrs(no_index_only=True)
+        datestrs = saver.get_datestrs()
         pbar = tqdm(datestrs)
         for datestr in pbar:
             pbar.set_description("Updating relations for {}".format(datestr))
             saver.set_datestr(datestr)
             saver.update_receiver_location()
             saver.update_aircraft_beacons()
-            saver.update_receiver_location()
+            saver.update_receiver_beacons()
             saver.create_indices()
 
 
