@@ -289,17 +289,6 @@ class LogfileDbSaver():
         ORDER BY timestamp, name, receiver_name
         """.format(self.receiver_table)
 
-    def is_transfered(self):
-        query = """
-        SELECT
-            1
-        FROM ({} LIMIT 1) AS sq, aircraft_beacons AS ab
-        WHERE ab.timestamp = sq.timestamp AND ab.name = sq.name AND ab.receiver_name = sq.receiver_name;
-        """.format(self.get_merged_aircraft_beacons_subquery())
-
-        self.cur.execute(query)
-        return len(self.cur.fetchall()) == 1
-
     def transfer_aircraft_beacons(self):
         query = """
         INSERT INTO aircraft_beacons(location, altitude, name, dstcall, relay, receiver_name, timestamp, track, ground_speed,
@@ -533,18 +522,14 @@ def transfer(start, end):
     """Transfer beacons from separate logfile tables to beacon table."""
 
     with LogfileDbSaver() as saver:
-        if start is not None and end is not None:
-            dates = get_database_days(start, end)
-            datestrs = [date.strftime('%Y_%m_%d') for date in dates]
-        else:
-            datestrs = saver.get_datestrs()
+        dates = get_database_days(start, end)
+        datestrs = [date.strftime('%Y_%m_%d') for date in dates]
         pbar = tqdm(datestrs)
         for datestr in pbar:
             pbar.set_description("Transfer beacons for {}".format(datestr))
             saver.set_datestr(datestr)
-            if not saver.is_transfered():
-                saver.transfer_aircraft_beacons()
-                saver.transfer_receiver_beacons()
+            saver.transfer_aircraft_beacons()
+            saver.transfer_receiver_beacons()
 
 
 @user_cli.command('create_flights2d')
@@ -585,7 +570,6 @@ def file_export(path):
 
     with LogfileDbSaver() as saver:
         datestrs = saver.get_datestrs()
-        datestrs = filter(lambda x: x.startswith('2018-12'), datestrs)
         pbar = tqdm(datestrs)
         for datestr in pbar:
             pbar.set_description("Exporting data for {}".format(datestr))
