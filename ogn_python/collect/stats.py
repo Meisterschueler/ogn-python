@@ -1,6 +1,6 @@
 from celery.utils.log import get_task_logger
 
-from sqlalchemy import insert, distinct, between
+from sqlalchemy import insert, distinct, between, literal
 from sqlalchemy.sql import null, and_, func, or_, update
 from sqlalchemy.sql.expression import case
 
@@ -11,6 +11,9 @@ from ogn_python.model.receiver_beacon import ReceiverBeacon
 from ogn_python.utils import date_to_timestamps
 
 logger = get_task_logger(__name__)
+
+# 40dB@10km is enough for 640km
+MAX_PLAUSIBLE_QUALITY = 40
 
 
 @app.task
@@ -43,7 +46,7 @@ def create_device_stats(session=None, date=None):
     # Calculate stats, firstseen, lastseen and last values != NULL
     device_stats = session.query(
             distinct(sq.c.device_id).label('device_id'),
-            func.date(sq.c.timestamp).label('date'),
+            literal(date).label('date'),
             func.max(sq.c.dr)
                 .over(partition_by=sq.c.device_id)
                 .label('receiver_count'),
@@ -115,7 +118,7 @@ def create_receiver_stats(session=None, date=None):
     # Calculate stats, firstseen, lastseen and last values != NULL
     receiver_stats = session.query(
             distinct(sq.c.receiver_id).label('receiver_id'),
-            func.date(sq.c.timestamp).label('date'),
+            literal(date).label('date'),
             func.first_value(sq.c.timestamp)
                 .over(partition_by=sq.c.receiver_id, order_by=case([(sq.c.timestamp == null(), None)], else_=sq.c.timestamp).asc().nullslast())
                 .label('firstseen'),
@@ -145,21 +148,20 @@ def create_receiver_stats(session=None, date=None):
     session.commit()
     logger.warn("ReceiverStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter))
 
-    # Update aircraft_beacon_count, aircraft_count and max_distance (without any error and max quality of 36dB@10km which is enough for 640km ... )
-    aircraft_beacon_stats = session.query(func.date(AircraftBeacon.timestamp).label('date'),
-                                          AircraftBeacon.receiver_id,
+    # Update aircraft_beacon_count, aircraft_count and max_distance
+    aircraft_beacon_stats = session.query(AircraftBeacon.receiver_id,
                                           func.count(AircraftBeacon.timestamp).label('aircraft_beacon_count'),
                                           func.count(func.distinct(AircraftBeacon.device_id)).label('aircraft_count'),
                                           func.max(AircraftBeacon.distance).label('max_distance')) \
         .filter(and_(between(AircraftBeacon.timestamp, start, end),
                      AircraftBeacon.error_count == 0,
-                     AircraftBeacon.quality <= 40)) \
-        .group_by(func.date(AircraftBeacon.timestamp),
-                  AircraftBeacon.receiver_id) \
+                     AircraftBeacon.quality <= MAX_PLAUSIBLE_QUALITY,
+                     AircraftBeacon.relay == null())) \
+        .group_by(AircraftBeacon.receiver_id) \
         .subquery()
 
     upd = update(ReceiverStats) \
-        .where(and_(ReceiverStats.date == aircraft_beacon_stats.c.date,
+        .where(and_(ReceiverStats.date == date,
                     ReceiverStats.receiver_id == aircraft_beacon_stats.c.receiver_id)) \
         .values({'aircraft_beacon_count': aircraft_beacon_stats.c.aircraft_beacon_count,
                  'aircraft_count': aircraft_beacon_stats.c.aircraft_count,
@@ -252,7 +254,7 @@ def create_relation_stats(session=None, date=None):
 
     # Calculate stats for selected day
     relation_stats = session.query(
-            func.date(AircraftBeacon.timestamp),
+            literal(date),
             AircraftBeacon.device_id,
             AircraftBeacon.receiver_id,
             func.max(AircraftBeacon.quality),
@@ -261,9 +263,9 @@ def create_relation_stats(session=None, date=None):
         .filter(and_(between(AircraftBeacon.timestamp, start, end),
                      AircraftBeacon.distance > 1000,
                      AircraftBeacon.error_count == 0,
-                     AircraftBeacon.quality <= 40,
+                     AircraftBeacon.quality <= MAX_PLAUSIBLE_QUALITY,
                      AircraftBeacon.ground_speed > 10)) \
-        .group_by(func.date(AircraftBeacon.timestamp), AircraftBeacon.device_id, AircraftBeacon.receiver_id) \
+        .group_by(literal(date), AircraftBeacon.device_id, AircraftBeacon.receiver_id) \
         .subquery()
 
     # And insert them
