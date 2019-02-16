@@ -292,16 +292,14 @@ def update_qualities(session=None, date=None):
         return None
 
     # Calculate avg quality of devices
-    dev_sq = session.query(RelationStats.date,
-                           RelationStats.device_id,
+    dev_sq = session.query(RelationStats.device_id,
                            func.avg(RelationStats.quality).label('quality')) \
         .filter(RelationStats.date == date) \
-        .group_by(RelationStats.date,
-                  RelationStats.device_id) \
+        .group_by(RelationStats.device_id) \
         .subquery()
 
     dev_upd = update(DeviceStats) \
-        .where(and_(DeviceStats.date == dev_sq.c.date,
+        .where(and_(DeviceStats.date == date,
                     DeviceStats.device_id == dev_sq.c.device_id)) \
         .values({'quality': dev_sq.c.quality})
 
@@ -311,16 +309,14 @@ def update_qualities(session=None, date=None):
     logger.warn("Updated {} DeviceStats: quality".format(dev_update_counter))
 
     # Calculate avg quality of receivers
-    rec_sq = session.query(RelationStats.date,
-                           RelationStats.receiver_id,
+    rec_sq = session.query(RelationStats.receiver_id,
                            func.avg(RelationStats.quality).label('quality')) \
         .filter(RelationStats.date == date) \
-        .group_by(RelationStats.date,
-                  RelationStats.receiver_id) \
+        .group_by(RelationStats.receiver_id) \
         .subquery()
 
     rec_upd = update(ReceiverStats) \
-        .where(and_(ReceiverStats.date == rec_sq.c.date,
+        .where(and_(ReceiverStats.date == date,
                     ReceiverStats.receiver_id == rec_sq.c.receiver_id)) \
         .values({'quality': rec_sq.c.quality})
 
@@ -330,18 +326,16 @@ def update_qualities(session=None, date=None):
     logger.warn("Updated {} ReceiverStats: quality".format(rec_update_counter))
 
     # Calculate quality_offset of devices
-    dev_sq = session.query(RelationStats.date,
-                        RelationStats.device_id,
-                        (func.sum(RelationStats.beacon_count * (RelationStats.quality - ReceiverStats.quality)) / (func.sum(RelationStats.beacon_count))).label('quality_offset')) \
+    dev_sq = session.query(RelationStats.device_id,
+                           (func.sum(RelationStats.beacon_count * (RelationStats.quality - ReceiverStats.quality)) / (func.sum(RelationStats.beacon_count))).label('quality_offset')) \
         .filter(RelationStats.date == date) \
         .filter(and_(RelationStats.receiver_id == ReceiverStats.receiver_id,
                      RelationStats.date == ReceiverStats.date)) \
-        .group_by(RelationStats.date,
-                  RelationStats.device_id) \
+        .group_by(RelationStats.device_id) \
         .subquery()
 
     dev_upd = update(DeviceStats) \
-        .where(and_(DeviceStats.date == dev_sq.c.date,
+        .where(and_(DeviceStats.date == date,
                     DeviceStats.device_id == dev_sq.c.device_id)) \
         .values({'quality_offset': dev_sq.c.quality_offset})
 
@@ -351,18 +345,16 @@ def update_qualities(session=None, date=None):
     logger.warn("Updated {} DeviceStats: quality_offset".format(dev_update_counter))
 
     # Calculate quality_offset of receivers
-    rec_sq = session.query(RelationStats.date,
-                        RelationStats.receiver_id,
-                        (func.sum(RelationStats.beacon_count * (RelationStats.quality - DeviceStats.quality)) / (func.sum(RelationStats.beacon_count))).label('quality_offset')) \
+    rec_sq = session.query(RelationStats.receiver_id,
+                           (func.sum(RelationStats.beacon_count * (RelationStats.quality - DeviceStats.quality)) / (func.sum(RelationStats.beacon_count))).label('quality_offset')) \
         .filter(RelationStats.date == date) \
         .filter(and_(RelationStats.device_id == DeviceStats.device_id,
                      RelationStats.date == DeviceStats.date)) \
-        .group_by(RelationStats.date,
-                  RelationStats.receiver_id) \
+        .group_by(RelationStats.receiver_id) \
         .subquery()
 
     rec_upd = update(ReceiverStats) \
-        .where(and_(ReceiverStats.date == rec_sq.c.date,
+        .where(and_(ReceiverStats.date == date,
                     ReceiverStats.receiver_id == rec_sq.c.receiver_id)) \
         .values({'quality_offset': rec_sq.c.quality_offset})
 
