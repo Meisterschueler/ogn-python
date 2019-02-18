@@ -23,7 +23,7 @@ def compute_flights2d(session, date):
     SELECT   sq5.date,
     sq5.device_id,
     st_collect(sq5.linestring order BY sq5.part) multilinestring,
-    st_collect(st_simplify(sq5.linestring ORDER BY sq5.part) simple_multilinestring
+    st_collect(st_simplify(sq5.linestring ORDER BY sq5.part, 0.0001) simple_multilinestring
     FROM     (
         SELECT   sq4.timestamp::date AS date,
         sq4.device_id,
