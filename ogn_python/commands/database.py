@@ -32,6 +32,15 @@ def get_database_days(start, end):
     return days
 
 
+@user_cli.command('info')
+def info():
+    import importlib
+    import os
+    config = importlib.import_module(os.environ['OGN_CONFIG_MODULE'])
+    print(config)
+    print(config.SQLALCHEMY_DATABASE_URI)
+
+
 @user_cli.command('init')
 def init():
     """Initialize the database."""
@@ -71,8 +80,8 @@ def upgrade():
 
 
 @user_cli.command('drop')
-@click.argument('sure')
-def drop(sure='n'):
+@click.option('--sure', default='n')
+def drop(sure):
     """Drop all tables."""
     if sure == 'y':
         Base.metadata.drop_all(engine)
