@@ -1,173 +1,316 @@
-from datetime import datetime, timedelta
-from ogn.parser import parse, ParseError
-from ogn_python.model import AircraftBeacon, ReceiverBeacon, Location
-from ogn_python.collect.database import upsert
+from ogn_python import db
 
-from mgrs import MGRS
+def create_tables(postfix):
+    """Create tables for log file import."""
 
-
-# define message types we want to proceed
-AIRCRAFT_BEACON_TYPES = ['aprs_aircraft', 'flarm', 'tracker', 'fanet', 'lt24', 'naviter', 'skylines', 'spider', 'spot']
-RECEIVER_BEACON_TYPES = ['aprs_receiver', 'receiver']
-
-# define fields we want to proceed
-BEACON_KEY_FIELDS = ['name', 'receiver_name', 'timestamp']
-AIRCRAFT_BEACON_FIELDS = ['location', 'altitude', 'dstcall', 'relay', 'track', 'ground_speed', 'address_type', 'aircraft_type', 'stealth', 'address', 'climb_rate', 'turn_rate', 'signal_quality', 'error_count', 'frequency_offset', 'gps_quality_horizontal', 'gps_quality_vertical', 'software_version', 'hardware_version', 'real_address', 'signal_power', 'distance', 'radial', 'quality', 'location_mgrs', 'location_mgrs_short', 'agl', 'receiver_id', 'device_id']
-RECEIVER_BEACON_FIELDS = ['location', 'altitude', 'dstcall', 'relay', 'version', 'platform', 'cpu_load', 'free_ram', 'total_ram', 'ntp_error', 'rt_crystal_correction', 'voltage', 'amperage', 'cpu_temp', 'senders_visible', 'senders_total', 'rec_input_noise', 'senders_signal', 'senders_messages', 'good_senders_signal', 'good_senders', 'good_and_bad_senders']
+    db.session.execute('DROP TABLE IF EXISTS "aircraft_beacons_{0}"; CREATE TABLE aircraft_beacons_{0} AS TABLE aircraft_beacons WITH NO DATA;'.format(postfix))
+    db.session.execute('DROP TABLE IF EXISTS "receiver_beacons_{0}"; CREATE TABLE receiver_beacons_{0} AS TABLE receiver_beacons WITH NO DATA;'.format(postfix))
+    db.session.commit()
 
 
-myMGRS = MGRS()
+def create_indices(postfix):
+    """Creates indices for aircraft- and receiver-beacons."""
+
+    db.session.execute("""
+        CREATE INDEX IF NOT EXISTS ix_aircraft_beacons_{0}_device_id ON "aircraft_beacons_{0}" (device_id NULLS FIRST);
+        CREATE INDEX IF NOT EXISTS ix_aircraft_beacons_{0}_receiver_id ON "aircraft_beacons_{0}" (receiver_id NULLS FIRST);
+        CREATE INDEX IF NOT EXISTS ix_aircraft_beacons_{0}_timestamp_name_receiver_name ON "aircraft_beacons_{0}" (timestamp, name, receiver_name);
+        CREATE INDEX IF NOT EXISTS ix_receiver_beacons_{0}_timestamp_name_receiver_name ON "receiver_beacons_{0}" (timestamp, name, receiver_name);
+    """.format(postfix))
+    db.session.commit()
 
 
-def _replace_lonlat_with_wkt(message):
-    latitude = message['latitude']
-    longitude = message['longitude']
+def create_indices_bigdata(postfix):
+    """Creates indices for aircraft- and receiver-beacons."""
 
-    location = Location(longitude, latitude)
-    message['location_wkt'] = location.to_wkt()
-    location_mgrs = myMGRS.toMGRS(latitude, longitude).decode('utf-8')
-    message['location_mgrs'] = location_mgrs
-    message['location_mgrs_short'] = location_mgrs[0:5] + location_mgrs[5:7] + location_mgrs[10:12]
-    del message['latitude']
-    del message['longitude']
-    return message
+    db.session.execute("""
+        CREATE INDEX IF NOT EXISTS ix_aircraft_beacons_{0}_timestamp_name_receiver_name ON "aircraft_beacons_{0}" (timestamp, name, receiver_name);
+        CREATE INDEX IF NOT EXISTS ix_receiver_beacons_{0}_timestamp_name_receiver_name ON "receiver_beacons_{0}" (timestamp, name, receiver_name);
+    """.format(postfix))
+    db.session.commit()
 
 
-def string_to_message(raw_string, reference_date):
-    global receivers
+def add_missing_devices(postfix):
+    """Add missing devices."""
 
-    try:
-        message = parse(raw_string, reference_date)
-    except NotImplementedError as e:
-        print('No parser implemented for message: {}'.format(raw_string))
-        return None
-    except ParseError as e:
-        print('Parsing error with message: {}'.format(raw_string))
-        return None
-    except TypeError as e:
-        print('TypeError with message: {}'.format(raw_string))
-        return None
-    except Exception as e:
-        print(raw_string)
-        print(e)
-        return None
-
-    # update reference receivers and distance to the receiver
-    if message['aprs_type'] == 'position':
-        if message['beacon_type'] in AIRCRAFT_BEACON_TYPES + RECEIVER_BEACON_TYPES:
-            message = _replace_lonlat_with_wkt(message)
-
-        if message['beacon_type'] in AIRCRAFT_BEACON_TYPES and 'gps_quality' in message:
-            if message['gps_quality'] is not None and 'horizontal' in message['gps_quality']:
-                message['gps_quality_horizontal'] = message['gps_quality']['horizontal']
-                message['gps_quality_vertical'] = message['gps_quality']['vertical']
-            del message['gps_quality']
-
-    # update raw_message
-    message['raw_message'] = raw_string
-
-    return message
+    db.session.execute("""
+        INSERT INTO devices(address)
+        SELECT DISTINCT(ab.address)
+        FROM "aircraft_beacons_{0}" AS ab
+        WHERE NOT EXISTS (SELECT 1 FROM devices AS d WHERE d.address = ab.address)
+        ORDER BY ab.address;
+    """.format(postfix))
+    db.session.commit()
 
 
-class DbSaver:
-    def __init__(self, session):
-        self.session = session
-        self.aircraft_message_map = dict()
-        self.receiver_message_map = dict()
-        self.last_commit = datetime.utcnow()
+def add_missing_receivers(postfix):
+    """Add missing receivers."""
 
-    def _put_in_map(self, message, my_map):
-        key = message['name'] + message['receiver_name'] + message['timestamp'].strftime('%s')
-
-        if key in my_map:
-            other = my_map[key]
-            merged = {k: message[k] if message[k] is not None else other[k] for k in message.keys()}
-            my_map[key] = merged
-        else:
-            my_map[key] = message
-
-    def add_raw_message(self, raw_string, reference_date=None):
-        if not reference_date:
-            reference_date=datetime.utcnow()
-        message = string_to_message(raw_string, reference_date=reference_date)
-        if message is not None:
-            self.add_message(message)
-        else:
-            print(raw_string)
-
-    def add_message(self, message):
-        if message is None or ('raw_message' in message and message['raw_message'][0] == '#') or 'beacon_type' not in message:
-            return
-
-        if 'location_wkt' in message:
-            message['location'] = message.pop('location_wkt')   # total_time_wasted_here = 3
-
-        if message['beacon_type'] in AIRCRAFT_BEACON_TYPES:
-            complete_message = {k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + AIRCRAFT_BEACON_FIELDS}
-            self._put_in_map(message=complete_message, my_map=self.aircraft_message_map)
-        elif message['beacon_type'] in RECEIVER_BEACON_TYPES:
-            complete_message = {k: message[k] if k in message else None for k in BEACON_KEY_FIELDS + RECEIVER_BEACON_FIELDS}
-            self._put_in_map(message=complete_message, my_map=self.receiver_message_map)
-        else:
-            print("Ignore beacon_type: {}".format(message['beacon_type']))
-            return
-
-        elapsed_time = datetime.utcnow() - self.last_commit
-        if elapsed_time >= timedelta(seconds=5):
-            self.flush()
-
-    def flush(self):
-        if len(self.aircraft_message_map) > 0:
-            messages = list(self.aircraft_message_map.values())
-            upsert(session=self.session, model=AircraftBeacon, rows=messages, update_cols=AIRCRAFT_BEACON_FIELDS)
-        if len(self.receiver_message_map) > 0:
-            messages = list(self.receiver_message_map.values())
-            upsert(session=self.session, model=ReceiverBeacon, rows=messages, update_cols=RECEIVER_BEACON_FIELDS)
-        self.session.commit()
-
-        self.aircraft_message_map = dict()
-        self.receiver_message_map = dict()
-        self.last_commit = datetime.utcnow()
+    db.session.execute("""
+        INSERT INTO receivers(name)
+        SELECT DISTINCT(rb.name)
+        FROM "receiver_beacons_{0}" AS rb
+        WHERE NOT EXISTS (SELECT 1 FROM receivers AS r WHERE r.name = rb.name)
+        ORDER BY name;
+    """.format(postfix))
+    db.session.commit()
 
 
-import os, gzip, csv
+def update_receiver_location(postfix):
+    """Updates the receiver location. We need this because we want the actual location for distance calculations."""
+
+    db.session.execute("""
+        UPDATE receivers AS r
+        SET
+            location = sq.location,
+            altitude = sq.altitude
+        FROM (
+            SELECT DISTINCT ON (rb.receiver_id) rb.receiver_id, rb.location, rb.altitude
+            FROM "receiver_beacons_{0}" AS rb
+            WHERE rb.location IS NOT NULL
+            ORDER BY rb.receiver_id, rb.timestamp
+            ) AS sq
+        WHERE r.id = sq.receiver_id;
+    """.format(postfix))
+    db.session.commit()
 
 
-class FileSaver:
-    def __init__(self):
-        self.aircraft_messages = list()
-        self.receiver_messages = list()
+def update_receiver_beacons(postfix):
+    """Updates the foreign keys."""
 
-    def open(self, path, reference_date_string):
-        aircraft_beacon_filename = os.path.join(path, 'aircraft_beacons.csv_' + reference_date_string + '.gz')
-        receiver_beacon_filename = os.path.join(path, 'receiver_beacons.csv_' + reference_date_string + '.gz')
+    db.session.execute("""
+        UPDATE receiver_beacons_{0} AS rb
+        SET receiver_id = r.id
+        FROM receivers AS r
+        WHERE rb.name = r.name;
+    """.format(postfix))
+    db.session.commit()
 
-        if not os.path.exists(aircraft_beacon_filename) and not os.path.exists(receiver_beacon_filename):
-            self.fout_ab = gzip.open(aircraft_beacon_filename, 'wt')
-            self.fout_rb = gzip.open(receiver_beacon_filename, 'wt')
-        else:
-            raise FileExistsError
 
-        self.aircraft_writer = csv.writer(self.fout_ab, delimiter=',')
-        self.aircraft_writer.writerow(AircraftBeacon.get_columns())
+def update_receiver_beacons_bigdata(postfix):
+    """Updates the foreign keys.
+       Due to performance reasons we use a new table instead of updating the old."""
 
-        self.receiver_writer = csv.writer(self.fout_rb, delimiter=',')
-        self.receiver_writer.writerow(ReceiverBeacon.get_columns())
+    db.session.execute("""
+        SELECT
+            rb.location, rb.altitude, rb.name, rb.receiver_name, rb.dstcall, rb.timestamp,
 
-        return 1
+            rb.version, rb.platform, rb.cpu_load, rb.free_ram, rb.total_ram, rb.ntp_error, rb.rt_crystal_correction, rb.voltage, rb.amperage,
+            rb.cpu_temp, rb.senders_visible, rb.senders_total, rb.rec_input_noise, rb.senders_signal, rb.senders_messages, rb.good_senders_signal,
+            rb.good_senders, rb.good_and_bad_senders,
 
-    def add_message(self, beacon):
-        if isinstance(beacon, AircraftBeacon):
-            self.aircraft_messages.append(beacon.get_values())
-        elif isinstance(beacon, ReceiverBeacon):
-            self.receiver_messages.append(beacon.get_values())
+            r.id AS receiver_id
+        INTO "receiver_beacons_{0}_temp"
+        FROM "receiver_beacons_{0}" AS rb, receivers AS r
+        WHERE rb.name = r.name;
 
-    def flush(self):
-        self.aircraft_writer.writerows(self.aircraft_messages)
-        self.receiver_writer.writerows(self.receiver_messages)
-        self.aircraft_messages = list()
-        self.receiver_messages = list()
+        DROP TABLE IF EXISTS "receiver_beacons_{0}";
+        ALTER TABLE "receiver_beacons_{0}_temp" RENAME TO "receiver_beacons_{0}";
+    """.format(postfix))
+    db.session.commit()
 
-    def close(self):
-        self.fout_ab.close()
-        self.fout_rb.close()
+
+def update_aircraft_beacons(postfix):
+    """Updates the foreign keys and calculates distance/radial and quality and computes the altitude above ground level.
+       Elevation data has to be in the table 'elevation' with srid 4326."""
+
+    db.session.execute("""
+        UPDATE aircraft_beacons_{0} AS ab
+        SET
+            device_id = d.id,
+            receiver_id = r.id,
+            distance = CASE WHEN ab.location IS NOT NULL AND r.location IS NOT NULL THEN CAST(ST_DistanceSphere(ab.location, r.location) AS REAL) ELSE NULL END,
+            radial = CASE WHEN ab.location IS NOT NULL AND r.location IS NOT NULL THEN CAST(degrees(ST_Azimuth(ab.location, r.location)) AS SMALLINT) ELSE NULL END,
+            quality = CASE WHEN ab.location IS NOT NULL AND r.location IS NOT NULL AND ST_DistanceSphere(ab.location, r.location) > 0 AND ab.signal_quality IS NOT NULL
+                        THEN CAST(signal_quality + 20*log(ST_DistanceSphere(ab.location, r.location)/10000) AS REAL)
+                        ELSE NULL
+            END
+
+        FROM devices AS d, receivers AS r
+        WHERE ab.address = d.address AND ab.receiver_name = r.name;
+    """.format(postfix))
+    db.session.commit()
+
+
+def update_aircraft_beacons_bigdata(postfix):
+    """Updates the foreign keys and calculates distance/radial and quality and computes the altitude above ground level.
+       Elevation data has to be in the table 'elevation' with srid 4326.
+       Due to performance reasons we use a new table instead of updating the old."""
+
+    db.session.execute("""
+        SELECT
+            ab.location, ab.altitude, ab.name, ab.dstcall, ab.relay, ab.receiver_name, ab.timestamp, ab.track, ab.ground_speed,
+
+            ab.address_type, ab.aircraft_type, ab.stealth, ab.address, ab.climb_rate, ab.turn_rate, ab.signal_quality, ab.error_count,
+            ab.frequency_offset, ab.gps_quality_horizontal, ab.gps_quality_vertical, ab.software_version, ab.hardware_version, ab.real_address, ab.signal_power,
+
+            ab.location_mgrs,
+            ab.location_mgrs_short,
+
+            d.id AS device_id,
+            r.id AS receiver_id,
+            CASE WHEN ab.location IS NOT NULL AND r.location IS NOT NULL THEN CAST(ST_DistanceSphere(ab.location, r.location) AS REAL) ELSE NULL END AS distance,
+            CASE WHEN ab.location IS NOT NULL AND r.location IS NOT NULL THEN CAST(degrees(ST_Azimuth(ab.location, r.location)) AS SMALLINT) ELSE NULL END AS radial,
+            CASE WHEN ab.location IS NOT NULL AND r.location IS NOT NULL AND ST_DistanceSphere(ab.location, r.location) > 0 AND ab.signal_quality IS NOT NULL
+                 THEN CAST(signal_quality + 20*log(ST_DistanceSphere(ab.location, r.location)/10000) AS REAL)
+                 ELSE NULL
+            END AS quality,
+            CAST(ab.altitude - ST_Value(e.rast, ab.location) AS REAL) AS agl
+
+        INTO "aircraft_beacons_{0}_temp"
+        FROM "aircraft_beacons_{0}" AS ab, devices AS d, receivers AS r, elevation AS e
+        WHERE ab.address = d.address AND receiver_name = r.name AND ST_Intersects(e.rast, ab.location);
+
+        DROP TABLE IF EXISTS "aircraft_beacons_{0}";
+        ALTER TABLE "aircraft_beacons_{0}_temp" RENAME TO "aircraft_beacons_{0}";
+    """.format(postfix))
+    db.session.commit()
+
+
+def delete_receiver_beacons(postfix):
+    """Delete beacons from table."""
+
+    db.session.execute("""
+        DELETE FROM receiver_beacons_continuous_import AS rb
+        USING (
+            SELECT name, receiver_name, timestamp
+            FROM receiver_beacons_continuous_import
+            WHERE receiver_id IS NOT NULL
+        ) AS sq
+        WHERE rb.name = sq.name AND rb.receiver_name = sq.receiver_name AND rb.timestamp = sq.timestamp
+    """.format(postfix))
+    db.session.commit()
+
+
+def delete_aircraft_beacons(postfix):
+    """Delete beacons from table."""
+
+    db.session.execute("""
+        DELETE FROM aircraft_beacons_continuous_import AS ab
+        USING (
+            SELECT name, receiver_name, timestamp
+            FROM aircraft_beacons_continuous_import
+            WHERE receiver_id IS NOT NULL and device_id IS NOT NULL
+        ) AS sq
+        WHERE ab.name = sq.name AND ab.receiver_name = sq.receiver_name AND ab.timestamp = sq.timestamp
+    """.format(postfix))
+    db.session.commit()
+
+
+def get_merged_aircraft_beacons_subquery(postfix):
+    """Some beacons are split into position and status beacon. With this query we merge them into one beacon."""
+
+    return """
+    SELECT
+        ST_AsEWKT(MAX(location)) AS location,
+        MAX(altitude)  AS altitude,
+        name,
+        MAX(dstcall) AS dstcall,
+        MAX(relay) AS relay,
+        receiver_name,
+        timestamp,
+        MAX(track) AS track,
+        MAX(ground_speed) AS ground_speed,
+
+        MAX(address_type) AS address_type,
+        MAX(aircraft_type) AS aircraft_type,
+        CAST(MAX(CAST(stealth AS int)) AS boolean) AS stealth,
+        MAX(address) AS address,
+        MAX(climb_rate) AS climb_rate,
+        MAX(turn_rate) AS turn_rate,
+        MAX(signal_quality) AS signal_quality,
+        MAX(error_count) AS error_count,
+        MAX(frequency_offset) AS frequency_offset,
+        MAX(gps_quality_horizontal) AS gps_quality_horizontal,
+        MAX(gps_quality_vertical) AS gps_quality_vertical,
+        MAX(software_version) AS software_version,
+        MAX(hardware_version) AS hardware_version,
+        MAX(real_address) AS real_address,
+        MAX(signal_power) AS signal_power,
+
+        CAST(MAX(distance) AS REAL) AS distance,
+        CAST(MAX(radial) AS REAL) AS radial,
+        CAST(MAX(quality) AS REAL) AS quality,
+        CAST(MAX(agl) AS REAL) AS agl,
+        MAX(location_mgrs) AS location_mgrs,
+        MAX(location_mgrs_short) AS location_mgrs_short,
+
+        MAX(receiver_id) AS receiver_id,
+        MAX(device_id) AS device_id
+    FROM "aircraft_beacons_{0}" AS ab
+    GROUP BY timestamp, name, receiver_name
+    ORDER BY timestamp, name, receiver_name
+    """.format(postfix)
+
+
+def get_merged_receiver_beacons_subquery(postfix):
+    """Some beacons are split into position and status beacon. With this query we merge them into one beacon."""
+
+    return """
+    SELECT
+        ST_AsEWKT(MAX(location)) AS location,
+        MAX(altitude) AS altitude,
+        name,
+        receiver_name,
+        MAX(dstcall) AS dstcall,
+        timestamp,
+
+        MAX(version) AS version,
+        MAX(platform) AS platform,
+        MAX(cpu_load) AS cpu_load,
+        MAX(free_ram) AS free_ram,
+        MAX(total_ram) AS total_ram,
+        MAX(ntp_error) AS ntp_error,
+        MAX(rt_crystal_correction) AS rt_crystal_correction,
+        MAX(voltage) AS voltage,
+        MAX(amperage) AS amperage,
+        MAX(cpu_temp) AS cpu_temp,
+        MAX(senders_visible) AS senders_visible,
+        MAX(senders_total) AS senders_total,
+        MAX(rec_input_noise) AS rec_input_noise,
+        MAX(senders_signal) AS senders_signal,
+        MAX(senders_messages) AS senders_messages,
+        MAX(good_senders_signal) AS good_senders_signal,
+        MAX(good_senders) AS good_senders,
+        MAX(good_and_bad_senders) AS good_and_bad_senders,
+
+        MAX(receiver_id) AS receiver_id
+    FROM "receiver_beacons_{0}" AS rb
+    GROUP BY timestamp, name, receiver_name
+    ORDER BY timestamp, name, receiver_name
+    """.format(postfix)
+
+
+def transfer_aircraft_beacons(postfix):
+    query = """
+    INSERT INTO aircraft_beacons(location, altitude, name, dstcall, relay, receiver_name, timestamp, track, ground_speed,
+        address_type, aircraft_type, stealth, address, climb_rate, turn_rate, signal_quality, error_count, frequency_offset, gps_quality_horizontal, gps_quality_vertical, software_version, hardware_version, real_address, signal_power,
+        distance, radial, quality, agl, location_mgrs, location_mgrs_short,
+        receiver_id, device_id)
+    SELECT sq.*
+    FROM ({}) sq
+    WHERE sq.receiver_id IS NOT NULL AND sq.device_id IS NOT NULL
+    ON CONFLICT DO NOTHING;
+    """.format(get_merged_aircraft_beacons_subquery(postfix))
+
+    db.session.execute(query)
+    db.session.commit()
+
+
+def transfer_receiver_beacons(postfix):
+    query = """
+    INSERT INTO receiver_beacons(location, altitude, name, receiver_name, dstcall, timestamp,
+
+        version, platform, cpu_load, free_ram, total_ram, ntp_error, rt_crystal_correction, voltage,
+        amperage, cpu_temp, senders_visible, senders_total, rec_input_noise, senders_signal,
+        senders_messages, good_senders_signal, good_senders, good_and_bad_senders,
+
+        receiver_id)
+    SELECT sq.*
+    FROM ({}) sq
+    WHERE sq.receiver_id IS NOT NULL
+    ON CONFLICT DO NOTHING;
+    """.format(get_merged_receiver_beacons_subquery(postfix))
+
+    db.session.execute(query)
+    db.session.commit()

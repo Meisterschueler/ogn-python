@@ -9,6 +9,7 @@ class DeviceStats(db.Model):
     date = db.Column(db.Date)
 
     # Static data
+    name = db.Column(db.String)
     firstseen = db.Column(db.DateTime)
     lastseen = db.Column(db.DateTime)
     aircraft_type = db.Column(db.SmallInteger)

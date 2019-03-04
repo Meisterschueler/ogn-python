@@ -51,7 +51,7 @@ def init():
     db.session.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
     db.session.execute('CREATE EXTENSION IF NOT EXISTS btree_gist;')
     db.session.commit()
-    Base.metadata.create_all(engine)
+    db.create_all()
 
     #alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
     #command.stamp(alembic_cfg, "head")
@@ -84,7 +84,7 @@ def upgrade():
 def drop(sure):
     """Drop all tables."""
     if sure == 'y':
-        Base.metadata.drop_all(engine)
+        db.drop_all()
         print('Dropped all tables.')
     else:
         print("Add argument '--sure y' to drop all tables.")
