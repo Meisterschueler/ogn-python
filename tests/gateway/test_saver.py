@@ -2,7 +2,7 @@ import datetime
 import unittest
 from unittest.mock import MagicMock
 
-from ogn.gateway.process_tools import DbSaver
+from ogn_python.gateway.process_tools import DbSaver
 
 
 class DbSaverTest(unittest.TestCase):

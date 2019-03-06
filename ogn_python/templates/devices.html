@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Devices</h3></div>
+<div class="panel-body">
+  <table class="datatable table table-striped table-bordered">
+    <tr>
+   	  <th>Address</th>
+   	  <th>Airport</th>
+   	  <th>Last takeoff/landing</th>
+      <th>Logbook</th>
+      <th>Software version</th>
+    </tr>
+
+    {% for device in devices %}
+	<tr>
+	  <td><a href="?id={{ device.id }}">{{ device.address }}</a></td>
+	  <td>{% if device.takeoff_landings %}{% set last_action = device.takeoff_landings|last %}{{ last_action.airport.name }}{% endif %}
+	  <td>{% if device.takeoff_landings %}{% set last_action = device.takeoff_landings|last %}{% if last_action.is_takeoff == True %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
+	  <td>{% if device.infos %}{% set info = device.infos|first %}{{ info.registration }} {% else %} - {% endif %}</td>
+	  <td>{% if device.software_version is not none %}{% if device.software_version < 6.6 %}<p class="text-danger">{{ device.software_version }}</p>{% else %}{{ device.software_version }}{% endif %}{% else %} - {% endif %}</td>
+	</tr>
+	{% endfor %}
+  </table>
+</div>
+</div>
+
+{% endblock %}

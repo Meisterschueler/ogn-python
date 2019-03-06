@@ -37,13 +37,13 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
 5. Create database
 
     ```
-    ./manage.py db.init
+    ./flask database init
     ```
 
 6. Optional: Prepare tables for TimescaleDB
 
     ```
-    ./manage.py db.init_timescaledb
+    ./flask database init_timescaledb
     ```
 
 7. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
@@ -85,7 +85,7 @@ The following scripts run in the foreground and should be deamonized
 - Start the aprs client
 
   ```
-  ./manage.py gateway.run
+  ./flask gateway run
   ```
 
 - Start a task server (make sure redis is up and running)
@@ -107,66 +107,44 @@ and set the environment variable `OGN_CONFIG_MODULE` accordingly.
 ```
 touch myconfig.py
 export OGN_CONFIG_MODULE="myconfig"
-./manage.py gateway.run
+./flask gateway run
 ```
 
-### manage.py - CLI options
+### Flask - Command Line Interface
 ```
-usage: manage [<namespace>.]<command> [<args>]
+Usage: flask [OPTIONS] COMMAND [ARGS]...
 
-positional arguments:
-  command     the command to run
+  A general utility script for Flask applications.
 
-optional arguments:
-  -h, --help  show this help message and exit
+  Provides commands from Flask, extensions, and the application. Loads the
+  application defined in the FLASK_APP environment variable, or from a
+  wsgi.py file. Setting the FLASK_ENV environment variable to 'development'
+  will enable debug mode.
 
-available commands:
-  
-  [bulkimport]
-    create_flights2d       Create complete flight traces from logfile tables.
-    create_gaps2d          Create 'gaps' from logfile tables.
-    file_export            Export separate logfile tables to csv files. They can be used for fast bulk import with sql COPY command.
-    file_import            Import APRS logfiles into separate logfile tables.
-    transfer               Transfer beacons from separate logfile tables to beacon table.
-    update                 Update beacons (add foreign keys, compute distance, bearing, ags, etc.) in separate logfile tables.
-  
-  [db]
-    drop                   Drop all tables.
-    import_airports        Import airports from a ".cup" file
-    import_ddb             Import registered devices from the DDB.
-    import_file            Import registered devices from a local file.
-    import_flarmnet        Import registered devices from a local file.
-    init                   Initialize the database.
-    init_timescaledb       Initialize TimescaleDB features.
-    update_country_codes   Update country codes of all receivers.
-    upgrade                Upgrade database to the latest version.
-  
-  [flights]
-    flights2d              Compute flights.
-  
-  [gateway]
-    run                    Run the aprs client.
-  
-  [export]
-    cup                    Export receiver waypoints as '.cup'.
-    igc                    Export igc file for <address> at <date>.
-  
-  [logbook]
-    compute_logbook        Compute logbook.
-    compute_takeoff_landingCompute takeoffs and landings.
-    show                   Show a logbook for <airport_name>.
-  
-  [stats]
-    create                 Create DeviceStats, ReceiverStats and RelationStats.
-    create_ognrange        Create stats for Melissa's ognrange.
-    update_devices         Update devices with data from stats.
-    update_receivers       Update receivers with data from stats.
+    $ export FLASK_APP=app.py
+    $ export FLASK_ENV=development
+    $ flask run
+
+Options:
+  --version  Show the flask version
+  --help     Show this message and exit.
+
+Commands:
+  database  Database creation and handling.
+  db        Perform database migrations.
+  export    Export data in several file formats.
+  flights   Create 2D flight paths from data.
+  gateway   Connection to APRS servers.
+  logbook   Handling of logbook data.
+  routes    Show the routes for the app.
+  run       Runs a development server.
+  shell     Runs a shell in the app context.
+  stats     Handling of statistical data.
 ```
 
-Only the command `logbook.compute` requires a running task server (celery) at the moment.
+Most commands are command groups, so if you execute this command you will get further (sub)commands.
 
-
-### Available tasks
+### Available tasks (deprecated - needs rework)
 
 - `ogn.collect.database.import_ddb` - Import registered devices from the DDB.
 - `ogn.collect.database.import_file` - Import registered devices from a local file.

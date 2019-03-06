@@ -3,8 +3,8 @@ from datetime import date
 
 from tests.base import TestBaseDB
 
-from ogn.model import AircraftBeacon, Receiver, ReceiverCoverage, Device
-from ogn.collect.ognrange import create_receiver_coverage
+from ogn_python.model import AircraftBeacon, Receiver, ReceiverCoverage, Device
+from ogn_python.collect.ognrange import create_receiver_coverage
 
 
 class TestOGNrange(TestBaseDB):

@@ -3,8 +3,8 @@ import os
 
 from tests.base import TestBaseDB
 
-from ogn.model import DeviceInfo
-from ogn.commands.database import import_file
+from ogn_python.model import DeviceInfo
+from ogn_python.commands.database import import_file
 
 
 class TestDatabase(TestBaseDB):

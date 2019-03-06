@@ -2,9 +2,9 @@ import unittest
 
 from tests.base import TestBaseDB
 
-from ogn.model import TakeoffLanding
+from ogn_python.model import TakeoffLanding
 
-from ogn.collect.takeoff_landings import update_takeoff_landings
+from ogn_python.collect.takeoff_landings import update_takeoff_landings
 
 
 class TestTakeoffLanding(TestBaseDB):

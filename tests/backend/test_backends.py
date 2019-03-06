@@ -5,11 +5,11 @@ from datetime import datetime
 
 from xmlunittest import XmlTestMixin
 
-from ogn.model import AircraftBeacon, Receiver, Device, DeviceInfo
+from ogn_python.model import AircraftBeacon, Receiver, Device, DeviceInfo
 
-from ogn.backend.liveglidernet import rec, lxml
-from ogn.backend.ognrange import stations2_filtered_pl
-from ogn.model.aircraft_type import AircraftType
+from ogn_python.backend.liveglidernet import rec, lxml
+from ogn_python.backend.ognrange import stations2_filtered_pl
+from ogn_python.model.aircraft_type import AircraftType
 
 
 class TestDB(unittest.TestCase, XmlTestMixin):
@@ -19,11 +19,11 @@ class TestDB(unittest.TestCase, XmlTestMixin):
 
     def setUp(self):
         os.environ['OGN_CONFIG_MODULE'] = 'config.test'
-        from ogn.commands.dbutils import engine, session
+        from ogn_python.commands.dbutils import engine, session
         self.session = session
         self.engine = engine
 
-        from ogn.commands.database import init
+        from ogn_python.commands.database import init
         init()
 
         # Prepare Beacons
