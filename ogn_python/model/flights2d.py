@@ -7,6 +7,7 @@ class Flight2D(db.Model):
     __tablename__ = "flights2d"
 
     date = db.Column(db.Date, primary_key=True)
+    flight_type = db.Column(db.SmallInteger, primary_key=True)
 
     path_wkt = db.Column('path', Geometry('MULTILINESTRING', srid=4326))
     path_simple_wkt = db.Column('path_simple', Geometry('MULTILINESTRING', srid=4326))     # this is the path simplified with ST_Simplify(path, 0.0001)

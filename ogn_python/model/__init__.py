@@ -2,6 +2,7 @@
 from .aircraft_type import AircraftType
 from .beacon import Beacon
 from .country import Country
+from .country_stats import CountryStats
 from .device import Device
 from .device_info import DeviceInfo
 from .device_info_origin import DeviceInfoOrigin

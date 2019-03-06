@@ -83,6 +83,8 @@ class ContinuousDbFeeder:
     def __init__(self,):
         self.postfix = 'continuous_import'
         self.last_flush = datetime.utcnow()
+        self.last_add_missing = datetime.utcnow()
+        self.last_transfer = datetime.utcnow()
 
         self.aircraft_buffer = StringIO()
         self.receiver_buffer = StringIO()
@@ -108,16 +110,24 @@ class ContinuousDbFeeder:
             app.logger.error("Ignore beacon_type: {}".format(message['beacon_type']))
             return
 
-        if datetime.utcnow() - self.last_flush >= timedelta(seconds=1):
+        if datetime.utcnow() - self.last_flush >= timedelta(seconds=5):
             self.flush()
             self.prepare()
-            self.transfer()
-            self.delete_beacons()
 
             self.aircraft_buffer = StringIO()
             self.receiver_buffer = StringIO()
 
             self.last_flush = datetime.utcnow()
+
+        if datetime.utcnow() - self.last_add_missing >= timedelta(seconds=60):
+            self.add_missing()
+            self.last_add_missing = datetime.utcnow()
+
+        if datetime.utcnow() - self.last_transfer >= timedelta(seconds=10):
+            self.transfer()
+            self.delete_beacons()
+            self.last_transfer = datetime.utcnow()
+
 
     def flush(self):
         self.aircraft_buffer.seek(0)
@@ -132,16 +142,16 @@ class ContinuousDbFeeder:
         self.aircraft_buffer = StringIO()
         self.receiver_buffer = StringIO()
 
+    def add_missing(self):
+        add_missing_receivers(self.postfix)
+        add_missing_devices(self.postfix)
+
     def prepare(self):
         # make receivers complete
-        add_missing_receivers(self.postfix)
         update_receiver_beacons(self.postfix)
         update_receiver_location(self.postfix)
 
         # make devices complete
-        add_missing_devices(self.postfix)
-
-        # prepare beacons for transfer
         update_aircraft_beacons(self.postfix)
 
     def transfer(self):
@@ -155,18 +165,47 @@ class ContinuousDbFeeder:
         delete_aircraft_beacons(self.postfix)
 
 
-def prepare_bigdata(postfix):
-    # make receivers complete
-    add_missing_receivers(postfix)
-    update_receiver_location(postfix)
+class FileDbFeeder():
+    def __init__(self):
+        self.postfix = 'continuous_import'
+        self.last_flush = datetime.utcnow()
 
-    # make devices complete
-    add_missing_devices(postfix)
+        self.aircraft_buffer = StringIO()
+        self.receiver_buffer = StringIO()
 
-    # prepare beacons for transfer
-    create_indices(postfix)
-    update_receiver_beacons_bigdata(postfix)
-    update_aircraft_beacons_bigdata(postfix)
+        create_tables(self.postfix)
+        create_indices(self.postfix)
+
+    def add(self, raw_string):
+        message = string_to_message(raw_string, reference_date=datetime.utcnow())
+
+        if message is None or ('raw_message' in message and message['raw_message'][0] == '#') or 'beacon_type' not in message:
+            return
+
+        if message['beacon_type'] in AIRCRAFT_BEACON_TYPES:
+            complete_message = ','.join([str(message[k]) if k in message and message[k] is not None else '\\N' for k in BEACON_KEY_FIELDS + AIRCRAFT_BEACON_FIELDS])
+            self.aircraft_buffer.write(complete_message)
+            self.aircraft_buffer.write('\n')
+        elif message['beacon_type'] in RECEIVER_BEACON_TYPES:
+            complete_message = ','.join([str(message[k]) if k in message and message[k] is not None else '\\N' for k in BEACON_KEY_FIELDS + RECEIVER_BEACON_FIELDS])
+            self.receiver_buffer.write(complete_message)
+            self.receiver_buffer.write('\n')
+        else:
+            app.logger.error("Ignore beacon_type: {}".format(message['beacon_type']))
+            return
+
+    def prepare(self):
+        # make receivers complete
+        add_missing_receivers(self.postfix)
+        update_receiver_location(self.postfix)
+
+        # make devices complete
+        add_missing_devices(self.postfix)
+
+        # prepare beacons for transfer
+        create_indices(self.postfix)
+        update_receiver_beacons_bigdata(self.postfix)
+        update_aircraft_beacons_bigdata(self.postfix)
 
 
 def get_aircraft_beacons_postfixes():

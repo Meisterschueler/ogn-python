@@ -4,7 +4,7 @@ from sqlalchemy import insert, distinct, between, literal
 from sqlalchemy.sql import null, and_, func, or_, update
 from sqlalchemy.sql.expression import case
 
-from ogn_python.model import AircraftBeacon, DeviceStats, ReceiverStats, RelationStats, Receiver, Device
+from ogn_python.model import AircraftBeacon, DeviceStats, Country, CountryStats, ReceiverStats, RelationStats, Receiver, Device
 
 from .celery import app
 from ogn_python.model.receiver_beacon import ReceiverBeacon
@@ -56,6 +56,9 @@ def create_device_stats(session=None, date=None):
             func.count(sq.c.device_id)
                 .over(partition_by=sq.c.device_id)
                 .label('aircraft_beacon_count'),
+            func.first_value(sq.c.name)
+                .over(partition_by=sq.c.device_id, order_by=case([(sq.c.name == null(), None)], else_=sq.c.timestamp).asc().nullslast())
+                .label('name'),
             func.first_value(sq.c.timestamp)
                 .over(partition_by=sq.c.device_id, order_by=case([(sq.c.timestamp == null(), None)], else_=sq.c.timestamp).asc().nullslast())
                 .label('firstseen'),
@@ -81,7 +84,8 @@ def create_device_stats(session=None, date=None):
 
     # And insert them
     ins = insert(DeviceStats).from_select(
-        [DeviceStats.device_id, DeviceStats.date, DeviceStats.receiver_count, DeviceStats.max_altitude, DeviceStats.aircraft_beacon_count, DeviceStats.firstseen, DeviceStats.lastseen, DeviceStats.aircraft_type, DeviceStats.stealth,
+        [DeviceStats.device_id, DeviceStats.date, DeviceStats.receiver_count, DeviceStats.max_altitude, DeviceStats.aircraft_beacon_count, DeviceStats.name,
+         DeviceStats.firstseen, DeviceStats.lastseen, DeviceStats.aircraft_type, DeviceStats.stealth,
          DeviceStats.software_version, DeviceStats.hardware_version, DeviceStats.real_address],
         device_stats)
     res = session.execute(ins)
@@ -173,6 +177,39 @@ def create_receiver_stats(session=None, date=None):
     logger.warn("Updated {} ReceiverStats".format(update_counter))
 
     return "ReceiverStats for {}: {} deleted, {} inserted, {} updated".format(date, deleted_counter, insert_counter, update_counter)
+
+
+@app.task
+def create_country_stats(session=None, date=None):
+    if session is None:
+        session = app.session
+
+    if not date:
+        logger.warn("A date is needed for calculating stats. Exiting")
+        return None
+    else:
+        (start, end) = date_to_timestamps(date)
+
+    # First kill the stats for the selected date
+    deleted_counter = session.query(CountryStats) \
+        .filter(CountryStats.date == date) \
+        .delete()
+
+    country_stats = session.query(literal(date), Country.gid,
+                                  func.count(AircraftBeacon.timestamp).label('aircraft_beacon_count'), \
+                                  func.count(func.distinct(AircraftBeacon.receiver_id)).label('device_count')) \
+        .filter(between(AircraftBeacon.timestamp, start, end)) \
+        .filter(func.st_contains(Country.geom, AircraftBeacon.location)) \
+        .group_by(Country.gid) \
+        .subquery()
+
+    # And insert them
+    ins = insert(CountryStats).from_select(
+        [CountryStats.date, CountryStats.country_id, CountryStats.aircraft_beacon_count, CountryStats.device_count],
+        country_stats)
+    res = session.execute(ins)
+    insert_counter = res.rowcount
+    session.commit()
 
 
 @app.task
@@ -422,6 +459,9 @@ def update_devices(session=None):
 
     device_stats = session.query(
             distinct(DeviceStats.device_id).label('device_id'),
+            func.first_value(DeviceStats.name)
+                .over(partition_by=DeviceStats.device_id, order_by=case([(DeviceStats.name == null(), None)], else_=DeviceStats.date).desc().nullslast())
+                .label('name'),
             func.first_value(DeviceStats.firstseen)
                 .over(partition_by=DeviceStats.device_id, order_by=case([(DeviceStats.firstseen == null(), None)], else_=DeviceStats.date).asc().nullslast())
                 .label('firstseen'),
@@ -448,7 +488,8 @@ def update_devices(session=None):
 
     upd = update(Device) \
         .where(and_(Device.id == device_stats.c.device_id)) \
-        .values({'firstseen': device_stats.c.firstseen,
+        .values({'name': device_stats.c.name,
+                 'firstseen': device_stats.c.firstseen,
                  'lastseen': device_stats.c.lastseen,
                  'aircraft_type': device_stats.c.aircraft_type,
                  'stealth': device_stats.c.stealth,

@@ -35,9 +35,9 @@ def add_missing_devices(postfix):
 
     db.session.execute("""
         INSERT INTO devices(address)
-        SELECT DISTINCT(ab.address)
+        SELECT DISTINCT (ab.address)
         FROM "aircraft_beacons_{0}" AS ab
-        WHERE NOT EXISTS (SELECT 1 FROM devices AS d WHERE d.address = ab.address)
+        WHERE ab.address IS NOT NULL AND NOT EXISTS (SELECT 1 FROM devices AS d WHERE d.address = ab.address)
         ORDER BY ab.address;
     """.format(postfix))
     db.session.commit()
@@ -48,10 +48,16 @@ def add_missing_receivers(postfix):
 
     db.session.execute("""
         INSERT INTO receivers(name)
-        SELECT DISTINCT(rb.name)
+        SELECT DISTINCT (rb.name)
         FROM "receiver_beacons_{0}" AS rb
         WHERE NOT EXISTS (SELECT 1 FROM receivers AS r WHERE r.name = rb.name)
-        ORDER BY name;
+        ORDER BY rb.name;
+
+        INSERT INTO receivers(name)
+        SELECT DISTINCT (ab.receiver_name)
+        FROM "aircraft_beacons_{0}" AS ab
+        WHERE NOT EXISTS (SELECT 1 FROM receivers AS r WHERE r.name = ab.receiver_name)
+        ORDER BY ab.receiver_name;
     """.format(postfix))
     db.session.commit()
 
@@ -82,7 +88,7 @@ def update_receiver_beacons(postfix):
         UPDATE receiver_beacons_{0} AS rb
         SET receiver_id = r.id
         FROM receivers AS r
-        WHERE rb.name = r.name;
+        WHERE rb.receiver_id IS NULL AND rb.name = r.name;
     """.format(postfix))
     db.session.commit()
 
@@ -127,7 +133,7 @@ def update_aircraft_beacons(postfix):
             END
 
         FROM devices AS d, receivers AS r
-        WHERE ab.address = d.address AND ab.receiver_name = r.name;
+        WHERE ab.device_id IS NULL and ab.receiver_id IS NULL AND ab.address = d.address AND ab.receiver_name = r.name;
     """.format(postfix))
     db.session.commit()
 
