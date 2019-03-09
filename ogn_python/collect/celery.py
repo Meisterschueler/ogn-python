@@ -24,13 +24,13 @@ def close_db(sender=None, headers=None, body=None, **kwargs):
     sender.app.session.close()
 
 
-app = Celery('ogn.collect',
+app = Celery('ogn_python.collect',
              backend='amqp://',
-             include=["ogn.collect.database",
-                      "ogn.collect.logbook",
-                      "ogn.collect.stats",
-                      "ogn.collect.takeoff_landings",
-                      "ogn.collect.ognrange"
+             include=["ogn_python.collect.database",
+                      "ogn_python.collect.logbook",
+                      "ogn_python.collect.stats",
+                      "ogn_python.collect.takeoff_landings",
+                      "ogn_python.collect.ognrange"
                       ])
 
 app.config_from_envvar("OGN_CONFIG_MODULE")
