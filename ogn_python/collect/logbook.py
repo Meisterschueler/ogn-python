@@ -166,7 +166,7 @@ def update_max_altitudes(session, logger=None):
         .group_by(Logbook.id) \
         .subquery()
 
-    update_logbook = app.session.query(Logbook) \
+    update_logbook = session.query(Logbook) \
         .filter(Logbook.id == max_altitudes.c.id) \
         .update({
             Logbook.max_altitude: max_altitudes.c.max_altitude},

@@ -3,8 +3,8 @@ import click
 
 from datetime import datetime
 
-from ogn_python.collect.logbook import update_entries
-from ogn_python.collect.takeoff_landings import update_takeoff_landings
+from ogn_python.collect.logbook import update_entries as logbook_update_entries
+from ogn_python.collect.takeoff_landings import update_entries as takeoff_landings_update_entries
 from ogn_python.model import Airport, Logbook
 from sqlalchemy.sql import func
 from tqdm import tqdm
@@ -28,7 +28,7 @@ def compute_takeoff_landing(start, end):
     pbar = tqdm(days)
     for single_date in pbar:
         pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
-        result = update_takeoff_landings(session=db.session, date=single_date)
+        result = takeoff_landings_update_entries(session=db.session, date=single_date)
 
 
 @user_cli.command('compute_logbook')
@@ -42,7 +42,7 @@ def compute_logbook(start, end):
     pbar = tqdm(days)
     for single_date in pbar:
         pbar.set_description(single_date.strftime('%Y-%m-%d'))
-        result = update_entries(session=db.session, date=single_date)
+        result = logbook_update_entries(session=db.session, date=single_date)
 
 
 @user_cli.command('show')

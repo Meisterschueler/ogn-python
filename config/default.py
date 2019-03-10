@@ -8,27 +8,25 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 from datetime import timedelta
 
-beat_schedule = {
+CELERYBEAT_SCHEDULE = {
     'update-ddb': {
-        'task': 'ogn_python.collect.celery.import_ddb',
-        'schedule': timedelta(minutes=15),
+        'task': 'import_ddb',
+        'schedule': timedelta(minutes=1),
     },
     'update-country-codes': {
-        'task': 'ogn_python.collect.celery.update_receivers_country_code',
-        'schedule': timedelta(minutes=5),
+        'task': 'update_receivers_country_code',
+        'schedule': timedelta(minutes=1),
     },
     'update-takeoff-and-landing': {
-        'task': 'ogn_python.collect.celery.update_takeoff_landings',
-        'schedule': timedelta(minutes=15),
+        'task': 'update_takeoff_landings',
+        'schedule': timedelta(minutes=1),
     },
     'update-logbook': {
-        'task': 'ogn_python.collect.celery.update_logbook_entries',
-        'schedule': timedelta(minutes=15),
+        'task': 'update_logbook_entries',
+        'schedule': timedelta(minutes=1),
     },
     'update-max-altitudes': {
-        'task': 'ogn_python.collect.celery.update_logbook_max_altitude',
-        'schedule': timedelta(minutes=15),
+        'task': 'update_logbook_max_altitude',
+        'schedule': timedelta(minutes=1),
     },
 }
-
-timezone = 'UTC'

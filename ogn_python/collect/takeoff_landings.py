@@ -10,7 +10,7 @@ from ogn_python.utils import date_to_timestamps
 from ogn_python import app
 
 
-def update_takeoff_landings(session, date, logger=None):
+def update_entries(session, date, logger=None):
     """Compute takeoffs and landings."""
 
     if logger is None:
