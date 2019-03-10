@@ -1,33 +1,25 @@
-from celery.utils.log import get_task_logger
-
 from sqlalchemy import insert, distinct, between, literal
 from sqlalchemy.sql import null, and_, func, or_, update
 from sqlalchemy.sql.expression import case
 
 from ogn_python.model import AircraftBeacon, DeviceStats, Country, CountryStats, ReceiverStats, RelationStats, Receiver, Device
 
-from .celery import app
 from ogn_python.model.receiver_beacon import ReceiverBeacon
 from ogn_python.utils import date_to_timestamps
 
-logger = get_task_logger(__name__)
+from ogn_python import app
 
 # 40dB@10km is enough for 640km
 MAX_PLAUSIBLE_QUALITY = 40
 
 
-@app.task
-def create_device_stats(session=None, date=None):
+def create_device_stats(session, date, logger=None):
     """Add/update device stats."""
 
-    if session is None:
-        session = app.session
+    if logger is None:
+        logger = app.logger
 
-    if not date:
-        logger.warn("A date is needed for calculating stats. Exiting")
-        return None
-    else:
-        (start, end) = date_to_timestamps(date)
+    (start, end) = date_to_timestamps(date)
 
     # First kill the stats for the selected date
     deleted_counter = session.query(DeviceStats) \
@@ -96,18 +88,13 @@ def create_device_stats(session=None, date=None):
     return "DeviceStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
 
 
-@app.task
-def create_receiver_stats(session=None, date=None):
+def create_receiver_stats(session, date, logger=None):
     """Add/update receiver stats."""
 
-    if session is None:
-        session = app.session
+    if logger is None:
+        logger = app.logger
 
-    if not date:
-        logger.warn("A date is needed for calculating stats. Exiting")
-        return None
-    else:
-        (start, end) = date_to_timestamps(date)
+    (start, end) = date_to_timestamps(date)
 
     # First kill the stats for the selected date
     deleted_counter = session.query(ReceiverStats) \
@@ -179,16 +166,11 @@ def create_receiver_stats(session=None, date=None):
     return "ReceiverStats for {}: {} deleted, {} inserted, {} updated".format(date, deleted_counter, insert_counter, update_counter)
 
 
-@app.task
-def create_country_stats(session=None, date=None):
-    if session is None:
-        session = app.session
+def create_country_stats(session, date, logger=None):
+    if logger is None:
+        logger = app.logger
 
-    if not date:
-        logger.warn("A date is needed for calculating stats. Exiting")
-        return None
-    else:
-        (start, end) = date_to_timestamps(date)
+    (start, end) = date_to_timestamps(date)
 
     # First kill the stats for the selected date
     deleted_counter = session.query(CountryStats) \
@@ -212,18 +194,13 @@ def create_country_stats(session=None, date=None):
     session.commit()
 
 
-@app.task
-def update_device_stats_jumps(session=None, date=None):
+def update_device_stats_jumps(session, date, logger=None):
     """Update device stats jumps."""
 
-    if session is None:
-        session = app.session
+    if logger is None:
+        logger = app.logger
 
-    if not date:
-        logger.warn("A date is needed for calculating stats. Exiting")
-        return None
-    else:
-        (start, end) = date_to_timestamps(date)
+    (start, end) = date_to_timestamps(date)
 
     # speed limits in m/s (values above indicates a unplausible position / jump)
     max_horizontal_speed = 1000
@@ -271,18 +248,13 @@ def update_device_stats_jumps(session=None, date=None):
     return "DeviceStats jumps for {}: {} updated".format(date, update_counter)
 
 
-@app.task
-def create_relation_stats(session=None, date=None):
+def create_relation_stats(session, date, logger=None):
     """Add/update relation stats."""
 
-    if session is None:
-        session = app.session
+    if logger is None:
+        logger = app.logger
 
-    if not date:
-        logger.warn("A date is needed for calculating stats. Exiting")
-        return None
-    else:
-        (start, end) = date_to_timestamps(date)
+    (start, end) = date_to_timestamps(date)
 
     # First kill the stats for the selected date
     deleted_counter = session.query(RelationStats) \
@@ -317,16 +289,11 @@ def create_relation_stats(session=None, date=None):
     return "RelationStats for {}: {} deleted, {} inserted".format(date, deleted_counter, insert_counter)
 
 
-@app.task
-def update_qualities(session=None, date=None):
+def update_qualities(session, date, logger=None):
     """Calculate relative qualities of receivers and devices."""
 
-    if session is None:
-        session = app.session
-
-    if not date:
-        logger.warn("A date is needed for calculating stats. Exiting")
-        return None
+    if logger is None:
+        logger = app.logger
 
     # Calculate avg quality of devices
     dev_sq = session.query(RelationStats.device_id,
@@ -403,12 +370,11 @@ def update_qualities(session=None, date=None):
     return "Updated {} DeviceStats and {} ReceiverStats".format(dev_update_counter, rec_update_counter)
 
 
-@app.task
-def update_receivers(session=None):
+def update_receivers(session, logger=None):
     """Update receivers with stats."""
 
-    if session is None:
-        session = app.session
+    if logger is None:
+        logger = app.logger
 
     receiver_stats = session.query(
             distinct(ReceiverStats.receiver_id).label('receiver_id'),
@@ -450,12 +416,11 @@ def update_receivers(session=None):
     return "Updated {} Receivers".format(update_counter)
 
 
-@app.task
-def update_devices(session=None):
+def update_devices(session, logger=None):
     """Update devices with stats."""
 
-    if session is None:
-        session = app.session
+    if logger is None:
+        logger = app.logger
 
     device_stats = session.query(
             distinct(DeviceStats.device_id).label('device_id'),

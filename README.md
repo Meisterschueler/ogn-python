@@ -91,13 +91,13 @@ The following scripts run in the foreground and should be deamonized
 - Start a task server (make sure redis is up and running)
 
   ```
-  celery -A ogn.collect worker -l info
+  celery -A ogn_python.collect worker -l info
   ```
 
 - Start the task scheduler (make sure a task server is up and running)
 
   ```
-  celery -A ogn.collect beat -l info
+  celery -A ogn_python.collect beat -l info
   ```
 
 

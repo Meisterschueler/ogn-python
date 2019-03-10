@@ -1,24 +1,20 @@
-from celery.utils.log import get_task_logger
-
 from sqlalchemy import and_, or_, insert, update, exists, between
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import true, false
 
-from ogn_python.collect.celery import app
 from ogn_python.model import TakeoffLanding, Logbook, AircraftBeacon
 from ogn_python.utils import date_to_timestamps
 
-logger = get_task_logger(__name__)
+from ogn_python import app
 
 
-@app.task
-def update_logbook(session=None, date=None):
+def update_entries(session, date, logger=None):
     """Add/update logbook entries."""
 
-    logger.info("Compute logbook.")
+    if logger is None:
+        logger = app.logger
 
-    if session is None:
-        session = app.session
+    logger.info("Compute logbook.")
 
     # limit time range to given date and set window partition and window order
     if date is not None:
@@ -146,9 +142,11 @@ def update_logbook(session=None, date=None):
     return "Logbook entries: {} inserted, {} updated".format(insert_counter, update_counter)
 
 
-@app.task
-def update_max_altitude(session=None):
+def update_max_altitudes(session, logger=None):
     """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
+
+    if logger is None:
+        logger = app.logger
 
     logger.info("Update logbook max altitude.")
 

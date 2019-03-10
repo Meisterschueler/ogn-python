@@ -1,30 +1,22 @@
-from celery.utils.log import get_task_logger
-
 from sqlalchemy import Date
 from sqlalchemy import and_, insert, update, exists, between
 from sqlalchemy.sql import func, null
 
-from ogn_python.collect.celery import app
 from ogn_python.model import AircraftBeacon, ReceiverCoverage
 from ogn_python.utils import date_to_timestamps
 
-logger = get_task_logger(__name__)
+from ogn_python import app
 
 
-@app.task
-def create_receiver_coverage(session=None, date=None):
+def create_receiver_coverage(session, date, logger=None):
     """Create receiver coverages."""
+
+    if logger is None:
+        logger = app.logger
 
     logger.info("Compute receiver coverages.")
 
-    if session is None:
-        session = app.session
-
-    if not date:
-        logger.warn("A date is needed for calculating stats. Exiting")
-        return None
-    else:
-        (start, end) = date_to_timestamps(date)
+    (start, end) = date_to_timestamps(date)
 
     # Filter aircraft beacons
     sq = session.query(AircraftBeacon.location_mgrs_short,

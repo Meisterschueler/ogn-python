@@ -1,31 +1,27 @@
 from datetime import timedelta
 
-from celery.utils.log import get_task_logger
-
 from sqlalchemy import and_, or_, insert, between, exists
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import case
 
-from ogn_python.collect.celery import app
 from ogn_python.model import AircraftBeacon, TakeoffLanding, Airport
 from ogn_python.utils import date_to_timestamps
 
-logger = get_task_logger(__name__)
+from ogn_python import app
 
 
-@app.task
-def update_takeoff_landings(session=None, date=None):
+def update_takeoff_landings(session, date, logger=None):
     """Compute takeoffs and landings."""
 
-    logger.info("Compute takeoffs and landings.")
+    if logger is None:
+        logger = app.logger
 
-    if session is None:
-        session = app.session
+    logger.info("Compute takeoffs and landings.")
 
     # check if we have any airport
     airports_query = session.query(Airport).limit(1)
     if not airports_query.all():
-        logger.warn("Cannot calculate takeoff and landings without any airport! Please import airports first.")
+        app.logger.warn("Cannot calculate takeoff and landings without any airport! Please import airports first.")
         return
 
     # takeoff / landing detection is based on 3 consecutive points all below a certain altitude AGL

@@ -3,9 +3,8 @@ import click
 
 from datetime import datetime
 
-from ogn_python.collect.logbook import update_logbook
+from ogn_python.collect.logbook import update_entries
 from ogn_python.collect.takeoff_landings import update_takeoff_landings
-from ogn_python.commands.dbutils import session
 from ogn_python.model import Airport, Logbook
 from sqlalchemy.sql import func
 from tqdm import tqdm
@@ -29,7 +28,7 @@ def compute_takeoff_landing(start, end):
     pbar = tqdm(days)
     for single_date in pbar:
         pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
-        result = update_takeoff_landings(session=session, date=single_date)
+        result = update_takeoff_landings(session=db.session, date=single_date)
 
 
 @user_cli.command('compute_logbook')
@@ -43,7 +42,7 @@ def compute_logbook(start, end):
     pbar = tqdm(days)
     for single_date in pbar:
         pbar.set_description(single_date.strftime('%Y-%m-%d'))
-        result = update_logbook(session=session, date=single_date)
+        result = update_entries(session=db.session, date=single_date)
 
 
 @user_cli.command('show')
@@ -51,7 +50,7 @@ def compute_logbook(start, end):
 @click.argument('date')
 def show(airport_name, date=None):
     """Show a logbook for <airport_name>."""
-    airport = session.query(Airport) \
+    airport = db.session.query(Airport) \
         .filter(Airport.name == airport_name) \
         .first()
 
@@ -66,7 +65,7 @@ def show(airport_name, date=None):
         or_args = [db.between(Logbook.reftime, start, end)]
 
     # get all logbook entries and add device and airport infos
-    logbook_query = session.query(func.row_number().over(order_by=Logbook.reftime).label('row_number'),
+    logbook_query = db.session.query(func.row_number().over(order_by=Logbook.reftime).label('row_number'),
                                   Logbook) \
         .filter(*or_args) \
         .filter(db.or_(Logbook.takeoff_airport_id == airport.id,
