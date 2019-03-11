@@ -28,7 +28,8 @@ def compute_takeoff_landing(start, end):
     pbar = tqdm(days)
     for single_date in pbar:
         pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
-        result = takeoff_landings_update_entries(session=db.session, date=single_date)
+        (start, end) = date_to_timestamps(single_date)
+        result = takeoff_landings_update_entries(session=db.session, start=start, end=end)
 
 
 @user_cli.command('compute_logbook')

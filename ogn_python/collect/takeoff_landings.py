@@ -10,7 +10,7 @@ from ogn_python.utils import date_to_timestamps
 from ogn_python import app
 
 
-def update_entries(session, date, logger=None):
+def update_entries(session, start, end, logger=None):
     """Compute takeoffs and landings."""
 
     if logger is None:
@@ -18,10 +18,14 @@ def update_entries(session, date, logger=None):
 
     logger.info("Compute takeoffs and landings.")
 
+    # considered time interval should not exceed a complete day
+    if end - start > timedelta(days=1):
+        logger.warn("timeinterval start='{}' and end='{}' is too big.".format(start, end))
+
     # check if we have any airport
     airports_query = session.query(Airport).limit(1)
     if not airports_query.all():
-        app.logger.warn("Cannot calculate takeoff and landings without any airport! Please import airports first.")
+        logger.warn("Cannot calculate takeoff and landings without any airport! Please import airports first.")
         return
 
     # takeoff / landing detection is based on 3 consecutive points all below a certain altitude AGL
@@ -32,11 +36,7 @@ def update_entries(session, date, logger=None):
     max_agl = 100       # takeoff / landing must not exceed this altitude AGL
 
     # limit time range to given date
-    if date is not None:
-        (start, end) = date_to_timestamps(date)
-        filters = [between(AircraftBeacon.timestamp, start, end)]
-    else:
-        filters = []
+    filters = [between(AircraftBeacon.timestamp, start, end)]
 
     # get beacons for selected day, one per device_id and timestamp
     sq = session.query(AircraftBeacon) \

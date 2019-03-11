@@ -21,8 +21,9 @@ logger = get_task_logger(__name__)
 def update_takeoff_landings():
     """Compute takeoffs and landings."""
 
-    today = datetime.datetime.today()
-    takeoff_update_entries(session=db.session, date=today, logger=logger)
+    now = datetime.datetime.now()
+    yesterday = now - datetime.timedelta(days=1)
+    takeoff_update_entries(session=db.session, start=yesterday, end=now, logger=logger)
 
 
 @celery.task(name='update_logbook_entries')
