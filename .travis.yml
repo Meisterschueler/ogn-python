@@ -1,7 +1,7 @@
 language: python
 
 env:
-  - OGN_CONFIG_MODULE='config.test'
+  - OGN_CONFIG_MODULE='config/test.py'
 
 python:
   - 3.5
@@ -20,9 +20,9 @@ before_script:
   - psql -U postgres -c 'CREATE EXTENSION postgis;'
 
 script:
-  - nosetests --with-coverage --cover-package=ogn
+  - nosetests --with-coverage --cover-package=ogn_python
   - pip install . --upgrade
-  - python -c 'import ogn'
+  - python -c 'import ogn_python'
 
 after_success:
   - coveralls

@@ -7,6 +7,8 @@ from sqlalchemy.sql import func
 from ogn_python.collect.database import update_device_infos, update_country_code
 from ogn_python.model import *
 from ogn_python.utils import get_airports, get_days
+
+from ogn_python import app
 from ogn_python import db
 
 user_cli = AppGroup('database')
@@ -34,11 +36,8 @@ def get_database_days(start, end):
 
 @user_cli.command('info')
 def info():
-    import importlib
-    import os
-    config = importlib.import_module(os.environ['OGN_CONFIG_MODULE'])
-    print(config)
-    print(config.SQLALCHEMY_DATABASE_URI)
+    print(app.config)
+    print(app.config['SQLALCHEMY_DATABASE_URI'])
 
 
 @user_cli.command('init')

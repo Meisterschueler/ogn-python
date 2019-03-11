@@ -8,7 +8,10 @@ from ogn_python.flask_celery import make_celery
 
 # Initialize Flask
 app = Flask(__name__)
-app.config.from_object('config.default')
+
+# Load the configuration
+#app.config.from_object('config.default')
+app.config.from_envvar('OGN_CONFIG_MODULE')
 
 # Bootstrap
 bootstrap = Bootstrap(app)

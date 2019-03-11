@@ -1,75 +1,57 @@
+import json
+from datetime import datetime
+
 import unittest
 from unittest import mock
-import os
-from datetime import datetime
 
 from xmlunittest import XmlTestMixin
 
-from ogn_python.model import AircraftBeacon, Receiver, Device, DeviceInfo
+from tests.base import TestBaseDB, db
+
+from ogn_python.model import AircraftBeacon, AircraftType, Receiver, Device, DeviceInfo
 
 from ogn_python.backend.liveglidernet import rec, lxml
 from ogn_python.backend.ognrange import stations2_filtered_pl
-from ogn_python.model.aircraft_type import AircraftType
 
 
-class TestDB(unittest.TestCase, XmlTestMixin):
-    session = None
-    engine = None
-    app = None
-
+class TestDB(TestBaseDB, XmlTestMixin):
     def setUp(self):
-        os.environ['OGN_CONFIG_MODULE'] = 'config.test'
-        from ogn_python.commands.dbutils import engine, session
-        self.session = session
-        self.engine = engine
-
-        from ogn_python.commands.database import init
-        init()
+        super().setUp()
 
         # Prepare Beacons
         self.r01 = Receiver(name='Koenigsdf', location_wkt='0101000020E610000061E8FED7A6EE26407F20661C10EA4740', lastseen='2017-12-20 10:00:00', altitude=601, version='0.2.5', platform='ARM')
         self.r02 = Receiver(name='Bene', location_wkt='0101000020E6100000D5E76A2BF6C72640D4063A6DA0DB4740', lastseen='2017-12-20 09:45:00', altitude=609, version='0.2.7', platform='x64')
         self.r03 = Receiver(name='Ohlstadt', location_wkt='0101000020E6100000057E678EBF772640A142883E32D44740', lastseen='2017-12-20 10:05:00', altitude=655, version='0.2.6', platform='ARM')
-        session.add(self.r01)
-        session.add(self.r02)
-        session.add(self.r03)
-        session.commit()
+        db.session.add(self.r01)
+        db.session.add(self.r02)
+        db.session.add(self.r03)
+        db.session.commit()
 
         self.d01 = Device(address='DD4711', lastseen='2017-12-20 10:00:02')
         self.d02 = Device(address='DD0815', lastseen='2017-12-20 09:56:00')
-        session.add(self.d01)
-        session.add(self.d02)
-        session.commit()
+        db.session.add(self.d01)
+        db.session.add(self.d02)
+        db.session.commit()
 
         self.di01 = DeviceInfo(registration='D-4711', competition='Hi', tracked=True, identified=True, device_id=self.d01.id)
-        session.add(self.di01)
-        session.commit()
+        db.session.add(self.di01)
+        db.session.commit()
 
         self.ab11 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', location_wkt='0101000020E6100000211FF46C56ED26402650D7EDC6E94740', aircraft_type=AircraftType.glider_or_motor_glider, timestamp='2017-12-20 10:00:01', track=105, ground_speed=57, climb_rate=-0.5, device_id=self.d01.id)
         self.ab12 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', location_wkt='0101000020E6100000806DEA295FED2640347D898BB6E94740', aircraft_type=AircraftType.glider_or_motor_glider, timestamp='2017-12-20 10:00:02', track=123, ground_speed=55, climb_rate=-0.4, altitude=209, device_id=self.d01.id)
         self.ab21 = AircraftBeacon(name='FLRDD0815', receiver_name='Koenigsdf', location_wkt='0101000020E6100000F38B25BF58F22640448B6CE7FBE94740', aircraft_type=AircraftType.powered_aircraft, timestamp='2017-12-20 09:54:30', track=280, ground_speed=80, climb_rate=-2.9, device_id=self.d02.id)
         self.ab22 = AircraftBeacon(name='FLRDD0815', receiver_name='Bene', location_wkt='0101000020E6100000A5E8482EFFF12640DC1EAA16FEE94740', aircraft_type=AircraftType.powered_aircraft, timestamp='2017-12-20 09:56:00', track=270, ground_speed=77, climb_rate=-1.5, altitude=543, device_id=self.d02.id)
-        session.add(self.ab11)
-        session.add(self.ab12)
-        session.add(self.ab21)
-        session.add(self.ab22)
-        session.commit()
+        db.session.add(self.ab11)
+        db.session.add(self.ab12)
+        db.session.add(self.ab21)
+        db.session.add(self.ab22)
+        db.session.commit()
 
-    def tearDown(self):
-        session = self.session
-        session.execute("DELETE FROM device_infos")
-        session.execute("DELETE FROM receivers")
-        session.execute("DELETE FROM devices")
-        session.execute("DELETE FROM aircraft_beacons")
-        session.commit()
-
-    @mock.patch('ogn.backend.liveglidernet.datetime')
+    @mock.patch('ogn_python.backend.liveglidernet.datetime')
     def test_rec(self, datetime_mock):
-        session = self.session
-
         datetime_mock.utcnow.return_value = datetime(2017, 12, 20, 10, 0)
 
-        data = rec(session).encode(encoding='utf-8')
+        data = rec(db.session).encode(encoding='utf-8')
 
         # Check the document
         root = self.assertXmlDocument(data)
@@ -88,14 +70,12 @@ class TestDB(unittest.TestCase, XmlTestMixin):
 
         self.assertXmlEquivalentOutputs(data, expected)
 
-    @mock.patch('ogn.backend.liveglidernet.utc_to_local', side_effect=lambda x: x)
-    @mock.patch('ogn.backend.liveglidernet.datetime')
+    @mock.patch('ogn_python.backend.liveglidernet.utc_to_local', side_effect=lambda x: x)
+    @mock.patch('ogn_python.backend.liveglidernet.datetime')
     def test_lxml(self, datetime_mock, utc_to_local_mock):
-        session = self.session
-
         datetime_mock.utcnow.return_value = datetime(2017, 12, 20, 10, 0, 5)
 
-        data = lxml(session).encode(encoding='utf-8')
+        data = lxml(db.session).encode(encoding='utf-8')
 
         # Check the complete document
         expected = """<?xml version="1.0" encoding="UTF-8"?>
@@ -107,15 +87,11 @@ class TestDB(unittest.TestCase, XmlTestMixin):
 
         self.assertXmlEquivalentOutputs(data, expected)
 
-    @mock.patch('ogn.backend.ognrange.datetime')
+    @mock.patch('ogn_python.backend.ognrange.datetime')
     def test_stations2_filtered_pl(self, datetime_mock):
-        session = self.session
-
         datetime_mock.utcnow.return_value = datetime(2017, 12, 20, 10, 0)
 
-        import json
-
-        result = stations2_filtered_pl(session)
+        result = stations2_filtered_pl(db.session)
 
         data = json.loads(result)
 

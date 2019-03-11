@@ -1,7 +1,7 @@
-import unittest
 from datetime import datetime, date
+import unittest
 
-from tests.base import TestBaseDB
+from tests.base import TestBaseDB, db
 
 from ogn_python.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
 
@@ -11,7 +11,6 @@ from ogn_python.collect.stats import create_device_stats
 class TestStats(TestBaseDB):
     def setUp(self):
         super().setUp()
-        session = self.session
 
         # Prepare Beacons
         self.ab01 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:01')
@@ -30,23 +29,21 @@ class TestStats(TestBaseDB):
 
         self.d01 = Device(address='DD4711')
 
-        session.add(self.r01)
-        session.add(self.d01)
-        session.commit()
+        db.session.add(self.r01)
+        db.session.add(self.d01)
+        db.session.commit()
 
     def test_create_device_stats(self):
-        session = self.session
-
         # Compute 1st beacon
         self.ab01.device = self.d01
         self.ab01.receiver = self.r01
-        session.add(self.ab01)
-        session.commit()
+        db.session.add(self.ab01)
+        db.session.commit()
 
         today = date(2017, 12, 10)
-        create_device_stats(session, date=today)
+        create_device_stats(db.session, date=today)
 
-        devicestats = session.query(DeviceStats).all()
+        devicestats = db.session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
         self.assertEqual(devicestats[0].device, self.d01)
 
@@ -68,12 +65,12 @@ class TestStats(TestBaseDB):
         self.ab02.altitude = 200
         self.ab02.aircraft_type = 3
         self.ab02.stealth = False
-        session.add(self.ab02)
-        session.commit()
+        db.session.add(self.ab02)
+        db.session.commit()
 
-        create_device_stats(session, date=today)
+        create_device_stats(db.session, date=today)
 
-        devicestats = session.query(DeviceStats).all()
+        devicestats = db.session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
         self.assertEqual(devicestats[0].device, self.d01)
 
@@ -94,12 +91,12 @@ class TestStats(TestBaseDB):
         self.ab03.receiver = self.r01
         self.ab03.error_count = 1
         self.ab03.software_version = 6.01
-        session.add(self.ab03)
-        session.commit()
+        db.session.add(self.ab03)
+        db.session.commit()
 
-        create_device_stats(session, date=today)
+        create_device_stats(db.session, date=today)
 
-        devicestats = session.query(DeviceStats).all()
+        devicestats = db.session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
         self.assertEqual(devicestats[0].device, self.d01)
 
@@ -122,12 +119,12 @@ class TestStats(TestBaseDB):
         self.ab04.software_version = 6.01
         self.ab04.hardware_version = 15
         self.ab04.real_address = 'DDALFA'
-        session.add(self.ab04)
-        session.commit()
+        db.session.add(self.ab04)
+        db.session.commit()
 
-        create_device_stats(session, date=today)
+        create_device_stats(db.session, date=today)
 
-        devicestats = session.query(DeviceStats).all()
+        devicestats = db.session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
         self.assertEqual(devicestats[0].device, self.d01)
 
@@ -148,12 +145,12 @@ class TestStats(TestBaseDB):
         self.ab05.receiver = self.r02
         self.ab05.altitude = 100
         self.ab05.stealth = True
-        session.add(self.ab05)
-        session.commit()
+        db.session.add(self.ab05)
+        db.session.commit()
 
-        create_device_stats(session, date=today)
+        create_device_stats(db.session, date=today)
 
-        devicestats = session.query(DeviceStats).all()
+        devicestats = db.session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
         self.assertEqual(devicestats[0].device, self.d01)
 
@@ -175,12 +172,12 @@ class TestStats(TestBaseDB):
         self.ab06.timestamp = datetime(2017, 12, 10, 9, 59, 50)
         self.ab06.altitude = 300
         self.ab06.software_version = 6.02
-        session.add(self.ab06)
-        session.commit()
+        db.session.add(self.ab06)
+        db.session.commit()
 
-        create_device_stats(session, date=today)
+        create_device_stats(db.session, date=today)
 
-        devicestats = session.query(DeviceStats).all()
+        devicestats = db.session.query(DeviceStats).all()
         self.assertEqual(len(devicestats), 1)
         self.assertEqual(devicestats[0].device, self.d01)
 

@@ -9,6 +9,22 @@ from ogn_python.utils import get_ddb, get_flarmnet
 from ogn_python import app
 
 
+def upsert(session, model, rows, update_cols):
+    """Insert rows in model. On conflicting update columns if new value IS NOT NULL."""
+
+    table = model.__table__
+
+    stmt = insert(table).values(rows)
+
+    on_conflict_stmt = stmt.on_conflict_do_update(
+        index_elements=table.primary_key.columns,
+        set_={k: case([(getattr(stmt.excluded, k) != null(), getattr(stmt.excluded, k))], else_=getattr(model, k)) for k in update_cols},
+    )
+
+    # print(compile_query(on_conflict_stmt))
+    session.execute(on_conflict_stmt)
+    
+
 def update_device_infos(session, address_origin, path=None):
     if address_origin == DeviceInfoOrigin.flarmnet:
         device_infos = get_flarmnet(fln_file=path)
