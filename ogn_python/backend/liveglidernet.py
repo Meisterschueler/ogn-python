@@ -4,6 +4,8 @@ from sqlalchemy import func, and_, between, case
 
 from ogn_python.model import AircraftBeacon, Device, Receiver
 
+from ogn_python import db
+
 
 def utc_to_local(utc_dt):
     return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
@@ -17,9 +19,9 @@ def decode(code):
     return code[2:9]
 
 
-def rec(session):
+def rec():
     last_10_minutes = datetime.utcnow() - timedelta(minutes=10)
-    receiver_query = session.query(Receiver,
+    receiver_query = db.session.query(Receiver,
                                    case([(Receiver.lastseen > last_10_minutes, True)],
                                         else_=False).label('is_online')) \
         .order_by(Receiver.name)
@@ -38,14 +40,14 @@ def rec(session):
     return xml
 
 
-def lxml(session, show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_min=-180):
+def lxml(show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_min=-180):
 
     if show_offline:
         observation_start = date.today()
     else:
         observation_start = datetime.utcnow() - timedelta(minutes=5)
 
-    position_query = session.query(AircraftBeacon, Device) \
+    position_query = db.session.query(AircraftBeacon, Device) \
         .filter(and_(between(func.ST_Y(AircraftBeacon.location_wkt), lat_min, lat_max),
                      between(func.ST_X(AircraftBeacon.location_wkt), lon_min, lon_max))) \
         .filter(Device.lastseen > observation_start) \

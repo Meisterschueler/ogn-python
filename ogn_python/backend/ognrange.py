@@ -5,6 +5,8 @@ from sqlalchemy import func, case
 from sqlalchemy.sql.expression import label
 from ogn_python.model import Receiver
 
+from ogn_python import db
+
 
 def alchemyencoder(obj):
     """JSON encoder function for SQLAlchemy special classes."""
@@ -17,10 +19,10 @@ def alchemyencoder(obj):
         return float(obj)
 
 
-def stations2_filtered_pl(session):
+def stations2_filtered_pl():
     last_10_minutes = datetime.utcnow() - timedelta(minutes=10)
 
-    query = session.query(
+    query = db.session.query(
         Receiver.name.label('s'),
         label('lt', func.round(func.ST_Y(Receiver.location_wkt) * 10000) / 10000),
         label('lg', func.round(func.ST_X(Receiver.location_wkt) * 10000) / 10000),
@@ -30,7 +32,7 @@ def stations2_filtered_pl(session):
         label('v', Receiver.version + '.' + Receiver.platform)) \
         .order_by(Receiver.lastseen)
 
-    res = session.execute(query)
+    res = db.session.execute(query)
     stations = json.dumps({'stations': [dict(r) for r in res]}, default=alchemyencoder)
 
     return stations

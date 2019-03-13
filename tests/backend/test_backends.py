@@ -51,7 +51,7 @@ class TestDB(TestBaseDB, XmlTestMixin):
     def test_rec(self, datetime_mock):
         datetime_mock.utcnow.return_value = datetime(2017, 12, 20, 10, 0)
 
-        data = rec(db.session).encode(encoding='utf-8')
+        data = rec().encode(encoding='utf-8')
 
         # Check the document
         root = self.assertXmlDocument(data)
@@ -75,7 +75,7 @@ class TestDB(TestBaseDB, XmlTestMixin):
     def test_lxml(self, datetime_mock, utc_to_local_mock):
         datetime_mock.utcnow.return_value = datetime(2017, 12, 20, 10, 0, 5)
 
-        data = lxml(db.session).encode(encoding='utf-8')
+        data = lxml().encode(encoding='utf-8')
 
         # Check the complete document
         expected = """<?xml version="1.0" encoding="UTF-8"?>
@@ -91,7 +91,7 @@ class TestDB(TestBaseDB, XmlTestMixin):
     def test_stations2_filtered_pl(self, datetime_mock):
         datetime_mock.utcnow.return_value = datetime(2017, 12, 20, 10, 0)
 
-        result = stations2_filtered_pl(db.session)
+        result = stations2_filtered_pl()
 
         data = json.loads(result)
 
