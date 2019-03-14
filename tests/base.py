@@ -9,6 +9,7 @@ from ogn_python import db   # noqa: E402
 class TestBaseDB(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        db.drop_all()
         db.session.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
         db.session.commit()
         db.create_all()
