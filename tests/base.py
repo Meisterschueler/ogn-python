@@ -17,7 +17,17 @@ class TestBaseDB(unittest.TestCase):
         pass
 
     def tearDown(self):
-        db.drop_all()
+        db.session.execute("""
+            DELETE FROM aircraft_beacons;
+            DELETE FROM receiver_beacons;
+            DELETE FROM takeoff_landings;
+            DELETE FROM logbook;
+            DELETE FROM receiver_coverages;
+            DELETE FROM device_stats;
+            DELETE FROM receiver_stats;
+            DELETE FROM receivers;
+            DELETE FROM devices;
+        """)
 
 
 if __name__ == '__main__':
