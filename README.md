@@ -56,9 +56,12 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     psql -d ogn -c "DROP TABLE world_borders_temp;"
     ```
     
-8. Optional: Import world elevation data (needed for AGL calculation)
-8.1 Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database.
+8. Import world elevation data (needed for AGL calculation)
+
+8.1 Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database which is 4326.
+
 8.1.1 The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world. Just download the data you need.
+
 8.1.2 For Europe we can get the DEM as GeoTIFF files from the [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
     Because the SRID of these files is 3035 and we want 4326 we have to convert them:
     
