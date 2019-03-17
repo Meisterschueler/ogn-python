@@ -21,6 +21,7 @@ def update_entries(session, start, end, logger=None):
     # considered time interval should not exceed a complete day
     if end - start > timedelta(days=1):
         logger.warn("timeinterval start='{}' and end='{}' is too big.".format(start, end))
+        return
 
     # check if we have any airport
     airports_query = session.query(Airport).limit(1)
@@ -133,6 +134,6 @@ def update_entries(session, start, end, logger=None):
     result = session.execute(ins)
     session.commit()
     insert_counter = result.rowcount
-    logger.warn("Inserted {} TakeoffLandings".format(insert_counter))
+    logger.info("Inserted {} TakeoffLandings".format(insert_counter))
 
     return "Inserted {} TakeoffLandings".format(insert_counter)

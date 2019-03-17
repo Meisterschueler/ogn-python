@@ -130,10 +130,11 @@ def update_aircraft_beacons(postfix):
             quality = CASE WHEN ab.location IS NOT NULL AND r.location IS NOT NULL AND ST_DistanceSphere(ab.location, r.location) > 0 AND ab.signal_quality IS NOT NULL
                         THEN CAST(signal_quality + 20*log(ST_DistanceSphere(ab.location, r.location)/10000) AS REAL)
                         ELSE NULL
-            END
+            END,
+            agl = CAST(ab.altitude - ST_Value(e.rast, ab.location) AS REAL)
 
-        FROM devices AS d, receivers AS r
-        WHERE ab.device_id IS NULL and ab.receiver_id IS NULL AND ab.address = d.address AND ab.receiver_name = r.name;
+        FROM devices AS d, receivers AS r, elevation AS e
+        WHERE ab.device_id IS NULL and ab.receiver_id IS NULL AND ab.address = d.address AND ab.receiver_name = r.name AND ST_Intersects(e.rast, ab.location);
     """.format(postfix))
     db.session.commit()
 

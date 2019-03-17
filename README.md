@@ -57,18 +57,19 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     ```
     
 8. Optional: Import world elevation data (needed for AGL calculation)
-    For Europe we can get the DEM as GeoTIFF files from the
-    [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
-    Because the spatial reference system (SRID) of these files is 3035 and we want 4326 we have to convert them:
+8.1 Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database.
+8.1.1 The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world. Just download the data you need.
+8.1.2 For Europe we can get the DEM as GeoTIFF files from the [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
+    Because the SRID of these files is 3035 and we want 4326 we have to convert them:
     
     ```
     gdalwarp -s_srs "EPSG:3035" -t_srs "EPSG:4326" source.tif target.tif
     ```
     
-    Then we can import the GeoTIFF into the elevation table:
+8.2 Then we can import the GeoTIFF into the elevation table:
     
     ```
-    raster2pgsql -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
+    raster2pgsql -s 4326 -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
     ```
     
 There is also a [Vagrant](https://www.vagrantup.com/) environment for the development of ogn-python.
