@@ -61,10 +61,12 @@ def purge_old_data(max_hours):
 
     from ogn_python.model import AircraftBeacon, ReceiverBeacon
     min_timestamp = datetime.datetime.utcnow() - datetime.timedelta(hours=max_hours)
-    db.session(AircraftBeacon) \
+    db.session.query(AircraftBeacon) \
         .filter(AircraftBeacon.timestamp < min_timestamp) \
         .delete()
 
-    db.session(ReceiverBeacon) \
+    db.session.query(ReceiverBeacon) \
         .filter(ReceiverBeacon.timestamp < min_timestamp) \
         .delete()
+
+    db.session.commit()
