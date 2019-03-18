@@ -20,7 +20,7 @@ CELERYBEAT_SCHEDULE = {
     'update-takeoff-and-landing': {
         'task': 'update_takeoff_landings',
         'schedule': timedelta(minutes=1),
-        'kwargs': {'delta': timedelta(minutes=10)}
+        'kwargs': {'last_minutes': 10},
     },
     'update-logbook': {
         'task': 'update_logbook_entries',
@@ -33,6 +33,6 @@ CELERYBEAT_SCHEDULE = {
     #'purge_old_data': {
     #    'task': 'purge_old_data',
     #    'schedule': timedelta(minutes=10),
-    #    'kwargs': {'age': timedelta(days=2)}
+    #    'kwargs': {'max_hours': 48}
     #},
 }

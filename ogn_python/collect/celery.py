@@ -18,11 +18,12 @@ logger = get_task_logger(__name__)
 
 
 @celery.task(name='update_takeoff_landings')
-def update_takeoff_landings(delta):
+def update_takeoff_landings(last_minutes):
     """Compute takeoffs and landings."""
 
-    now = datetime.datetime.utcnow()
-    takeoff_update_entries(session=db.session, start=now-delta, end=now, logger=logger)
+    end = datetime.datetime.utcnow()
+    start = end - datetime.timedelta(minutes=last_minutes)
+    takeoff_update_entries(session=db.session, start=start, end=end, logger=logger)
 
 
 @celery.task(name='update_logbook_entries')
@@ -55,15 +56,15 @@ def update_receivers_country_code():
 
 
 @celery.task(name='purge_old_data')
-def purge_old_data(age):
+def purge_old_data(max_hours):
     """Delete AircraftBeacons and ReceiverBeacons older than given 'age'."""
 
     from ogn_python.model import AircraftBeacon, ReceiverBeacon
-    now = datetime.datetime.utcnow()
+    min_timestamp = datetime.datetime.utcnow() - datetime.timedelta(hours=max_hours)
     db.session(AircraftBeacon) \
-        .filter(AircraftBeacon.timestamp < now - age) \
+        .filter(AircraftBeacon.timestamp < min_timestamp) \
         .delete()
 
     db.session(ReceiverBeacon) \
-        .filter(ReceiverBeacon.timestamp < now - age) \
+        .filter(ReceiverBeacon.timestamp < min_timestamp) \
         .delete()
