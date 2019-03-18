@@ -11,7 +11,7 @@ from datetime import timedelta
 CELERYBEAT_SCHEDULE = {
     'update-ddb': {
         'task': 'import_ddb',
-        'schedule': timedelta(minutes=1),
+        'schedule': timedelta(hours=1),
     },
     'update-country-codes': {
         'task': 'update_receivers_country_code',
@@ -20,6 +20,7 @@ CELERYBEAT_SCHEDULE = {
     'update-takeoff-and-landing': {
         'task': 'update_takeoff_landings',
         'schedule': timedelta(minutes=1),
+        'kwargs': {'delta': timedelta(minutes=10)}
     },
     'update-logbook': {
         'task': 'update_logbook_entries',
@@ -29,4 +30,9 @@ CELERYBEAT_SCHEDULE = {
         'task': 'update_logbook_max_altitude',
         'schedule': timedelta(minutes=1),
     },
+    #'purge_old_data': {
+    #    'task': 'purge_old_data',
+    #    'schedule': timedelta(minutes=10),
+    #    'kwargs': {'age': timedelta(days=2)}
+    #},
 }

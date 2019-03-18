@@ -58,11 +58,12 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     
 8. Get world elevation data (needed for AGL calculation)
 	Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database which is 4326.
-	The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world. Just download the data you need.
+	The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world with SRID 4326. Just download the data you need.
+	
 	For Europe we can get the DEM as GeoTIFF files from the [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
     Because the SRID of these files is 3035 and we want 4326 we have to convert them (next step)
     
-9. Convert the elevation data into correct SRID
+9. Optional: Convert the elevation data into correct SRID
 
 	We convert elevation from one SRID (here: 3035) to target SRID (4326):
     
