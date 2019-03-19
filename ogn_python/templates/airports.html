@@ -2,10 +2,24 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
+
 <div class="container">
 <div class="panel panel-success">
 <div class="panel-heading"><h3 class="panel-title">Airports</h3></div>
 <div class="panel-body">
+
+<form>
+<div class="well">
+<select name="country" onchange="this.form.submit();">
+	<option value="">(none)</option>
+    {% for country in countries %}
+    <option value="{{ country.iso2 }}"{% if sel_country == country.iso2 %} SELECTED{% endif %}>{{ country.iso2 }}</option>
+    {% endfor %}
+</select>
+</div>
+</form>
+
   <table class="datatable table table-striped table-bordered">
     <tr>
       <th>#</th>
@@ -13,10 +27,10 @@
    	  <th>Country</th>
     </tr>
 
-    {% for airport in pagination.items %}
+    {% for airport in airports %}
 	<tr>
 	  <td>{{ loop.index }}
-	  <td>{{ airport.name }}</td>
+	  <td><a href="{{ url_for('airport', id=airport.id) }}">{{ airport.name }}</a></td>
 	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/></td>
 	</tr>
 	{% endfor %}

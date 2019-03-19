@@ -2,12 +2,24 @@
 
 {% block content %}
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
 
 <div class="container">
 <div class="panel panel-success" id="asdf">
 <div class="panel-heading"><h3 class="panel-title">Receivers</h3></div>
 <div class="panel-body">
+
+<form>
+<div class="well">
+<select name="country" onchange="this.form.submit();">
+	<option value="">(all)</option>
+    {% for country in countries %}
+    <option value="{{ country.iso2 }}"{% if sel_country == country.iso2 %} SELECTED{% endif %}>{{ country.iso2 }} ({{ country.receiver_count }})</option>
+    {% endfor %}
+</select>
+</div>
+</form>
+
   <table class="datatable table table-striped table-bordered">
     <tr>
    	  <th>Name</th>
@@ -17,9 +29,9 @@
 
     {% for receiver in receivers %}
 	<tr>
-	  <td>{{ receiver.name }}</td>
+	  <td><a href="{{ url_for('receiver', receiver_id=receiver.id) }}">{{ receiver.name }}</a></td>
 	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/></td>
-	  <td>{{ receiver.altitude }}</td>
+	  <td>{{ receiver.altitude|int }}</td>
 	</tr>
 	{% endfor %}
   </table>
