@@ -39,6 +39,7 @@
         <th>Type</th>
         <th colspan="2">Takeoff</th>
         <th colspan="2">Landing</th>
+        <th>Time</th>
         <th>AGL</th>
         <th>Remark</th>
 	</tr>
@@ -51,6 +52,7 @@
         <td>{% if entry.takeoff_track is not none and entry.takeoff_airport.id|string() == sel_airport %} {{ '%02d' | format(entry.takeoff_track/10) }} {% endif %}</td>
         <td>{% if entry.landing_timestamp is not none and entry.landing_airport.id|string() == sel_airport %} {{ entry.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>
         <td>{% if entry.landing_track is not none and entry.landing_airport.id|string() == sel_airport %} {{ '%02d' | format(entry.landing_track/10) }} {% endif %}</td>
+        <td>{% if entry.duration is not none %}{{ entry.duration }}{% endif %}</td>
         <td>{% if entry.max_altitude is not none %}{{ '%0.1f'|format(entry.max_altitude - entry.takeoff_airport.altitude) }} m{% endif %}</td>
         <td>
         	{% if entry.takeoff_airport is not none and entry.takeoff_airport.id|string() != sel_airport %}Take Off: <a href="{{ url_for('logbook', airport=entry.takeoff_airport.id) }}">{{ entry.takeoff_airport.name }}</a>
