@@ -65,16 +65,16 @@ def receiver_detail():
         .filter(Receiver.id == sel_receiver_id) \
         .one()
 
-    near_airports = db.session.query(Airport, func.st_distancesphere(Airport.location_wkt, Receiver.location_wkt).label('distance')) \
-        .filter(and_(Receiver.id == sel_receiver_id), func.st_contains(func.st_buffer(Receiver.location_wkt, 0.5), Airport.location_wkt)) \
+    airport = db.session.query(Airport) \
+        .filter(and_(Receiver.id == sel_receiver_id, 
+                     func.st_contains(func.st_buffer(Receiver.location_wkt, 0.5), Airport.location_wkt),
+                     func.st_distance_sphere(Airport.location_wkt, Receiver.location_wkt) < 1000)) \
         .filter(Airport.style.in_((2,4,5))) \
-        .order_by(func.st_distancesphere(Airport.location_wkt, Receiver.location_wkt)) \
-        .limit(10)
 
     return render_template('receiver_detail.html',
                            title='Receiver Detail',
                            receiver=receiver,
-                           near_airports=near_airports)
+                           airport=airport.first())
 
 
 @app.route('/airports.html', methods=['GET', 'POST'])
@@ -92,19 +92,31 @@ def airports():
             .group_by(Airport.id) \
             .order_by(Airport.name)
     else:
-        airports = db.session.query(Airport) \
-            .filter(or_(Logbook.takeoff_airport_id == Airport.id, Logbook.landing_airport_id == Airport.id)) \
-            .group_by(Airport.id) \
-            .order_by(Airport.name)
+        airports = []
 
     page = request.args.get('page', 1, type=int)
 
-    return render_template('airports.html', sel_country=sel_country, countries=countries_in_logbook, airports=airports)
+    return render_template('airports.html',
+                           sel_country=sel_country,
+                           countries=countries_in_logbook,
+                           airports=airports)
 
 
-@app.route('/airport.html')
-def airport():
-    pass
+@app.route('/airport_detail.html')
+def airport_detail():
+    sel_airport = request.args.get('airport')
+
+    airport = db.session.query(Airport) \
+        .filter(Airport.id == sel_airport)
+
+    devices = db.session.query(Device).join(Logbook) \
+        .filter(Logbook.takeoff_airport_id == sel_airport) \
+        .order_by(Device.address)
+
+    return render_template('airport_detail.html',
+                           title='Airport Detail',
+                           airport=airport.one(),
+                           devices=devices)
 
 
 @app.route('/logbook.html', methods=['GET', 'POST'])
@@ -182,6 +194,7 @@ def logbook():
                            dates=dates,
                            logbook=logbook)
 
+
 @app.route('/statistics.html')
 def statistics():
     receiverstats = db.session.query(ReceiverStats) \
@@ -190,6 +203,7 @@ def statistics():
     return render_template('statistics.html', receiverstats=receiverstats)
 
 # Backend routes for other sites
+
 
 @app.route('/live.html')
 def live():

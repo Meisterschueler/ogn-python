@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Airport Details</h3></div>
+<table class="datatable table table-striped table-bordered">
+	<tr><td>Name:</td><td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/> {{ airport.name }}</td></tr>
+	<tr><td>Code:</td><td>{{ airport.code }}</td></tr>
+	<tr><td>Altitude:</td><td>{{ airport.altitude|int }} m</td></tr>
+	<tr><td>Style:</td><td>{{ airport.style }}</td></tr>
+	<tr><td>Description:</td><td>{{ airport.description }}</td></tr>
+	<tr><td>Runway Direction:</td><td>{{ airport.runway_direction }}</td></tr>
+	<tr><td>Runway Length:</td><td>{{ airport.runway_length }} m</td></tr>
+	<tr><td>Frequency:</td><td>{{ airport.frequency }} MHz</td></tr>
+</table>
+</div>
+
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Seen Devices</h3></div>
+<table class="datatable table table-striped table-bordered">
+    <tr>
+   	  <th>Address</th>
+   	  <th>Registration</th>
+   	  <th>Last takeoff/landing</th>
+      <th>Software version</th>
+    </tr>
+
+	{% for device in devices %}
+	<tr>
+		<td><a href="{{ url_for('device_detail', id=device.id) }}">{{ device.address }}</a></td>
+		<td>{% if device.info is none %}-{% else %}{{ device.info.registration }}{% endif %}</a></td>
+		<td>{% if device.takeoff_landings %}{% set last_action = device.takeoff_landings|last %}{% if last_action.is_takeoff == True %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
+		<td>{{ device.software_version }}</td>
+	</tr>
+	{% endfor %}
+</table>
+</div>
+
+</div>
+
+{% endblock %}

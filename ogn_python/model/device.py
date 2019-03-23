@@ -3,6 +3,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from ogn_python import db
 from .device_info import DeviceInfo
 
+
 class Device(db.Model):
     __tablename__ = 'devices'
 

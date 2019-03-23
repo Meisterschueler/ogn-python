@@ -24,14 +24,14 @@
     <tr>
       <th>#</th>
    	  <th>Name</th>
-   	  <th>Country</th>
+   	  <th>Logbook (takeoff and landings)</th>
     </tr>
 
     {% for airport in airports %}
 	<tr>
 	  <td>{{ loop.index }}
-	  <td><a href="{{ url_for('logbook', airport=airport.id) }}">{{ airport.name }}</a></td>
-	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/></td>
+	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/> <a href="{{ url_for('airport_detail', airport=airport.id) }}">{{ airport.name }}</a></td>
+	  <td><a href="{{ url_for('logbook', airport=airport.id) }}">Logbook</a></td>
 	</tr>
 	{% endfor %}
   </table>
