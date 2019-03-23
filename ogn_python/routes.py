@@ -156,11 +156,11 @@ def logbook():
 
     # Get Logbook
     filters = []
-    if sel_date:
-        filters.append(db.func.date(Logbook.reftime) == sel_date)
-
     if sel_country and sel_airport:
         filters.append(db.or_(Logbook.takeoff_airport_id == sel_airport, Logbook.landing_airport_id == sel_airport))
+
+    if sel_date:
+        filters.append(db.func.date(Logbook.reftime) == sel_date)
 
     if sel_device_id:
         filters.append(Logbook.device_id == sel_device_id)
