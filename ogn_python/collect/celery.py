@@ -10,6 +10,8 @@ from ogn_python.collect.logbook import update_max_altitudes as logbook_update_ma
 from ogn_python.collect.database import import_ddb as device_infos_import_ddb
 from ogn_python.collect.database import update_country_code as receivers_update_country_code
 
+from ogn_python.collect.stats import create_device_stats, update_device_stats_jumps, create_receiver_stats, create_relation_stats, update_qualities
+
 from ogn_python import db
 from ogn_python import celery
 
@@ -70,3 +72,16 @@ def purge_old_data(max_hours):
         .delete()
 
     db.session.commit()
+
+
+@celery.task(name='update_stats')
+def update_stats(day_offset):
+    """Update stats of the current day."""
+
+    date = datetime.datetime.today() + datetime.timedelta(days=day_offset)
+
+    create_device_stats(session=db.session, date=date)
+    update_device_stats_jumps(session=db.session, date=date)
+    create_receiver_stats(session=db.session, date=date)
+    create_relation_stats(session=db.session, date=date)
+    update_qualities(session=db.session, date=date)

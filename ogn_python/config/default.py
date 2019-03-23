@@ -5,7 +5,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-
+from celery.schedules import crontab
 from datetime import timedelta
 
 CELERYBEAT_SCHEDULE = {
@@ -29,6 +29,16 @@ CELERYBEAT_SCHEDULE = {
     'update-max-altitudes': {
         'task': 'update_logbook_max_altitude',
         'schedule': timedelta(minutes=1),
+    },
+    'update-stats-hourly': {
+        'task': 'update_stats',
+        'schedule': timedelta(hours=1),
+        'kwargs': {'day_offset': 0},
+    },
+    'update-stats-daily': {
+        'task': 'update_stats',
+        'schedule': crontab(hour=0, minute=5),
+        'kwargs': {'day_offset': -1},
     },
     #'purge_old_data': {
     #    'task': 'purge_old_data',
