@@ -20,8 +20,8 @@ def devices():
     return render_template('devices.html', devices=devices)
 
 
-@app.route('/device.html', methods=['GET', 'POST'])
-def device():
+@app.route('/device_detail.html', methods=['GET', 'POST'])
+def device_detail():
     device_id = request.args.get('id')
     device = db.session.query(Device) \
         .filter(Device.id == device_id) \
@@ -166,12 +166,11 @@ def logbook():
         filters.append(Logbook.device_id == sel_device_id)
 
     if len(filters) > 0:
-        entries = db.session.query(Logbook, Device, DeviceInfo) \
+        logbook = db.session.query(Logbook) \
             .filter(*filters) \
-            .filter(db.and_(Logbook.device_id == Device.id, Device.address == DeviceInfo.address)) \
             .order_by(Logbook.reftime)
     else:
-        entries = None
+        logbook = None
 
     return render_template('logbook.html',
                            title='Logbook',
@@ -181,7 +180,7 @@ def logbook():
                            airports=airports,
                            sel_date=sel_date,
                            dates=dates,
-                           entries=entries)
+                           logbook=logbook)
 
 @app.route('/statistics.html')
 def statistics():

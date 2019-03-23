@@ -1,5 +1,7 @@
-from ogn_python import db
+from sqlalchemy.ext.hybrid import hybrid_property
 
+from ogn_python import db
+from .device_info import DeviceInfo
 
 class Device(db.Model):
     __tablename__ = 'devices'
@@ -25,3 +27,11 @@ class Device(db.Model):
             self.software_version,
             self.hardware_version,
             self.real_address)
+
+    @hybrid_property
+    def info(self):
+        query = db.session.query(DeviceInfo) \
+            .filter(DeviceInfo.address == self.address) \
+            .order_by(DeviceInfo.address_origin)
+
+        return query.first()

@@ -17,10 +17,10 @@
 
     {% for device in devices %}
 	<tr>
-	  <td><a href="{{ url_for('device', id=device.id) }}">{{ device.address }}</a></td>
+	  <td><a href="{{ url_for('device_detail', id=device.id) }}">{{ device.address }}</a></td>
 	  <td>{% if device.takeoff_landings %}{% set last_action = device.takeoff_landings|last %}{{ last_action.airport.name }}{% endif %}
 	  <td>{% if device.takeoff_landings %}{% set last_action = device.takeoff_landings|last %}{% if last_action.is_takeoff == True %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
-	  <td>{% if device.infos %}{% set info = device.infos|first %}{{ info.registration }} {% else %} - {% endif %}</td>
+	  <td>{% if device.info is not none %}{{ device.info.registration }}{% else %} - {% endif %}</td>
 	  <td>{% if device.software_version is not none %}{% if device.software_version < 6.6 %}<p class="text-danger">{{ device.software_version }}</p>{% else %}{{ device.software_version }}{% endif %}{% else %} - {% endif %}</td>
 	</tr>
 	{% endfor %}
