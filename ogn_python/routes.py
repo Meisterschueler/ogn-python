@@ -8,26 +8,31 @@ from ogn_python.model import *
 
 
 @app.route('/')
-@app.route('/index')
+@app.route('/index.html')
 def index():
     return render_template('base.html')
 
 
-@app.route('/devices', methods=['GET', 'POST'])
+@app.route('/devices.html', methods=['GET', 'POST'])
 def devices():
+    devices = db.session.query(Device) \
+        .limit(100)
+    return render_template('devices.html', devices=devices)
+
+
+@app.route('/device.html', methods=['GET', 'POST'])
+def device():
     device_id = request.args.get('id')
-    if device_id:
-        device = db.session.query(Device) \
-            .filter(Device.id == device_id)
+    device = db.session.query(Device) \
+        .filter(Device.id == device_id) \
+        .one()
 
-        return render_template('device_detail.html', device=device)
-    else:
-        devices = db.session.query(Device) \
-            .limit(100)
-        return render_template('devices.html', devices=devices)
+    return render_template('device_detail.html',
+                           title='Device',
+                           device=device)
 
 
-@app.route('/receivers')
+@app.route('/receivers.html')
 def receivers():
     sel_country = request.args.get('country')
 
@@ -45,15 +50,20 @@ def receivers():
         receivers = db.session.query(Receiver) \
             .order_by(Receiver.name)
 
-    return render_template('receivers.html', sel_country=sel_country, countries=countries_in_receivers, receivers=receivers)
+    return render_template('receivers.html',
+                           title='Receivers',
+                           sel_country=sel_country,
+                           countries=countries_in_receivers,
+                           receivers=receivers)
 
 
-@app.route('/receiver')
-def receiver():
+@app.route('/receiver_detail.html')
+def receiver_detail():
     sel_receiver_id = request.args.get('receiver_id')
 
     receiver = db.session.query(Receiver) \
-        .filter(Receiver.id == sel_receiver_id)
+        .filter(Receiver.id == sel_receiver_id) \
+        .one()
 
     near_airports = db.session.query(Airport, func.st_distancesphere(Airport.location_wkt, Receiver.location_wkt).label('distance')) \
         .filter(and_(Receiver.id == sel_receiver_id), func.st_contains(func.st_buffer(Receiver.location_wkt, 0.5), Airport.location_wkt)) \
@@ -61,10 +71,13 @@ def receiver():
         .order_by(func.st_distancesphere(Airport.location_wkt, Receiver.location_wkt)) \
         .limit(10)
 
-    return render_template('receiver.html', receiver=receiver, near_airports=near_airports)
+    return render_template('receiver_detail.html',
+                           title='Receiver Detail',
+                           receiver=receiver,
+                           near_airports=near_airports)
 
 
-@app.route('/airports', methods=['GET', 'POST'])
+@app.route('/airports.html', methods=['GET', 'POST'])
 def airports():
     sel_country = request.args.get('country')
 
@@ -75,7 +88,7 @@ def airports():
 
     if sel_country:
         airports = db.session.query(Airport) \
-            .filter(and_(or_(Logbook.takeoff_airport_id == Airport.id, Logbook.landing_airport_id == Airport.id), Country.iso2 == Airport.country_code)) \
+            .filter(and_(or_(Logbook.takeoff_airport_id == Airport.id, Logbook.landing_airport_id == Airport.id), Airport.country_code == sel_country)) \
             .group_by(Airport.id) \
             .order_by(Airport.name)
     else:
@@ -88,11 +101,13 @@ def airports():
 
     return render_template('airports.html', sel_country=sel_country, countries=countries_in_logbook, airports=airports)
 
-@app.route('/airport')
+
+@app.route('/airport.html')
 def airport():
     pass
 
-@app.route('/logbook', methods=['GET', 'POST'])
+
+@app.route('/logbook.html', methods=['GET', 'POST'])
 def logbook():
     sel_country = request.args.get('country')
     sel_airport = request.args.get('airport')
@@ -151,31 +166,32 @@ def logbook():
         filters.append(Logbook.device_id == sel_device_id)
 
     if len(filters) > 0:
-        logbook = db.session.query(Logbook.takeoff_timestamp,
-                                   db.func.round(Logbook.takeoff_track/10).label('takeoff_track'),
-                                   Logbook.landing_timestamp,
-                                   db.func.round(Logbook.landing_track/10).label('landing_track'),
-                                   Logbook.max_altitude,
-                                   DeviceInfo.aircraft,
-                                   DeviceInfo.registration,
-                                   DeviceInfo.competition) \
+        entries = db.session.query(Logbook, Device, DeviceInfo) \
             .filter(*filters) \
             .filter(db.and_(Logbook.device_id == Device.id, Device.address == DeviceInfo.address)) \
             .order_by(Logbook.reftime)
     else:
-        logbook = None
+        entries = None
 
-    return render_template('logbook.html', sel_country=sel_country, countries=countries_avail, sel_airport=sel_airport, airports=airports, sel_date=sel_date, dates=dates, logbook=logbook)
+    return render_template('logbook.html',
+                           title='Logbook',
+                           sel_country=sel_country,
+                           countries=countries_avail,
+                           sel_airport=sel_airport,
+                           airports=airports,
+                           sel_date=sel_date,
+                           dates=dates,
+                           entries=entries)
 
-
-@app.route('/live')
-def live():
-    return render_template('ogn_live.jinja')
-
-
-@app.route('/records')
-def records():
+@app.route('/statistics.html')
+def statistics():
     receiverstats = db.session.query(ReceiverStats) \
         .limit(10)
 
-    return render_template('records.html', receiverstats=receiverstats)
+    return render_template('statistics.html', receiverstats=receiverstats)
+
+# Backend routes for other sites
+
+@app.route('/live.html')
+def live():
+    return render_template('ogn_live.jinja')

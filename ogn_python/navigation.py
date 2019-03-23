@@ -10,5 +10,5 @@ nav.register_element('top_menubar', Navbar(
     View('Receivers', 'receivers'),
     View('Airports', 'airports'),
     View('Logbook', 'logbook'),
-    View('Records', 'records'),
+    View('Statistics', 'statistics'),
 ))

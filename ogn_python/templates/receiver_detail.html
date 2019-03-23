@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
+
+
+<div class="container">
+
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Receiver Details</h3></div>
+<table class="datatable table table-striped table-bordered">
+	<tr><td>Name:</td><td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/> {{ receiver.name }}</td></tr>
+	<tr><td>Version:</td><td>{{ receiver.version }}</td></tr>
+	<tr><td>Platform:</td><td>{{ receiver.platform }}</td></tr>
+	<tr><td>First seen:</td><td>{{ receiver.firstseen }}</td></tr>
+	<tr><td>Last seen:</td><td>{{ receiver.lastseen }}</td></tr>
+</table>
+</div>
+
+
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Nearby Airports</h3></div>
+  <table class="datatable table table-striped table-bordered">
+    <thead>
+      <tr>
+	   	<th>Name</th>
+	    <th>Distance</th>
+	  </tr>
+    </thead>
+
+	<tbody>
+      {% for tupel in near_airports %}
+      {% set airport = tupel[0] %}
+      {% set distance = tupel[1] %}
+	  <tr>
+	    <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/> {% if airport.takeoff_landings %}<a href="{{ url_for('logbook', airport=airport.id) }}">{{ airport.name }}</a>{% else %}{{ airport.name }}{% endif %}</td>
+	    <td>{{ '%0.1f'|format(distance/1000) }} km</td>
+ 	  </tr>
+	  {% endfor %}
+	</tbody>
+  </table>
+</div>
+
+
+</div>
+
+{% endblock %}

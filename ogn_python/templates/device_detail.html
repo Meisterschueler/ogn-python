@@ -2,33 +2,23 @@
 
 {% block content %}
 
-<div class="container-fluid">
-<div class="panel panel-success" id="asdf">
-<div class="panel-heading"><h3 class="panel-title">Devices</h3></div>
-<div class="panel-body">
+<div class="container">
 
-{{ device.address }}
-
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Device Details</h3></div>
 <table class="datatable table table-striped table-bordered">
-	<tr>
-		<th>Nr.</th>
-        <th colspan="2">Takeoff</th>
-        <th colspan="2">Landing</th>
-        <th>AGL</th>
-	</tr>
-	{% for entry in device.logbook %}
-	<tr>
-		<td>{{ loop.index }}</td>
-        <td>{% if entry.takeoff_timestamp is not none %} {{ entry.takeoff_timestamp.strftime('%H:%M') }} {% endif %}</td>
-        <td>{% if entry.takeoff_track is not none %} {{ '%02d' | format(entry.takeoff_track) }} {% endif %}</td>
-        <td>{% if entry.landing_timestamp is not none %} {{ entry.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>
-        <td>{% if entry.landing_track is not none %} {{ '%02d' | format(entry.landing_track) }} {% endif %}</td>
-        <td>{% if entry.max_altitude is not none %} {{ entry.max_altitude }} {% endif %}</td>
-	</tr>
-	{% endfor %}
+	<tr><td>Name:</td><td>{{ device.name }}</td></tr>
+	<tr><td>Address:</td><td>{{ device.address }}</td></tr>
+	<tr><td>Real Address:</td><td>{{ device.real_address }}</td></tr>
+	<tr><td>Stealth:</td><td>{{ device.stealth }}</td></tr>
+	<tr><td>Aircraft Type:</td><td>{{ device.aircraft_type }}</td></tr>
+	<tr><td>Software Version:</td><td>{{ device.software_version }}</td></tr>
+	<tr><td>Hardware Version:</td><td>{{ device.hardware_version }}</td></tr>
+	<tr><td>First seen:</td><td>{{ device.firstseen }}</td></tr>
+	<tr><td>Last seen:</td><td>{{ device.lastseen }}</td></tr>
 </table>
-
 </div>
+
 </div>
 
 {% endblock %}

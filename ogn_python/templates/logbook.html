@@ -31,7 +31,7 @@
 </form>
 
 
-{% if logbook is not none %}
+{% if entries is not none %}
 <table class="datatable table table-striped table-bordered">
 	<tr>
 		<th>Nr.</th>
@@ -41,16 +41,19 @@
         <th colspan="2">Landing</th>
         <th>AGL</th>
 	</tr>
-	{% for entry in logbook %}
+	{% for entry in entries %}
+	{% set logbook = entry[0] %}
+	{% set device = entry[1] %}
+	{% set device_info = entry[2] %}
 	<tr>
 		<td>{{ loop.index }}</td>
-        <td>{{ entry.registration }}</td>
-        <td>{{ entry.aircraft }}</td>
-        <td>{% if entry.takeoff_timestamp is not none %} {{ entry.takeoff_timestamp.strftime('%H:%M') }} {% endif %}</td>
-        <td>{% if entry.takeoff_track is not none %} {{ '%02d' | format(entry.takeoff_track) }} {% endif %}</td>
-        <td>{% if entry.landing_timestamp is not none %} {{ entry.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>
-        <td>{% if entry.landing_track is not none %} {{ '%02d' | format(entry.landing_track) }} {% endif %}</td>
-        <td>{% if entry.max_altitude is not none %} {{ entry.max_altitude }} {% endif %}</td>
+        <td><a href="{{ url_for('device', id=device.id) }}">{{ device_info.registration }}</a></td>
+        <td>{{ device_info.aircraft }}</td>
+        <td>{% if logbook.takeoff_timestamp is not none %} {{ logbook.takeoff_timestamp.strftime('%H:%M') }} {% endif %}</td>
+        <td>{% if logbook.takeoff_track is not none %} {{ '%02d' | format(logbook.takeoff_track/10) }} {% endif %}</td>
+        <td>{% if logbook.landing_timestamp is not none %} {{ logbook.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>
+        <td>{% if logbook.landing_track is not none %} {{ '%02d' | format(logbook.landing_track/10) }} {% endif %}</td>
+        <td>{% if logbook.max_altitude is not none %} {{ logbook.max_altitude }} {% endif %}</td>
 	</tr>
 	{% endfor %}
 </table>

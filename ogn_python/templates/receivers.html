@@ -23,15 +23,13 @@
   <table class="datatable table table-striped table-bordered">
     <tr>
    	  <th>Name</th>
-      <th>Country</th>
       <th>Altitude</th>
     </tr>
 
     {% for receiver in receivers %}
 	<tr>
-	  <td><a href="{{ url_for('receiver', receiver_id=receiver.id) }}">{{ receiver.name }}</a></td>
-	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/></td>
-	  <td>{{ receiver.altitude|int }}</td>
+	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/> <a href="{{ url_for('receiver_detail', receiver_id=receiver.id) }}">{{ receiver.name }}</a></td>
+	  <td>{{ receiver.altitude|int }} m</td>
 	</tr>
 	{% endfor %}
   </table>
