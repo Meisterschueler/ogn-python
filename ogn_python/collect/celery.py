@@ -10,7 +10,7 @@ from ogn_python.collect.logbook import update_max_altitudes as logbook_update_ma
 from ogn_python.collect.database import import_ddb as device_infos_import_ddb
 from ogn_python.collect.database import update_country_code as receivers_update_country_code
 
-from ogn_python.collect.stats import create_device_stats, update_device_stats_jumps, create_receiver_stats, create_relation_stats, update_qualities, update_receivers_command, update_devices_command
+from ogn_python.collect.stats import create_device_stats, update_device_stats_jumps, create_receiver_stats, create_relation_stats, update_qualities, update_receivers, update_devices
 
 from ogn_python import db
 from ogn_python import celery
@@ -85,5 +85,5 @@ def update_stats(day_offset):
     create_receiver_stats(session=db.session, date=date)
     create_relation_stats(session=db.session, date=date)
     update_qualities(session=db.session, date=date)
-    update_receivers_command(session=db.session)
-    update_devices_command(session=db.session)
+    update_receivers(session=db.session)
+    update_devices(session=db.session)
