@@ -76,7 +76,19 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     ```
     raster2pgsql -s 4326 -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
     ```
-    
+
+11. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
+	
+	```
+	flask database import_airports tests/SeeYou.cup 
+	```
+
+12. Import DDB (needed for registration signs in the logbook).
+
+	```
+	flask database import_ddb
+	```
+	
 There is also a [Vagrant](https://www.vagrantup.com/) environment for the development of ogn-python.
 You can create and start this virtual machine with `vagrant up` and login with `vagrant ssh`.
 The code of ogn-python will be available in the shared folder `/vagrant`.

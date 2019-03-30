@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from ogn_python import db
@@ -36,3 +38,29 @@ class Device(db.Model):
             .order_by(DeviceInfo.address_origin)
 
         return query.first()
+
+    EXPIRY_DATES = {
+        6.67: datetime.date(2020, 10, 31),
+        6.63: datetime.date(2020, 5, 31),
+        6.62: datetime.date(2020, 5, 31),
+        6.6: datetime.date(2020, 1, 31),
+        6.42: datetime.date(2019, 10, 31),
+        6.41: datetime.date(2019, 1, 31),
+        6.4: datetime.date(2019, 1, 31),
+        6.09: datetime.date(2018, 9, 30),
+        6.08: datetime.date(2018, 9, 30),
+        6.07: datetime.date(2018, 3, 31),
+        6.06: datetime.date(2017, 9, 30),
+        6.05: datetime.date(2017, 3, 31),
+    }
+
+    def expiry_date(self):
+        if self.name.startswith('FLR'):
+            if self.software_version in self.EXPIRY_DATES:
+                return self.EXPIRY_DATES[self.software_version]
+            else:
+                return datetime.date(2000, 1, 1)
+        else:
+            return None
+
+

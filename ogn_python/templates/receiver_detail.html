@@ -13,7 +13,7 @@
 	<tr><td>Name:</td><td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/> {{ receiver.name }}</td></tr>
 	<tr><td>Airport:</td>
 		<td>{% if airport is not none %}<img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/>
-			{% if airport.takeoff_landings %}<a href="{{ url_for('logbook', airport=airport.id) }}">{{ airport.name }}</a>{% else %}{{ airport.name }}{% endif %}
+			{% if airport.takeoff_landings %}<a href="{{ url_for('airport_detail', airport=airport.id) }}">{{ airport.name }}</a>{% else %}{{ airport.name }}{% endif %}
 		{% else %}-{% endif %}
 		</td>
 	</tr>

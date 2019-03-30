@@ -1,3 +1,5 @@
+import datetime
+
 from flask import request, render_template
 from sqlalchemy import func, and_, or_
 
@@ -87,7 +89,7 @@ def airports():
         .order_by(Country.iso2)
 
     if sel_country:
-        airports = db.session.query(Airport) \
+        airports = db.session.query(Airport, Receiver).outerjoin(Receiver) \
             .filter(and_(or_(Logbook.takeoff_airport_id == Airport.id, Logbook.landing_airport_id == Airport.id), Airport.country_code == sel_country)) \
             .group_by(Airport.id) \
             .order_by(Airport.name)
@@ -197,10 +199,16 @@ def logbook():
 
 @app.route('/statistics.html')
 def statistics():
-    receiverstats = db.session.query(ReceiverStats) \
-        .limit(10)
 
-    return render_template('statistics.html', receiverstats=receiverstats)
+    today = datetime.date.today()
+    today = datetime.date(2018, 7, 31)
+
+    receiverstats = db.session.query(ReceiverStats) \
+        .filter(ReceiverStats.date == today)
+
+    return render_template('statistics.html',
+                           title='Receiver Statistics',
+                           receiverstats=receiverstats)
 
 # Backend routes for other sites
 

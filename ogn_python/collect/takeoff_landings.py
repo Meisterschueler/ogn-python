@@ -134,6 +134,7 @@ def update_entries(session, start, end, logger=None):
     result = session.execute(ins)
     session.commit()
     insert_counter = result.rowcount
-    logger.info("Inserted {} TakeoffLandings".format(insert_counter))
 
-    return "Inserted {} TakeoffLandings".format(insert_counter)
+    finish_message = "TakeoffLandings: Inserted {}".format(insert_counter)
+    logger.info(finish_message)
+    return finish_message

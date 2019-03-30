@@ -80,6 +80,7 @@ def create_receiver_coverage(session, date, logger=None):
     result = session.execute(ins)
     insert_counter = result.rowcount
     session.commit()
-    logger.debug("New receiver coverage entries: {}".format(insert_counter))
 
-    return "Receiver coverage entries: {} inserted, {} updated".format(insert_counter, update_counter)
+    finish_message = "ReceiverCoverage: {} inserted, {} updated".format(insert_counter, update_counter)
+    logger.debug(finish_message)
+    return finish_message

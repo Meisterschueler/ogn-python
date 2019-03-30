@@ -35,7 +35,7 @@
 		<td><a href="{{ url_for('device_detail', id=device.id) }}">{{ device.address }}</a></td>
 		<td>{% if device.info is none %}-{% else %}{{ device.info.registration }}{% endif %}</a></td>
 		<td>{% if device.takeoff_landings %}{% set last_action = device.takeoff_landings|last %}{% if last_action.is_takeoff == True %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
-		<td>{{ device.software_version }}</td>
+		<td>{% if device.software_version is not none %}{{ device.software_version }}{% else %}-{% endif %}</td>
 	</tr>
 	{% endfor %}
 </table>

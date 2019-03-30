@@ -23,7 +23,7 @@ def upsert(session, model, rows, update_cols):
 
     # print(compile_query(on_conflict_stmt))
     session.execute(on_conflict_stmt)
-    
+
 
 def update_device_infos(session, address_origin, path=None):
     if address_origin == DeviceInfoOrigin.flarmnet:
@@ -53,9 +53,10 @@ def import_ddb(session, logger=None):
 
     logger.info("Import registered devices fom the DDB...")
     counter = update_device_infos(session, DeviceInfoOrigin.ogn_ddb)
-    logger.info("Imported {} devices.".format(counter))
 
-    return "Imported {} devices.".format(counter)
+    finish_message = "DeviceInfo: {} inserted.".format(counter)
+    logger.info(finish_message)
+    return finish_message
 
 
 def update_country_code(session, logger=None):
@@ -70,6 +71,7 @@ def update_country_code(session, logger=None):
                 synchronize_session='fetch')
 
     session.commit()
-    logger.info("Updated {} AircraftBeacons".format(update_receivers))
 
-    return "Updated country for {} Receivers".format(update_receivers)
+    finish_message = "Receivers (country): {} updated".format(update_receivers)
+    logger.info(finish_message)
+    return finish_message

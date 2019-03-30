@@ -11,15 +11,13 @@
   <table class="datatable table table-striped table-bordered">
     <tr>
    	  <th>Receiver</th>
-      <th>Country</th>
       <th>Aircrafts</th>
       <th>Beacons</th>
     </tr>
     
     {% for receiverstat in receiverstats %}
 	<tr>
-	  <td>{{ receiverstat.receiver.name }}</td>
-	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiverstat.receiver.country.iso2|lower }}" alt="{{ receiverstat.receiver.country.iso2 }}"/></td>
+	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiverstat.receiver.country.iso2|lower }}" alt="{{ receiverstat.receiver.country.iso2 }}"/> {{ receiverstat.receiver.name }}</td>
 	  <td>{{ receiverstat.aircraft_count }}</td>
 	  <td>{{ receiverstat.beacon_count }}</td>
 	</tr>

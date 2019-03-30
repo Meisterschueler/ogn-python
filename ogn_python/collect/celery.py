@@ -25,7 +25,8 @@ def update_takeoff_landings(last_minutes):
 
     end = datetime.datetime.utcnow()
     start = end - datetime.timedelta(minutes=last_minutes)
-    takeoff_update_entries(session=db.session, start=start, end=end, logger=logger)
+    result = takeoff_update_entries(session=db.session, start=start, end=end, logger=logger)
+    return result
 
 
 @celery.task(name='update_logbook_entries')
@@ -33,28 +34,32 @@ def update_logbook_entries():
     """Add/update logbook entries."""
 
     today = datetime.datetime.today()
-    logbook_update_entries(session=db.session, date=today, logger=logger)
+    result = logbook_update_entries(session=db.session, date=today, logger=logger)
+    return result
 
 
 @celery.task(name='update_logbook_max_altitude')
 def update_logbook_max_altitude():
     """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
 
-    logbook_update_max_altitudes(session=db.session, logger=logger)
+    result = logbook_update_max_altitudes(session=db.session, logger=logger)
+    return result
 
 
 @celery.task(name='import_ddb')
 def import_ddb():
     """Import registered devices from the DDB."""
 
-    device_infos_import_ddb(session=db.session, logger=logger)
+    result = device_infos_import_ddb(session=db.session, logger=logger)
+    return result
 
 
 @celery.task(name='update_receivers_country_code')
 def update_receivers_country_code():
     """Update country code in receivers table if None."""
 
-    receivers_update_country_code(session=db.session, logger=logger)
+    result = receivers_update_country_code(session=db.session, logger=logger)
+    return result
 
 
 @celery.task(name='purge_old_data')

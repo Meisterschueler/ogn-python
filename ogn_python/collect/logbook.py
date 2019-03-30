@@ -137,9 +137,10 @@ def update_entries(session, date, logger=None):
     result = session.execute(ins)
     insert_counter = result.rowcount
     session.commit()
-    logger.debug("New logbook entries: {}".format(insert_counter))
 
-    return "Logbook entries: {} inserted, {} updated".format(insert_counter, update_counter)
+    finish_message = "Logbook: {} inserted, {} updated".format(insert_counter, update_counter)
+    logger.debug(finish_message)
+    return finish_message
 
 
 def update_max_altitudes(session, logger=None):
@@ -173,6 +174,7 @@ def update_max_altitudes(session, logger=None):
             synchronize_session='fetch')
 
     session.commit()
-    logger.info("Logbook: {} entries updated.".format(update_logbook))
 
-    return "Logbook: {} entries updated.".format(update_logbook)
+    finish_message = "Logbook (altitude): {} entries updated.".format(update_logbook)
+    logger.info(finish_message)
+    return finish_message
