@@ -15,6 +15,7 @@ class TestTakeoffLanding(TestBaseDB):
         db.session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Benediktbeuren','0101000020E6100000D5E76A2BF6C72640D4063A6DA0DB4740',609,4)")
         db.session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Koenigsdorf','0101000020E610000061E8FED7A6EE26407F20661C10EA4740',600,5)")
         db.session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Ohlstadt','0101000020E6100000057E678EBF772640A142883E32D44740',655,5)")
+        db.session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Unterbuchen','0101000020E6100000462575029AF8264089F7098D4DE44740',635,3)")
         db.session.execute("UPDATE airports SET border = ST_Expand(location, 0.05)")
 
         db.session.execute("INSERT INTO devices(address) VALUES('DDEFF7')")

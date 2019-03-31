@@ -5,7 +5,6 @@ from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import case
 
 from ogn_python.model import AircraftBeacon, TakeoffLanding, Airport
-from ogn_python.utils import date_to_timestamps
 
 from ogn_python import app
 
@@ -20,31 +19,30 @@ def update_entries(session, start, end, logger=None):
 
     # considered time interval should not exceed a complete day
     if end - start > timedelta(days=1):
-        logger.warn("timeinterval start='{}' and end='{}' is too big.".format(start, end))
-        return
+        abort_message = "TakeoffLanding: timeinterval start='{}' and end='{}' is too big.".format(start, end)
+        logger.warn(abort_message)
+        return abort_message
 
     # check if we have any airport
     airports_query = session.query(Airport).limit(1)
     if not airports_query.all():
-        logger.warn("Cannot calculate takeoff and landings without any airport! Please import airports first.")
-        return
+        abort_message = "TakeoffLanding: Cannot calculate takeoff and landings without any airport! Please import airports first."
+        logger.warn(abort_message)
+        return abort_message
 
     # takeoff / landing detection is based on 3 consecutive points all below a certain altitude AGL
     takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
     landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
     duration = 100      # the points must not exceed this duration
     radius = 5000       # the points must not exceed this radius around the 2nd point
-    max_agl = 100       # takeoff / landing must not exceed this altitude AGL
+    max_agl = 200       # takeoff / landing must not exceed this altitude AGL
 
-    # limit time range to given date
-    filters = [between(AircraftBeacon.timestamp, start, end)]
-
-    # get beacons for selected day, one per device_id and timestamp
+    # get beacons for selected time range, one per device_id and timestamp
     sq = session.query(AircraftBeacon) \
         .distinct(AircraftBeacon.device_id, AircraftBeacon.timestamp) \
         .order_by(AircraftBeacon.device_id, AircraftBeacon.timestamp, AircraftBeacon.error_count) \
         .filter(AircraftBeacon.agl < max_agl) \
-        .filter(*filters) \
+        .filter(between(AircraftBeacon.timestamp, start, end)) \
         .subquery()
 
     # make a query with current, previous and next position
@@ -112,8 +110,8 @@ def update_entries(session, start, end, logger=None):
 
     # ... and take the nearest airport
     sq6 = session.query(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_id) \
-        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_id) \
-        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_id, sq5.c.airport_distance) \
+        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id) \
+        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_distance) \
         .subquery()
 
     # consider them only if they are not already existing in db
@@ -135,6 +133,6 @@ def update_entries(session, start, end, logger=None):
     session.commit()
     insert_counter = result.rowcount
 
-    finish_message = "TakeoffLandings: Inserted {}".format(insert_counter)
+    finish_message = "TakeoffLandings: {} inserted".format(insert_counter)
     logger.info(finish_message)
     return finish_message
