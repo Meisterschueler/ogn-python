@@ -14,7 +14,7 @@
 <select name="country" onchange="this.form.submit();">
 	<option value="">(all)</option>
     {% for country in countries %}
-    <option value="{{ country.iso2 }}"{% if sel_country == country.iso2 %} SELECTED{% endif %}>{{ country.iso2 }} ({{ country.receiver_count }})</option>
+    <option value="{{ country.iso2 }}"{% if sel_country == country.iso2 %} SELECTED{% endif %}>{{ country.iso2 }}</option>
     {% endfor %}
 </select>
 </div>

@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
+from flask_caching import Cache
 from celery import Celery
 
 from ogn_python.navigation import nav
@@ -18,6 +19,9 @@ bootstrap = Bootstrap(app)
 
 # Sqlalchemy
 db = SQLAlchemy(app)
+
+# Cache
+cache = Cache(app)
 
 # Celery
 celery = make_celery(app)

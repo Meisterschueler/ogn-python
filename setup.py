@@ -37,6 +37,8 @@ setup(
         'Flask-Migrate==2.3.1',
         'flask-bootstrap==3.3.7.1',
         'flask-nav==0.6',
+        'flask-wtf==0.14.2',
+        'flask-caching==1.7.0',
         'geopy==1.17.0',
         'celery[redis]==4.2.1',
         'aerofiles==0.4.1',

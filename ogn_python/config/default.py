@@ -1,9 +1,16 @@
+SECRET_KEY = 'you-will-never-guess'
+
 SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost:5432/ogn'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# Flask-Cache stuff
+CACHE_TYPE = 'simple'
+CACHE_DEFAULT_TIMEOUT = 300
 
 # Celery stuff
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
 
 from celery.schedules import crontab
 from datetime import timedelta

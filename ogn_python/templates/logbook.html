@@ -2,10 +2,13 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
+
 <div class="container">
 <div class="panel panel-success">
 <div class="panel-heading"><h3 class="panel-title">Logbook</h3></div>
 <div class="panel-body">
+
 
 <form>
 <div class="well">
@@ -18,14 +21,17 @@
 <select name="airport" onchange="this.form.submit();">
 	<option value="">(none)</option>
     {% for airport in airports %}
-    <option value="{{ airport.id }}"{% if sel_airport == airport.id|string() %} SELECTED{% endif %}>{{ airport.name }}</option>
+    <option value="{{ airport.id }}"{% if sel_airport == airport.id %} SELECTED{% endif %}>{{ airport.name }}</option>
     {% endfor %}
 </select>
 <select name="date" onchange="this.form.submit();">
-	<option value="">(none)</option>
-    {% for date in dates %}
-    <option value="{{ date[0] }}"{% if sel_date|string() == date[0]|string() %} SELECTED{% endif %}>{{ date[0] }} ({{ date[1] }})</option>
-    {% endfor %}
+	{% if dates|length %}
+	    {% for entry in dates %}
+	    <option value="{{ entry.date }}"{% if sel_date|string() == entry.date|string() %} SELECTED{% endif %}>{{ entry.date }} ({{ entry.logbook_count }})</option>
+	    {% endfor %}
+	{% else %}
+		<option value="">(none)</option>
+	{% endif %}
 </select>
 </div>
 </form>
@@ -46,8 +52,8 @@
 	{% for entry in logbook %}
 	<tr>
 		<td>{{ loop.index }}</td>
-        <td><a href="{{ url_for('device_detail', id=entry.device.id) }}">{% if entry.device.info is none %}{{ entry.device.address }}{% else %}{{ entry.device.info.registration }}{% endif %}</a></td>
-        <td>{% if entry.device.info is none %}-{% else %}{{ entry.device.info.aircraft }}{% endif %}</td>
+        <td><a href="{{ url_for('device_detail', id=entry.device.id) }}">{% if entry.device.info is not none and entry.device.info.registration|length %}{{ entry.device.info.registration }}{% else %}[{{ entry.device.address }}]{% endif %}</a></td>
+        <td>{% if entry.device.info is not none and entry.device.info.aircraft|length %}{{ entry.device.info.aircraft }}{% else %}-{% endif %}</td>
         <td>{% if entry.takeoff_timestamp is not none and entry.takeoff_airport.id|string() == sel_airport %} {{ entry.takeoff_timestamp.strftime('%H:%M') }} {% endif %}</td>
         <td>{% if entry.takeoff_track is not none and entry.takeoff_airport.id|string() == sel_airport %} {{ '%02d' | format(entry.takeoff_track/10) }} {% endif %}</td>
         <td>{% if entry.landing_timestamp is not none and entry.landing_airport.id|string() == sel_airport %} {{ entry.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>

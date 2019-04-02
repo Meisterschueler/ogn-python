@@ -5,8 +5,49 @@ from sqlalchemy import func, and_, or_
 
 from ogn_python import app
 from ogn_python import db
+from ogn_python import cache
 
 from ogn_python.model import *
+
+
+@cache.cached(key_prefix='countries_in_receivers')
+def get_countries_in_receivers():
+    query = db.session.query(Country) \
+        .filter(Country.gid == Receiver.country_id) \
+        .order_by(Country.iso2) \
+        .distinct()
+
+    return [country for country in query.all()]
+
+
+@cache.cached(key_prefix='countries_in_logbook')
+def get_countries_in_logbook():
+    query = db.session.query(Country) \
+        .filter(Country.iso2 == Airport.country_code) \
+        .order_by(Country.iso2) \
+        .distinct()
+
+    return [country for country in query.all()]
+
+
+def get_airports_in_country(sel_country):
+    query = db.session.query(Airport) \
+        .filter(Airport.country_code == sel_country) \
+        .filter(Logbook.takeoff_airport_id == Airport.id) \
+        .order_by(Airport.name) \
+        .distinct()
+
+    return [airport for airport in query.all()]
+
+
+def get_dates_for_airport(sel_airport):
+    query = db.session.query(func.date(Logbook.reftime), func.count(Logbook.id).label('logbook_count')) \
+        .filter(Airport.id == sel_airport) \
+        .filter(or_(Airport.id == Logbook.takeoff_airport_id, Airport.id == Logbook.landing_airport_id)) \
+        .group_by(func.date(Logbook.reftime)) \
+        .order_by(func.date(Logbook.reftime).desc())
+
+    return [{'date': date, 'logbook_count': logbook_count} for (date, logbook_count) in query.all()]
 
 
 @app.route('/')
@@ -18,6 +59,7 @@ def index():
 @app.route('/devices.html', methods=['GET', 'POST'])
 def devices():
     devices = db.session.query(Device) \
+        .order_by(Device.address) \
         .limit(100)
     return render_template('devices.html', devices=devices)
 
@@ -38,10 +80,7 @@ def device_detail():
 def receivers():
     sel_country = request.args.get('country')
 
-    countries_in_receivers = db.session.query(Country.iso2, func.count(Receiver.id).label('receiver_count')) \
-        .filter(Country.gid == Receiver.country_id) \
-        .group_by(Country.iso2) \
-        .order_by(Country.iso2)
+    countries = get_countries_in_receivers()
 
     # Get receiver selection list
     if sel_country:
@@ -55,7 +94,7 @@ def receivers():
     return render_template('receivers.html',
                            title='Receivers',
                            sel_country=sel_country,
-                           countries=countries_in_receivers,
+                           countries=countries,
                            receivers=receivers)
 
 
@@ -83,15 +122,11 @@ def receiver_detail():
 def airports():
     sel_country = request.args.get('country')
 
-    countries_in_logbook = db.session.query(Country.iso2, func.count(Airport.id).label('airport_count')) \
-        .filter(Country.iso2 == Airport.country_code) \
-        .group_by(Country.iso2) \
-        .order_by(Country.iso2)
+    countries = get_countries_in_logbook()
 
     if sel_country:
-        airports = db.session.query(Airport, Receiver).outerjoin(Receiver) \
-            .filter(and_(or_(Logbook.takeoff_airport_id == Airport.id, Logbook.landing_airport_id == Airport.id), Airport.country_code == sel_country)) \
-            .group_by(Airport.id) \
+        airports = db.session.query(Airport) \
+            .filter(Airport.country_code == sel_country) \
             .order_by(Airport.name)
     else:
         airports = []
@@ -100,7 +135,7 @@ def airports():
 
     return render_template('airports.html',
                            sel_country=sel_country,
-                           countries=countries_in_logbook,
+                           countries=countries,
                            airports=airports)
 
 
@@ -129,48 +164,32 @@ def logbook():
 
     sel_device_id = request.args.get('device_id')
 
-    airport_ids_in_logbook = db.session.query(db.distinct(Logbook.takeoff_airport_id).label('id')) \
-        .subquery()
+    countries = get_countries_in_logbook()
 
-    airports_in_logbook = db.session.query(Airport) \
-        .filter(Airport.id == airport_ids_in_logbook.c.id) \
-        .subquery()
-
-    country_ids_in_logbook = db.session.query(db.distinct(Country.gid).label('id')) \
-        .filter(Country.iso2 == airports_in_logbook.c.country_code) \
-        .subquery()
-
-    countries_avail = db.session.query(Country) \
-        .filter(Country.gid == country_ids_in_logbook.c.id) \
-        .order_by(Country.iso2)
-
-    # Get airport selection list
     if sel_country:
-        airports = db.session.query(Airport) \
-            .filter(Airport.id == airport_ids_in_logbook.c.id) \
-            .filter(Airport.country_code == sel_country) \
-            .order_by(Airport.name)
-    elif sel_airport:
-        airports = db.session.query(Airport) \
-            .filter(Airport.id == sel_airport)
-
-        sel_country = airports.one().country_code
+        airports = get_airports_in_country(sel_country)
     else:
-        airports = ['']
+        airports = []
 
-    # Get date selection list
-    if sel_country and sel_airport:
-        dates = db.session.query(db.func.date(Logbook.reftime), db.func.count(Logbook.id)) \
-            .filter(db.or_(Logbook.takeoff_airport_id == sel_airport,
-                           Logbook.landing_airport_id == sel_airport)) \
-            .group_by(db.func.date(Logbook.reftime)) \
-            .order_by(db.func.date(Logbook.reftime))
+    if sel_airport:
+        sel_airport = int(sel_airport)
+        if sel_airport not in [airport.id for airport in airports]:
+            sel_airport = None
+            sel_date = None
+        dates = get_dates_for_airport(sel_airport)
     else:
-        dates = ['']
+        dates = []
+
+    if sel_date:
+        sel_date = datetime.datetime.strptime(sel_date, '%Y-%m-%d').date()
+        if sel_date not in [entry['date'] for entry in dates]:
+            sel_date = dates[0]['date']
+    elif len(dates) > 0:
+        sel_date = dates[0]['date']
 
     # Get Logbook
     filters = []
-    if sel_country and sel_airport:
+    if sel_airport:
         filters.append(db.or_(Logbook.takeoff_airport_id == sel_airport, Logbook.landing_airport_id == sel_airport))
 
     if sel_date:
@@ -189,7 +208,7 @@ def logbook():
     return render_template('logbook.html',
                            title='Logbook',
                            sel_country=sel_country,
-                           countries=countries_avail,
+                           countries=countries,
                            sel_airport=sel_airport,
                            airports=airports,
                            sel_date=sel_date,
