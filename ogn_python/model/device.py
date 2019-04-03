@@ -39,6 +39,14 @@ class Device(db.Model):
 
         return query.first()
 
+    # Todo: remove FK from DeviceInfo
+    def get_infos(self):
+        query = db.session.query(DeviceInfo) \
+            .filter(DeviceInfo.address == self.address) \
+            .order_by(DeviceInfo.address_origin)
+
+        return [info for info in query.all()]
+
     EXPIRY_DATES = {
         6.67: datetime.date(2020, 10, 31),
         6.63: datetime.date(2020, 5, 31),

@@ -19,6 +19,28 @@
 </table>
 </div>
 
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Device Info</h3></div>
+<table class="datatable table table-striped table-bordered">
+	<tr>
+		<th>Aircraft</th>
+		<th>Registration</th>
+		<th>Competition Sign</th>
+		<th>Aircraft Type</th>
+		<th>Source</th>
+	</tr>
+	<tr>
+		{% for info in device.get_infos() %}
+		<td>{{ info.aircraft }}</td>
+		<td>{{ info.registration }}</td>
+		<td>{{ info.competition }}</td>
+		<td>{{ info.aircraft_type }}</td>
+		<td>{{ info.address_origin }}</td>
+		{% endfor %}
+	</tr>
+</table>
+</div>
+
 </div>
 
 {% endblock %}
