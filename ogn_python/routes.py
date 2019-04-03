@@ -15,7 +15,7 @@ def get_countries_in_receivers():
     query = db.session.query(Country) \
         .filter(Country.gid == Receiver.country_id) \
         .order_by(Country.iso2) \
-        .distinct()
+        .distinct(Country.iso2)
 
     return [country for country in query.all()]
 
@@ -25,21 +25,23 @@ def get_countries_in_logbook():
     query = db.session.query(Country) \
         .filter(Country.iso2 == Airport.country_code) \
         .order_by(Country.iso2) \
-        .distinct()
+        .distinct(Country.iso2)
 
     return [country for country in query.all()]
 
 
+@cache.memoize()
 def get_airports_in_country(sel_country):
     query = db.session.query(Airport) \
         .filter(Airport.country_code == sel_country) \
         .filter(Logbook.takeoff_airport_id == Airport.id) \
         .order_by(Airport.name) \
-        .distinct()
+        .distinct(Airport.name)
 
     return [airport for airport in query.all()]
 
 
+@cache.memoize()
 def get_dates_for_airport(sel_airport):
     query = db.session.query(func.date(Logbook.reftime), func.count(Logbook.id).label('logbook_count')) \
         .filter(Airport.id == sel_airport) \
