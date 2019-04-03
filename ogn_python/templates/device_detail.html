@@ -29,15 +29,15 @@
 		<th>Aircraft Type</th>
 		<th>Source</th>
 	</tr>
+	{% for info in device.get_infos() %}
 	<tr>
-		{% for info in device.get_infos() %}
 		<td>{{ info.aircraft }}</td>
 		<td>{{ info.registration }}</td>
 		<td>{{ info.competition }}</td>
 		<td>{{ info.aircraft_type }}</td>
 		<td>{{ info.address_origin }}</td>
-		{% endfor %}
 	</tr>
+	{% endfor %}
 </table>
 </div>
 
