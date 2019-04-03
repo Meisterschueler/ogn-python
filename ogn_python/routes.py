@@ -12,33 +12,33 @@ from ogn_python.model import *
 
 @cache.cached(key_prefix='countries_in_receivers')
 def get_countries_in_receivers():
-    query = db.session.query(Country) \
+    query = db.session.query(Country.iso2) \
         .filter(Country.gid == Receiver.country_id) \
         .order_by(Country.iso2) \
         .distinct(Country.iso2)
 
-    return [country for country in query.all()]
+    return [{'iso2': country[0]} for country in query.all()]
 
 
 @cache.cached(key_prefix='countries_in_logbook')
 def get_countries_in_logbook():
-    query = db.session.query(Country) \
+    query = db.session.query(Country.iso2) \
         .filter(Country.iso2 == Airport.country_code) \
         .order_by(Country.iso2) \
         .distinct(Country.iso2)
 
-    return [country for country in query.all()]
+    return [{'iso2': country[0]} for country in query.all()]
 
 
 @cache.memoize()
 def get_airports_in_country(sel_country):
-    query = db.session.query(Airport) \
+    query = db.session.query(Airport.id, Airport.name) \
         .filter(Airport.country_code == sel_country) \
         .filter(Logbook.takeoff_airport_id == Airport.id) \
         .order_by(Airport.name) \
         .distinct(Airport.name)
 
-    return [airport for airport in query.all()]
+    return [{'id': airport[0], 'name': airport[1]} for airport in query.all()]
 
 
 @cache.memoize()
@@ -175,7 +175,7 @@ def logbook():
 
     if sel_airport:
         sel_airport = int(sel_airport)
-        if sel_airport not in [airport.id for airport in airports]:
+        if sel_airport not in [airport['id'] for airport in airports]:
             sel_airport = None
             sel_date = None
         dates = get_dates_for_airport(sel_airport)
