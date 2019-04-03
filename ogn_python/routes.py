@@ -127,9 +127,7 @@ def airports():
     countries = get_countries_in_logbook()
 
     if sel_country:
-        airports = db.session.query(Airport) \
-            .filter(Airport.country_code == sel_country) \
-            .order_by(Airport.name)
+        airports = get_airports_in_country(sel_country)
     else:
         airports = []
 
