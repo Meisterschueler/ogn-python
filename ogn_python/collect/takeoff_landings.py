@@ -33,6 +33,8 @@ def update_entries(session, start, end, logger=None):
     # takeoff / landing detection is based on 3 consecutive points all below a certain altitude AGL
     takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
     landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
+    min_takeoff_climb_rate = -5 # takeoff detection: glider should not sink too much
+    max_landing_climb_rate = 5  # landing detection: glider should not climb too much
     duration = 100      # the points must not exceed this duration
     radius = 5000       # the points must not exceed this radius around the 2nd point
     max_agl = 200       # takeoff / landing must not exceed this altitude AGL
@@ -64,7 +66,10 @@ def update_entries(session, start, end, logger=None):
         func.lead(sq.c.ground_speed).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label('ground_speed_next'),
         sq.c.altitude,
         func.lag(sq.c.altitude).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label('altitude_prev'),
-        func.lead(sq.c.altitude).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label('altitude_next')) \
+        func.lead(sq.c.altitude).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label('altitude_next'),
+        sq.c.climb_rate,
+        func.lag(sq.c.climb_rate).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label('climb_rate_prev'),
+        func.lead(sq.c.climb_rate).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label('climb_rate_next')) \
         .subquery()
 
     # consider only positions with predecessor and successor and limit distance and duration between points
@@ -90,10 +95,12 @@ def update_entries(session, start, end, logger=None):
         sq3.c.device_id) \
         .filter(or_(and_(sq3.c.ground_speed_prev < takeoff_speed,    # takeoff
                          sq3.c.ground_speed > takeoff_speed,
-                         sq3.c.ground_speed_next > takeoff_speed),
+                         sq3.c.ground_speed_next > takeoff_speed,
+                         sq3.c.climb_rate > min_takeoff_climb_rate),
                     and_(sq3.c.ground_speed_prev > landing_speed,    # landing
                          sq3.c.ground_speed < landing_speed,
-                         sq3.c.ground_speed_next < landing_speed))) \
+                         sq3.c.ground_speed_next < landing_speed,
+                         sq3.c.climb_rate < max_landing_climb_rate))) \
         .subquery()
 
     # consider them if the are near airports ...
