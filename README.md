@@ -171,6 +171,7 @@ Most commands are command groups, so if you execute this command you will get fu
 - `ogn_python.collect.celery.update_receivers_country_code` - Update country code in receivers table if None.
 - `ogn_python.collect.celery.purge_old_data` - Delete AircraftBeacons and ReceiverBeacons older than given 'age'.
 - `ogn_python.collect.celery.update_stats` - Create stats and update receivers/devices with stats.
+- `ogn_python.collect.celery.update_ognrange` - Create receiver coverage stats for Melissas ognrange.
 
 If the task server is up and running, tasks could be started manually. Here we compute takeoffs and landings for the past 90 minutes:
 

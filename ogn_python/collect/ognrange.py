@@ -8,8 +8,8 @@ from ogn_python.utils import date_to_timestamps
 from ogn_python import app
 
 
-def create_receiver_coverage(session, date, logger=None):
-    """Create receiver coverages."""
+def update_entries(session, date, logger=None):
+    """Create receiver coverage stats for Melissas ognrange."""
 
     if logger is None:
         logger = app.logger

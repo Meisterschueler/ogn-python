@@ -10,7 +10,7 @@ from ogn_python.collect.stats import create_device_stats, create_receiver_stats,
     update_qualities, update_receivers as update_receivers_command, update_devices as update_devices_command,\
     update_device_stats_jumps
 
-from ogn_python.collect.ognrange import create_receiver_coverage
+from ogn_python.collect.ognrange import update_entries as update_receiver_coverages
 
 from ogn_python import db
 
@@ -105,11 +105,11 @@ def update_mgrs(start, end):
 @click.argument('start')
 @click.argument('end')
 def create_ognrange(start=None, end=None):
-    """Create stats for Melissas ognrange."""
+    """Create receiver coverage stats for Melissas ognrange."""
 
     days = get_database_days(start, end)
 
     pbar = tqdm(days)
     for single_date in pbar:
         pbar.set_description(datetime.strftime(single_date, '%Y-%m-%d'))
-        result = create_receiver_coverage(session=db.session, date=single_date)
+        result = update_receiver_coverages(session=db.session, date=single_date)

@@ -12,9 +12,10 @@ from ogn_python.collect.database import update_country_code as receivers_update_
 
 from ogn_python.collect.stats import create_device_stats, update_device_stats_jumps, create_receiver_stats, create_relation_stats, update_qualities, update_receivers, update_devices
 
+from ogn_python.collect.ognrange import update_entries as receiver_coverage_update_entries
+
 from ogn_python import db
 from ogn_python import celery
-from ogn_python.model import receiver
 
 
 logger = get_task_logger(__name__)
@@ -97,3 +98,12 @@ def update_stats(day_offset):
     update_qualities(session=db.session, date=date)
     update_receivers(session=db.session)
     update_devices(session=db.session)
+
+
+@celery.task(name='update_ognrange')
+def update_ognrange(day_offset):
+    """Create receiver coverage stats for Melissas ognrange."""
+
+    date = datetime.datetime.today() + datetime.timedelta(days=day_offset)
+
+    receiver_coverage_update_entries(session=db.session, date=date)
