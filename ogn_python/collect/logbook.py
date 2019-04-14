@@ -17,21 +17,11 @@ def update_entries(session, date, logger=None):
     logger.info("Compute logbook.")
 
     # limit time range to given date and set window partition and window order
-    if date is not None:
-        (start, end) = date_to_timestamps(date)
-        filters = [between(TakeoffLanding.timestamp, start, end)]
-        pa = (TakeoffLanding.device_id)
-        wo = and_(TakeoffLanding.device_id,
-                  TakeoffLanding.airport_id,
-                  TakeoffLanding.timestamp)
-    else:
-        filters = []
-        pa = (func.date(TakeoffLanding.timestamp),
-              TakeoffLanding.device_id)
-        wo = and_(func.date(TakeoffLanding.timestamp),
-                  TakeoffLanding.device_id,
-                  TakeoffLanding.airport_id,
-                  TakeoffLanding.timestamp)
+    (start, end) = date_to_timestamps(date)
+    pa = (TakeoffLanding.device_id)
+    wo = and_(TakeoffLanding.device_id,
+              TakeoffLanding.airport_id,
+              TakeoffLanding.timestamp)
 
     # make a query with current, previous and next "takeoff_landing" event, so we can find complete flights
     sq = session.query(
@@ -50,7 +40,7 @@ def update_entries(session, date, logger=None):
             TakeoffLanding.airport_id,
             func.lag(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label('airport_id_prev'),
             func.lead(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label('airport_id_next')) \
-        .filter(*filters) \
+        .filter(between(TakeoffLanding.timestamp, start, end)) \
         .subquery()
 
     # find complete flights
@@ -143,7 +133,7 @@ def update_entries(session, date, logger=None):
     return finish_message
 
 
-def update_max_altitudes(session, logger=None):
+def update_max_altitudes(session, date, logger=None):
     """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
 
     if logger is None:
@@ -154,9 +144,11 @@ def update_max_altitudes(session, logger=None):
     if session is None:
         session = app.session
 
+    (start, end) = date_to_timestamps(date)
+
     logbook_entries = session.query(Logbook.id) \
         .filter(and_(Logbook.takeoff_timestamp != null(), Logbook.landing_timestamp != null(), Logbook.max_altitude == null())) \
-        .limit(1000) \
+        .filter(between(Logbook.reftime, start, end)) \
         .subquery()
 
     max_altitudes = session.query(Logbook.id, func.max(AircraftBeacon.altitude).label('max_altitude')) \

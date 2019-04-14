@@ -14,6 +14,7 @@ from ogn_python.collect.stats import create_device_stats, update_device_stats_ju
 
 from ogn_python import db
 from ogn_python import celery
+from ogn_python.model import receiver
 
 
 logger = get_task_logger(__name__)
@@ -30,19 +31,20 @@ def update_takeoff_landings(last_minutes):
 
 
 @celery.task(name='update_logbook_entries')
-def update_logbook_entries():
+def update_logbook_entries(day_offset):
     """Add/update logbook entries."""
 
-    today = datetime.datetime.today()
-    result = logbook_update_entries(session=db.session, date=today, logger=logger)
+    date = datetime.datetime.today() + datetime.timedelta(days=day_offset)
+    result = logbook_update_entries(session=db.session, date=date, logger=logger)
     return result
 
 
 @celery.task(name='update_logbook_max_altitude')
-def update_logbook_max_altitude():
+def update_logbook_max_altitude(day_offset):
     """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
 
-    result = logbook_update_max_altitudes(session=db.session, logger=logger)
+    date = datetime.datetime.today() + datetime.timedelta(days=day_offset)
+    result = logbook_update_max_altitudes(session=db.session, date=date, logger=logger)
     return result
 
 
@@ -68,15 +70,18 @@ def purge_old_data(max_hours):
 
     from ogn_python.model import AircraftBeacon, ReceiverBeacon
     min_timestamp = datetime.datetime.utcnow() - datetime.timedelta(hours=max_hours)
-    db.session.query(AircraftBeacon) \
+    aircraft_beacons_deleted = db.session.query(AircraftBeacon) \
         .filter(AircraftBeacon.timestamp < min_timestamp) \
         .delete()
 
-    db.session.query(ReceiverBeacon) \
+    receiver_beacons_deleted = db.session.query(ReceiverBeacon) \
         .filter(ReceiverBeacon.timestamp < min_timestamp) \
         .delete()
 
     db.session.commit()
+
+    result = "{} AircraftBeacons deleted, {} ReceiverBeacons deleted".format(aircraft_beacons_deleted, receiver_beacons_deleted)
+    return result
 
 
 @celery.task(name='update_stats')

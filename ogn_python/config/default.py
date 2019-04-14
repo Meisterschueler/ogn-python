@@ -35,7 +35,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'update-max-altitudes': {
         'task': 'update_logbook_max_altitude',
-        'schedule': timedelta(minutes=1),
+        'schedule': timedelta(hours=1),
     },
     'update-stats-hourly': {
         'task': 'update_stats',

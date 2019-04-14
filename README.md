@@ -162,25 +162,22 @@ Commands:
 
 Most commands are command groups, so if you execute this command you will get further (sub)commands.
 
-### Available tasks (deprecated - needs rework)
+### Available tasks
 
-- `ogn.collect.database.import_ddb` - Import registered devices from the DDB.
-- `ogn.collect.database.import_file` - Import registered devices from a local file.
-- `ogn.collect.database.update_country_code` - Update country code in receivers table if None.
-- `ogn.collect.database.update_devices` - Add/update entries in devices table and update foreign keys in aircraft beacons.
-- `ogn.collect.database.update_receivers` - Add/update_receivers entries in receiver table and update receivers foreign keys and distance in aircraft beacons and update foreign keys in receiver beacons.
-- `ogn.collect.logbook.update_logbook` - Add/update logbook entries.
-- `ogn.collect.logbook.update_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
-- `ogn.collect.stats.update_device_stats` - Add/update entries in device stats table.
-- `ogn.collect.stats.update_receiver_stats` - Add/update entries in receiver stats table.
-- `ogn.collect.takeoff_landing.update_takeoff_landing` - Compute takeoffs and landings.
+- `ogn_python.collect.celery.update_takeoff_landings` - Compute takeoffs and landings.
+- `ogn_python.collect.celery.update_logbook_entries` - Add/update logbook entries.
+- `ogn_python.collect.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
+- `ogn_python.collect.celery.import_ddb` - Import registered devices from the DDB.
+- `ogn_python.collect.celery.update_receivers_country_code` - Update country code in receivers table if None.
+- `ogn_python.collect.celery.purge_old_data` - Delete AircraftBeacons and ReceiverBeacons older than given 'age'.
+- `ogn_python.collect.celery.update_stats` - Create stats and update receivers/devices with stats.
 
-If the task server is up and running, tasks could be started manually.
+If the task server is up and running, tasks could be started manually. Here we compute takeoffs and landings for the past 90 minutes:
 
 ```
 python3
->>>from ogn.collect.database import import_ddb
->>>import_ddb.delay()
+>>>from ogn_python.collect.celery import update_takeoff_landings
+>>>update_takeoff_landings.delay(minutes=90)
 ```
 
 ## License
