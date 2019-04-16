@@ -7,21 +7,21 @@
     <meta name="viewport" content="initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
     <title>Open Glider Network Range Tool</title>
 
     <!-- Bootstrap core CSS -->
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link href="files/bootstrap/bootstrap.colorpickersliders.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='files/bootstrap/bootstrap.colorpickersliders.css') }}" rel="stylesheet">
 
     <!-- Open Layers and OpenStreetMaps CSS -->
-    <link href="files/ol/ol.css" rel="stylesheet" type="text/css" /> 
+    <link href="{{ url_for('static', filename='files/ol/ol.css') }}" rel="stylesheet" type="text/css" /> 
 
     <!-- On Glide Range overriding CSS -->
-    <link href="files/style.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='files/style.css') }}" rel="stylesheet">
 	
-    <script src="files/url.js"></script>
+    <script src="{{ url_for('static', filename='files/url.js') }}"></script>
     <script type="text/javascript">
       var OgR = url;
       var dLat = 52.1290225;
@@ -29,9 +29,9 @@
       var dZoom = 4;   
     </script>
 
-    <script src="files/mgrs.min.js"></script>
-    <script src="files/maptiles2.js"></script>
-    <script src="files/heatmap2.js"></script>
+    <script src="{{ url_for('static', filename='files/mgrs.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='files/maptiles2.js') }}"></script>
+    <script src="{{ url_for('static', filename='files/heatmap2.js') }}"></script>
   </head>
 
   <body onload="initialize()">
@@ -181,9 +181,9 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="files/bootstrap/typeahead.bundle.js"></script>
-    <script src="files/tinycolor.js"></script>
-    <script src="files/bootstrap/bootstrap.colorpickersliders.nocielch.js"></script>
-    <script src="files/ol/ol.js"></script>
+    <script src="{{ url_for('static', filename='files/bootstrap/typeahead.bundle.js') }}"></script>
+    <script src="{{ url_for('static', filename='files/tinycolor.js') }}"></script>
+    <script src="{{ url_for('static', filename='files/bootstrap/bootstrap.colorpickersliders.nocielch.js') }}"></script>
+    <script src="{{ url_for('static', filename='files/ol/ol.js') }}"></script>
   </body>
 </html>
