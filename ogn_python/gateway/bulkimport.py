@@ -110,7 +110,7 @@ class ContinuousDbFeeder:
             app.logger.error("Ignore beacon_type: {}".format(message['beacon_type']))
             return
 
-        if datetime.utcnow() - self.last_flush >= timedelta(seconds=5):
+        if datetime.utcnow() - self.last_flush >= timedelta(seconds=20):
             self.flush()
             self.prepare()
 
@@ -123,7 +123,7 @@ class ContinuousDbFeeder:
             self.add_missing()
             self.last_add_missing = datetime.utcnow()
 
-        if datetime.utcnow() - self.last_transfer >= timedelta(seconds=10):
+        if datetime.utcnow() - self.last_transfer >= timedelta(seconds=30):
             self.transfer()
             self.delete_beacons()
             self.last_transfer = datetime.utcnow()

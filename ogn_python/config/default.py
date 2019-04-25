@@ -1,10 +1,10 @@
-SECRET_KEY = 'you-will-never-guess'
+SECRET_KEY = 'i-like-ogn'
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost:5432/ogn'
+SQLALCHEMY_DATABASE_URI = 'postgresql://ogn:ognwriter@localhost:5432/ogn'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Flask-Cache stuff
-CACHE_TYPE = 'simple'
+CACHE_TYPE = 'redis'
 CACHE_DEFAULT_TIMEOUT = 300
 
 # Celery stuff
@@ -22,34 +22,29 @@ CELERYBEAT_SCHEDULE = {
     },
     'update-country-codes': {
         'task': 'update_receivers_country_code',
-        'schedule': timedelta(minutes=1),
+        'schedule': timedelta(days=1),
     },
     'update-takeoff-and-landing': {
         'task': 'update_takeoff_landings',
-        'schedule': timedelta(minutes=1),
-        'kwargs': {'last_minutes': 10},
+        'schedule': timedelta(hours=1),
+        'kwargs': {'last_minutes': 90},
     },
     'update-logbook': {
         'task': 'update_logbook_entries',
-        'schedule': timedelta(minutes=1),
+        'schedule': timedelta(hours=2),
     },
     'update-max-altitudes': {
         'task': 'update_logbook_max_altitude',
         'schedule': timedelta(hours=1),
-    },
-    'update-stats-hourly': {
-        'task': 'update_stats',
-        'schedule': timedelta(hours=1),
-        'kwargs': {'day_offset': 0},
     },
     'update-stats-daily': {
         'task': 'update_stats',
         'schedule': crontab(hour=0, minute=5),
         'kwargs': {'day_offset': -1},
     },
-    #'purge_old_data': {
-    #    'task': 'purge_old_data',
-    #    'schedule': timedelta(minutes=10),
-    #    'kwargs': {'max_hours': 48}
-    #},
+    'purge_old_data': {
+        'task': 'purge_old_data',
+        'schedule': timedelta(hours=1),
+        'kwargs': {'max_hours': 48}
+    },
 }
