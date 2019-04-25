@@ -4,7 +4,7 @@ import unittest
 from tests.base import TestBaseDB, db
 
 from ogn_python.model import AircraftBeacon, Receiver, ReceiverCoverage, Device
-from ogn_python.collect.ognrange import create_receiver_coverage
+from ogn_python.collect.ognrange import update_entries
 
 
 class TestOGNrange(TestBaseDB):
@@ -33,7 +33,7 @@ class TestOGNrange(TestBaseDB):
         db.session.commit()
 
     def test_update_receiver_coverage(self):
-        create_receiver_coverage(db.session, date=date(2017, 12, 10))
+        update_entries(db.session, date=date(2017, 12, 10))
 
         coverages = db.session.query(ReceiverCoverage).all()
         self.assertEqual(len(coverages), 1)

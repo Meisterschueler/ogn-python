@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, date
 
 import unittest
 from unittest import mock
@@ -8,10 +8,10 @@ from xmlunittest import XmlTestMixin
 
 from tests.base import TestBaseDB, db
 
-from ogn_python.model import AircraftBeacon, AircraftType, Receiver, Device, DeviceInfo
+from ogn_python.model import AircraftBeacon, AircraftType, Receiver, Device, DeviceInfo, ReceiverCoverage
 
 from ogn_python.backend.liveglidernet import rec, lxml
-from ogn_python.backend.ognrange import stations2_filtered_pl
+from ogn_python.backend.ognrange import stations2_filtered_pl, max_tile_mgrs_pl
 
 
 class TestDB(TestBaseDB, XmlTestMixin):
@@ -45,6 +45,15 @@ class TestDB(TestBaseDB, XmlTestMixin):
         db.session.add(self.ab12)
         db.session.add(self.ab21)
         db.session.add(self.ab22)
+        db.session.commit()
+
+        self.rc11 = ReceiverCoverage(location_mgrs_short='32TPU8312', date=date(2017, 12, 20), max_signal_quality=10, max_altitude=1000, min_altitude=600, aircraft_beacon_count=20, device_count=2, receiver=self.r01)
+        self.rc12 = ReceiverCoverage(location_mgrs_short='32TPU8434', date=date(2017, 12, 20), max_signal_quality=10, max_altitude=1000, min_altitude=600, aircraft_beacon_count=20, device_count=2, receiver=self.r01)
+        self.rc12 = ReceiverCoverage(location_mgrs_short='32TPU8434', date=date(2017, 12, 21), max_signal_quality=10, max_altitude=1000, min_altitude=600, aircraft_beacon_count=20, device_count=2, receiver=self.r01)
+        self.rc21 = ReceiverCoverage(location_mgrs_short='32TPU8512', date=date(2017, 12, 20), max_signal_quality=10, max_altitude=1000, min_altitude=600, aircraft_beacon_count=20, device_count=2, receiver=self.r02)
+        db.session.add(self.rc11)
+        db.session.add(self.rc12)
+        db.session.add(self.rc21)
         db.session.commit()
 
     @mock.patch('ogn_python.backend.liveglidernet.datetime')
@@ -91,7 +100,7 @@ class TestDB(TestBaseDB, XmlTestMixin):
     def test_stations2_filtered_pl(self, datetime_mock):
         datetime_mock.utcnow.return_value = datetime(2017, 12, 20, 10, 0)
 
-        result = stations2_filtered_pl()
+        result = stations2_filtered_pl(start=date(2017, 12, 15), end=date(2017, 12, 25))
 
         data = json.loads(result)
 
@@ -118,6 +127,22 @@ class TestDB(TestBaseDB, XmlTestMixin):
         self.assertEqual(s2["v"], "0.2.5.ARM")
 
         self.assertEqual(s3["s"], 'Ohlstadt')
+
+    def test_max_tile_mgrs_pl(self):
+        result = max_tile_mgrs_pl(station='Koenigsdf', start=date(2017, 12, 15), end=date(2017, 12, 25), squares='32TPU')
+
+        data = json.loads(result)
+
+        self.assertEqual(data['t'], '32TPU')
+        self.assertEqual(data['p'][0], '8312/1')
+        self.assertEqual(data['p'][1], '8434/2')
+
+        result = max_tile_mgrs_pl(station='Bene', start=date(2017, 12, 15), end=date(2017, 12, 25), squares='32TPU')
+
+        data = json.loads(result)
+
+        self.assertEqual(data['t'], '32TPU')
+        self.assertEqual(data['p'][0], '8512/1')
 
 
 if __name__ == '__main__':
