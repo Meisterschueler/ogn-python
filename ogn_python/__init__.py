@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_caching import Cache
 from celery import Celery
 
@@ -14,17 +15,10 @@ app = Flask(__name__)
 #app.config.from_object('config.default')
 app.config.from_envvar('OGN_CONFIG_MODULE')
 
-# Bootstrap
+# Initialize other things
 bootstrap = Bootstrap(app)
-
-# Sqlalchemy
 db = SQLAlchemy(app)
-
-# Cache
+migrate = Migrate(app, db)
 cache = Cache(app)
-
-# Celery
 celery = make_celery(app)
-
-# Navigation
 nav.init_app(app)
