@@ -17,10 +17,6 @@ class DeviceInfo(db.Model):
 
     address_origin = db.Column(db.SmallInteger)
 
-    # Relations (deprecated)
-    device_id = db.Column(db.Integer, db.ForeignKey('devices.id', ondelete='SET NULL'), index=True)
-    device = db.relationship('Device', foreign_keys=[device_id], backref=db.backref('infos', order_by='DeviceInfo.address_origin.asc()'))
-
     def __repr__(self):
         return "<DeviceInfo: %s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,

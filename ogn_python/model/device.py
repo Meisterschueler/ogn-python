@@ -39,7 +39,6 @@ class Device(db.Model):
 
         return query.first()
 
-    # Todo: remove FK from DeviceInfo
     def get_infos(self):
         query = db.session.query(DeviceInfo) \
             .filter(DeviceInfo.address == self.address) \
