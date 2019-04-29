@@ -34,19 +34,26 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     apt-get install redis-server
     ```
 
-5. Create database
+5.	Set the configuration
+	Let the environment variable `OGN_CONFIG_MODULE` point to the configuration file:
+
+```
+export OGN_CONFIG_MODULE="config/default.py"
+```
+
+6. Create database
 
     ```
     ./flask database init
     ```
 
-6. Optional: Prepare tables for TimescaleDB
+7. Optional: Prepare tables for TimescaleDB
 
     ```
     ./flask database init_timescaledb
     ```
 
-7. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
+8. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
     Get the [World Borders Dataset](http://thematicmapping.org/downloads/world_borders.php) and unpack it.
     Then import it into your database (we use "ogn" as database name).
     
@@ -56,14 +63,14 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     psql -d ogn -c "DROP TABLE world_borders_temp;"
     ```
     
-8. Get world elevation data (needed for AGL calculation)
+9. Get world elevation data (needed for AGL calculation)
 	Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database which is 4326.
 	The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world with SRID 4326. Just download the data you need.
 	
 	For Europe we can get the DEM as GeoTIFF files from the [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
     Because the SRID of these files is 3035 and we want 4326 we have to convert them (next step)
     
-9. Optional: Convert the elevation data into correct SRID
+10. Optional: Convert the elevation data into correct SRID
 
 	We convert elevation from one SRID (here: 3035) to target SRID (4326):
     
@@ -71,19 +78,19 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     gdalwarp -s_srs "EPSG:3035" -t_srs "EPSG:4326" source.tif target.tif
     ```
     
-10. Import the GeoTIFF into the elevation table:
+11. Import the GeoTIFF into the elevation table:
     
     ```
     raster2pgsql -s 4326 -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
     ```
 
-11. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
+12. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
 	
 	```
 	flask database import_airports tests/SeeYou.cup 
 	```
 
-12. Import DDB (needed for registration signs in the logbook).
+13. Import DDB (needed for registration signs in the logbook).
 
 	```
 	flask database import_ddb
@@ -117,16 +124,6 @@ The following scripts run in the foreground and should be deamonized
   ```
   celery -A ogn_python.collect beat -l info
   ```
-
-
-To load a custom configuration, create a file `myconfig.py` (see [config/default.py](config/default.py))
-and set the environment variable `OGN_CONFIG_MODULE` accordingly.
-
-```
-touch myconfig.py
-export OGN_CONFIG_MODULE="myconfig"
-./flask gateway run
-```
 
 ### Flask - Command Line Interface
 ```
@@ -178,7 +175,7 @@ If the task server is up and running, tasks could be started manually. Here we c
 ```
 python3
 >>>from ogn_python.collect.celery import update_takeoff_landings
->>>update_takeoff_landings.delay(minutes=90)
+>>>update_takeoff_landings.delay(last_minutes=90)
 ```
 
 ## License
