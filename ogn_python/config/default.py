@@ -1,10 +1,10 @@
 SECRET_KEY = 'i-like-ogn'
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://ogn:ognwriter@localhost:5432/ogn'
+SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost:5432/ogn'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Flask-Cache stuff
-CACHE_TYPE = 'redis'
+CACHE_TYPE = 'simple'
 CACHE_DEFAULT_TIMEOUT = 300
 
 # Celery stuff
