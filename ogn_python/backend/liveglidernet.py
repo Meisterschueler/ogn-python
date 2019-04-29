@@ -62,25 +62,23 @@ def lxml(show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_min=-180)
     for [aircraft_beacon, device] in position_query.all():
         code = encode(device.address)
 
-        if len(device.infos) > 0:
-            device_info = device.infos[0]
-            if device_info and (not device_info.tracked or not device_info.identified):
+        if device.info:
+            if (not device.info.tracked or not device.info.identified):
                 continue
 
-            if not device_info.competition:
-                competition = device_info.registration[-2:]
+            if not device.info.competition:
+                competition = device.info.registration[-2:]
             else:
-                competition = device_info.competition
+                competition = device.info.competition
 
-            if not device_info.registration:
+            if not device.info.registration:
                 registration = '???'
             else:
-                registration = device_info.registration
+                registration = device.info.registration
 
             address = device.address
 
         else:
-            device_info = None
             competition = ('_' + code[-2:]).lower()
             registration = code
             address = 0
