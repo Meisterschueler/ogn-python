@@ -33,7 +33,7 @@ class TestDB(TestBaseDB, XmlTestMixin):
         db.session.add(self.d02)
         db.session.commit()
 
-        self.di01 = DeviceInfo(registration='D-4711', competition='Hi', tracked=True, identified=True, device_id=self.d01.id)
+        self.di01 = DeviceInfo(registration='D-4711', competition='Hi', tracked=True, identified=True)
         db.session.add(self.di01)
         db.session.commit()
 

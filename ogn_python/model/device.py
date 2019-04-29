@@ -69,5 +69,3 @@ class Device(db.Model):
                 return datetime.date(2000, 1, 1)
         else:
             return None
-
-
