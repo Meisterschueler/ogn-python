@@ -32,14 +32,21 @@ CELERYBEAT_SCHEDULE = {
     'update-logbook': {
         'task': 'update_logbook_entries',
         'schedule': timedelta(hours=2),
+        'kwargs': {'day_offset': 0},
     },
     'update-max-altitudes': {
         'task': 'update_logbook_max_altitude',
         'schedule': timedelta(hours=1),
+        'kwargs': {'day_offset': 0},
     },
     'update-stats-daily': {
         'task': 'update_stats',
         'schedule': crontab(hour=0, minute=5),
+        'kwargs': {'day_offset': -1},
+    },
+    'update-logbook-daily': {
+        'task': 'update_logbook_entries',
+        'schedule': crontab(hour=1, minute=0),
         'kwargs': {'day_offset': -1},
     },
     'purge_old_data': {

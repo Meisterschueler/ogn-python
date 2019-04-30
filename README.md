@@ -34,12 +34,12 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     apt-get install redis-server
     ```
 
-5.	Set the configuration
+5.	Set the configuration.
 	Let the environment variable `OGN_CONFIG_MODULE` point to the configuration file:
 
-```
-export OGN_CONFIG_MODULE="config/default.py"
-```
+	```
+	export OGN_CONFIG_MODULE="config/default.py"
+	```
 
 6. Create database
 
