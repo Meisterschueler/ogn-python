@@ -1,7 +1,7 @@
 import datetime
 
-from flask import request, render_template
-from sqlalchemy import func, and_, or_
+from flask import request, render_template, send_file
+from flask_cors import cross_origin
 
 from ogn_python import app
 from ogn_python import db
@@ -24,6 +24,7 @@ def get_countries_in_receivers():
 def get_countries_in_logbook():
     query = db.session.query(Country.iso2) \
         .filter(Country.iso2 == Airport.country_code) \
+        .filter(Logbook.takeoff_airport_id == Airport.id) \
         .order_by(Country.iso2) \
         .distinct(Country.iso2)
 
@@ -43,11 +44,11 @@ def get_airports_in_country(sel_country):
 
 @cache.memoize()
 def get_dates_for_airport(sel_airport):
-    query = db.session.query(func.date(Logbook.reftime), func.count(Logbook.id).label('logbook_count')) \
+    query = db.session.query(db.func.date(Logbook.reftime), db.func.count(Logbook.id).label('logbook_count')) \
         .filter(Airport.id == sel_airport) \
-        .filter(or_(Airport.id == Logbook.takeoff_airport_id, Airport.id == Logbook.landing_airport_id)) \
-        .group_by(func.date(Logbook.reftime)) \
-        .order_by(func.date(Logbook.reftime).desc())
+        .filter(db.or_(Airport.id == Logbook.takeoff_airport_id, Airport.id == Logbook.landing_airport_id)) \
+        .group_by(db.func.date(Logbook.reftime)) \
+        .order_by(db.func.date(Logbook.reftime).desc())
 
     return [{'date': date, 'logbook_count': logbook_count} for (date, logbook_count) in query.all()]
 
@@ -87,7 +88,7 @@ def receivers():
     # Get receiver selection list
     if sel_country:
         receivers = db.session.query(Receiver) \
-            .filter(and_(Receiver.country_id == Country.gid, Country.iso2 == sel_country)) \
+            .filter(db.and_(Receiver.country_id == Country.gid, Country.iso2 == sel_country)) \
             .order_by(Receiver.name)
     else:
         receivers = db.session.query(Receiver) \
@@ -109,9 +110,9 @@ def receiver_detail():
         .one()
 
     airport = db.session.query(Airport) \
-        .filter(and_(Receiver.id == sel_receiver_id, 
-                     func.st_contains(func.st_buffer(Receiver.location_wkt, 0.5), Airport.location_wkt),
-                     func.st_distance_sphere(Airport.location_wkt, Receiver.location_wkt) < 1000)) \
+        .filter(db.and_(Receiver.id == sel_receiver_id, 
+                     db.func.st_contains(db.func.st_buffer(Receiver.location_wkt, 0.5), Airport.location_wkt),
+                     db.func.st_distance_sphere(Airport.location_wkt, Receiver.location_wkt) < 1000)) \
         .filter(Airport.style.in_((2,4,5))) \
 
     return render_template('receiver_detail.html',
@@ -215,6 +216,18 @@ def logbook():
                            dates=dates,
                            logbook=logbook)
 
+@app.route('/download.html')
+def download_flight():
+    from io import StringIO
+    buffer = StringIO()
+    buffer.write('Moin moin\nAlter Verwalter')
+    buffer.seek(0)
+
+    return send_file(buffer,
+                     as_attachment=True,
+                     attachment_filename='wtf.igc',
+                     mimetype = 'text/plain')
+
 
 @app.route('/statistics.html')
 def statistics():
@@ -228,10 +241,3 @@ def statistics():
     return render_template('statistics.html',
                            title='Receiver Statistics',
                            receiverstats=receiverstats)
-
-# Backend routes for other sites
-
-
-@app.route('/live.html')
-def live():
-    return render_template('ogn_live.jinja')

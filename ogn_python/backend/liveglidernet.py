@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta, timezone, date
 
-from sqlalchemy import func, and_, between, case
-
 from ogn_python.model import AircraftBeacon, Device, Receiver
 
 from ogn_python import db
+from ogn_python.model.receiver_beacon import ReceiverBeacon
 
 
 def utc_to_local(utc_dt):
@@ -20,19 +19,24 @@ def decode(code):
 
 
 def rec():
-    last_10_minutes = datetime.utcnow() - timedelta(minutes=10)
-    receiver_query = db.session.query(Receiver,
-                                   case([(Receiver.lastseen > last_10_minutes, True)],
-                                        else_=False).label('is_online')) \
-        .order_by(Receiver.name)
+    min_online_timestamp = datetime.utcnow() - timedelta(minutes=10)
 
-    lines = list()
+    timestamp_range_filter = [db.between(ReceiverBeacon.timestamp, datetime(2018, 7, 31, 11, 55, 0), datetime(2018, 7, 31, 12, 5, 0))]
+
+    last_seen_query = db.session.query(ReceiverBeacon) \
+        .filter(*timestamp_range_filter) \
+        .order_by(ReceiverBeacon.receiver_id, ReceiverBeacon.timestamp) \
+        .distinct(ReceiverBeacon.receiver_id)
+
+    lines = []
     lines.append('<?xml version="1.0" encoding="UTF-8"?>')
     lines.append('<markers>')
     lines.append('<m e="0"/>')
-    for [receiver, is_online] in receiver_query.all():
+    for receiver_beacon in last_seen_query:
+        if receiver_beacon.location == None or receiver_beacon.name.startswith('FNB'):
+            continue
         lines.append('<m a="{0}" b="{1:.7f}" c="{2:.7f}" d="{3:1d}"/>'
-                     .format(receiver.name, receiver.location.latitude, receiver.location.longitude, is_online))
+                     .format(receiver_beacon.name, receiver_beacon.location.latitude, receiver_beacon.location.longitude, receiver_beacon.timestamp < min_online_timestamp))
 
     lines.append('</markers>')
     xml = '\n'.join(lines)
@@ -42,24 +46,20 @@ def rec():
 
 def lxml(show_offline=False, lat_max=90, lat_min=-90, lon_max=180, lon_min=-180):
 
-    if show_offline:
-        observation_start = date.today()
-    else:
-        observation_start = datetime.utcnow() - timedelta(minutes=5)
+    timestamp_range_filter = [db.between(AircraftBeacon.timestamp, datetime(2018, 7, 31, 11, 55, 0), datetime(2018, 7, 31, 12, 5, 0))]
 
-    position_query = db.session.query(AircraftBeacon, Device) \
-        .filter(and_(between(func.ST_Y(AircraftBeacon.location_wkt), lat_min, lat_max),
-                     between(func.ST_X(AircraftBeacon.location_wkt), lon_min, lon_max))) \
-        .filter(Device.lastseen > observation_start) \
-        .filter(Device.lastseen == AircraftBeacon.timestamp) \
-        .filter(Device.id == AircraftBeacon.device_id) \
-        .order_by(AircraftBeacon.timestamp)
+    last_seen_query = db.session.query(AircraftBeacon) \
+        .filter(*timestamp_range_filter) \
+        .order_by(AircraftBeacon.device_id, AircraftBeacon.timestamp) \
+        .distinct(AircraftBeacon.device_id) \
 
     lines = list()
     lines.append('<?xml version="1.0" encoding="UTF-8"?>')
     lines.append('<markers>')
 
-    for [aircraft_beacon, device] in position_query.all():
+    for aircraft_beacon in last_seen_query:
+        device = aircraft_beacon.device
+
         code = encode(device.address)
 
         if device.info:
