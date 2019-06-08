@@ -33,7 +33,7 @@ setup(
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
         'Flask==1.0.2',
-        'flask-sqlalchemy==2.3.2',
+        'flask-sqlalchemy==2.4.0',
         'Flask-Migrate==2.4.0',
         'flask-bootstrap==3.3.7.1',
         'flask-nav==0.6',
