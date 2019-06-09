@@ -50,7 +50,7 @@ setup(
         'mgrs==1.3.5',
         'xmlunittest==0.5.0',
         'tqdm==4.32.1',
-	'requests==2.21.0',
+	'requests==2.22.0',
     ],
     extras_require={
         'dev': [
