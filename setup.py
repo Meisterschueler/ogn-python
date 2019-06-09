@@ -39,7 +39,7 @@ setup(
         'flask-nav==0.6',
         'flask-wtf==0.14.2',
         'flask-caching==1.7.0',
-        'geopy==1.19.0',
+        'geopy==1.20.0',
         'celery==4.3.0',
 	'redis==3.2.1',
         'aerofiles==1.0.0',
