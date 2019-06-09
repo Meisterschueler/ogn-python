@@ -34,7 +34,7 @@ setup(
     install_requires=[
         'Flask==1.0.3',
         'flask-sqlalchemy==2.4.0',
-        'Flask-Migrate==2.4.0',
+        'Flask-Migrate==2.5.2',
         'flask-bootstrap==3.3.7.1',
         'flask-nav==0.6',
         'flask-wtf==0.14.2',
