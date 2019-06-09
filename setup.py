@@ -38,7 +38,7 @@ setup(
         'flask-bootstrap==3.3.7.1',
         'flask-nav==0.6',
         'flask-wtf==0.14.2',
-        'flask-caching==1.7.0',
+        'flask-caching==1.7.2',
         'geopy==1.20.0',
         'celery==4.3.0',
 	'redis==3.2.1',
