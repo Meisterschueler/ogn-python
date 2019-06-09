@@ -56,7 +56,7 @@ setup(
         'dev': [
             'nose==1.3.7',
             'coveralls==1.8.0',
-            'flake8==3.5.0',
+            'flake8==3.7.7',
             'xmlunittest==0.4.0'
         ]
     },
