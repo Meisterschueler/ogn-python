@@ -18,13 +18,9 @@ def decode(code):
     return code[2:9]
 
 
-def rec():
-    min_online_timestamp = datetime.utcnow() - timedelta(minutes=10)
-
-    timestamp_range_filter = [db.between(ReceiverBeacon.timestamp, datetime(2018, 7, 31, 11, 55, 0), datetime(2018, 7, 31, 12, 5, 0))]
-
+def rec(min_timestamp, min_online_timestamp):
     last_seen_query = db.session.query(ReceiverBeacon) \
-        .filter(*timestamp_range_filter) \
+        .filter(ReceiverBeacon.timestamp > min_timestamp) \
         .order_by(ReceiverBeacon.receiver_id, ReceiverBeacon.timestamp) \
         .distinct(ReceiverBeacon.receiver_id)
 
