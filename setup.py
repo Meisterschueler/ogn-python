@@ -49,7 +49,7 @@ setup(
         'psycopg2-binary==2.8.1',
         'mgrs==1.3.5',
         'xmlunittest==0.5.0',
-        'tqdm==4.31.1',
+        'tqdm==4.32.1',
 	'requests==2.21.0',
     ],
     extras_require={
