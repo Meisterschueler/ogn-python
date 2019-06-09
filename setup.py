@@ -34,19 +34,19 @@ setup(
     install_requires=[
         'Flask==1.0.3',
         'flask-sqlalchemy==2.4.0',
-        'Flask-Migrate==2.4.0',
+        'Flask-Migrate==2.5.2',
         'flask-bootstrap==3.3.7.1',
         'flask-nav==0.6',
         'flask-wtf==0.14.2',
         'flask-caching==1.7.0',
-        'geopy==1.19.0',
+        'geopy==1.20.0',
         'celery==4.3.0',
 	'redis==3.2.1',
         'aerofiles==1.0.0',
         'geoalchemy2==0.6.2',
         'shapely==1.6.4.post2',
         'ogn-client==0.9.1',
-        'psycopg2-binary==2.8.1',
+        'psycopg2-binary==2.8.2',
         'mgrs==1.3.5',
         'xmlunittest==0.5.0',
         'tqdm==4.32.1',
@@ -55,7 +55,7 @@ setup(
     extras_require={
         'dev': [
             'nose==1.3.7',
-            'coveralls==1.2',
+            'coveralls==1.8.0',
             'flake8==3.7.7',
             'xmlunittest==0.4.0'
         ]
