@@ -46,7 +46,7 @@ setup(
         'geoalchemy2==0.6.3',
         'shapely==1.6.4.post2',
         'ogn-client==0.9.4',
-        'psycopg2-binary==2.8.2',
+        'psycopg2-binary==2.8.3',
         'mgrs==1.3.5',
         'xmlunittest==0.5.0',
         'tqdm==4.32.2',
