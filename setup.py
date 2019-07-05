@@ -32,7 +32,7 @@ setup(
     keywords='gliding ogn',
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
-        'Flask==1.0.3',
+        'Flask==1.1.0',
         'flask-sqlalchemy==2.4.0',
         'Flask-Migrate==2.5.2',
         'flask-bootstrap==3.3.7.1',
