@@ -5,7 +5,6 @@ from flask_migrate import Migrate
 from flask_caching import Cache
 from celery import Celery
 
-from ogn_python.navigation import nav
 from ogn_python.flask_celery import make_celery
 
 # Initialize Flask
@@ -21,4 +20,3 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 cache = Cache(app)
 celery = make_celery(app)
-nav.init_app(app)
