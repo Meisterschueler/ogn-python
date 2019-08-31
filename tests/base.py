@@ -1,15 +1,15 @@
 import unittest
 import os
 
-os.environ['OGN_CONFIG_MODULE'] = 'config/test.py'
+os.environ["OGN_CONFIG_MODULE"] = "config/test.py"
 
-from ogn_python import db   # noqa: E402
+from app import db  # noqa: E402
 
 
 class TestBaseDB(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        db.session.execute('CREATE EXTENSION IF NOT EXISTS postgis;')
+        db.session.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
         db.session.commit()
         db.drop_all()
         db.create_all()
@@ -18,7 +18,8 @@ class TestBaseDB(unittest.TestCase):
         pass
 
     def tearDown(self):
-        db.session.execute("""
+        db.session.execute(
+            """
             DELETE FROM aircraft_beacons;
             DELETE FROM receiver_beacons;
             DELETE FROM takeoff_landings;
@@ -28,8 +29,9 @@ class TestBaseDB(unittest.TestCase):
             DELETE FROM receiver_stats;
             DELETE FROM receivers;
             DELETE FROM devices;
-        """)
+        """
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

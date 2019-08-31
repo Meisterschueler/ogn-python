@@ -1,0 +1,56 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+    {% if title %}{{ title }}{% else %}No page title{% endif %}
+{% endblock %}
+
+{% block navbar %}
+<link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+<nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">OGN DDB</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('devices') }}">Devices</a></li>
+                <li><a href="{{ url_for('receivers') }}">Receivers</a></li>
+                <li><a href="{{ url_for('airports') }}">Airports</a></li>
+                <li><a href="{{ url_for('logbook') }}">Logbook</a></li>
+                <li><a href="{{ url_for('statistics') }}">Statistics</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    	<!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+        {% for category, message in messages %}
+        	{% if category == 'message' %}
+				<div class="alert alert-warning" role="alert">
+        	{% else %}
+            	<div class="alert alert-{{ category }}" role="alert">
+            {% endif %}
+            	{{ message }}
+            	</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% block app_content %}{% endblock %}
+{%- block footer %}
+<footer class="text-center"><small>&copy; 2019 The OGN Team</small></footer>
+{%- endblock footer %}
+</div>
+{% endblock %}

@@ -3,9 +3,9 @@ import unittest
 
 from tests.base import TestBaseDB, db
 
-from ogn_python.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
+from app.model import AircraftBeacon, ReceiverBeacon, Receiver, Device, DeviceStats
 
-from ogn_python.collect.stats import create_device_stats
+from app.collect.stats import create_device_stats
 
 
 class TestStats(TestBaseDB):
@@ -13,21 +13,21 @@ class TestStats(TestBaseDB):
         super().setUp()
 
         # Prepare Beacons
-        self.ab01 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:01')
-        self.ab02 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:02')
-        self.ab03 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:03')
-        self.ab04 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:04')
-        self.ab05 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:05')
-        self.ab06 = AircraftBeacon(name='FLRDD4711', receiver_name='Koenigsdf', timestamp='2017-12-10 10:00:05')
+        self.ab01 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:01")
+        self.ab02 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:02")
+        self.ab03 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:03")
+        self.ab04 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:04")
+        self.ab05 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:05")
+        self.ab06 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:05")
 
-        self.rb01 = ReceiverBeacon(name='Koenigsdf', receiver_name='GLIDERN1', timestamp='2017-12-10 09:55:00', altitude=601, version='0.2.5', platform='ARM')
-        self.rb02 = ReceiverBeacon(name='Koenigsdf', receiver_name='GLIDERN1', timestamp='2017-12-10 10:00:00', altitude=601, version='0.2.7', platform='ARM')
-        self.rb03 = ReceiverBeacon(name='Koenigsdf', receiver_name='GLIDERN1', timestamp='2017-12-10 10:05:00', altitude=601, version='0.2.6', platform='ARM')
+        self.rb01 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 09:55:00", altitude=601, version="0.2.5", platform="ARM")
+        self.rb02 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 10:00:00", altitude=601, version="0.2.7", platform="ARM")
+        self.rb03 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 10:05:00", altitude=601, version="0.2.6", platform="ARM")
 
-        self.r01 = Receiver(name='Koenigsdf')
-        self.r02 = Receiver(name='Bene')
+        self.r01 = Receiver(name="Koenigsdf")
+        self.r02 = Receiver(name="Bene")
 
-        self.d01 = Device(address='DD4711')
+        self.d01 = Device(address="DD4711")
 
         db.session.add(self.r01)
         db.session.add(self.d01)
@@ -50,7 +50,7 @@ class TestStats(TestBaseDB):
         self.assertEqual(devicestats[0].max_altitude, None)
         self.assertEqual(devicestats[0].receiver_count, 1)
         self.assertEqual(devicestats[0].aircraft_beacon_count, 1)
-        self.assertEqual(devicestats[0].date, datetime.strptime('2017-12-10', '%Y-%m-%d').date())
+        self.assertEqual(devicestats[0].date, datetime.strptime("2017-12-10", "%Y-%m-%d").date())
         self.assertEqual(devicestats[0].firstseen, datetime(2017, 12, 10, 10, 0, 1))
         self.assertEqual(devicestats[0].lastseen, datetime(2017, 12, 10, 10, 0, 1))
         self.assertEqual(devicestats[0].aircraft_type, None)
@@ -77,7 +77,7 @@ class TestStats(TestBaseDB):
         self.assertEqual(devicestats[0].max_altitude, 200)
         self.assertEqual(devicestats[0].receiver_count, 1)
         self.assertEqual(devicestats[0].aircraft_beacon_count, 2)
-        self.assertEqual(devicestats[0].date, datetime.strptime('2017-12-10', '%Y-%m-%d').date())
+        self.assertEqual(devicestats[0].date, datetime.strptime("2017-12-10", "%Y-%m-%d").date())
         self.assertEqual(devicestats[0].firstseen, datetime(2017, 12, 10, 10, 0, 1))
         self.assertEqual(devicestats[0].lastseen, datetime(2017, 12, 10, 10, 0, 2))
         self.assertEqual(devicestats[0].aircraft_type, 3)
@@ -103,7 +103,7 @@ class TestStats(TestBaseDB):
         self.assertEqual(devicestats[0].max_altitude, 200)
         self.assertEqual(devicestats[0].receiver_count, 1)
         self.assertEqual(devicestats[0].aircraft_beacon_count, 2)
-        self.assertEqual(devicestats[0].date, datetime.strptime('2017-12-10', '%Y-%m-%d').date())
+        self.assertEqual(devicestats[0].date, datetime.strptime("2017-12-10", "%Y-%m-%d").date())
         self.assertEqual(devicestats[0].firstseen, datetime(2017, 12, 10, 10, 0, 1))
         self.assertEqual(devicestats[0].lastseen, datetime(2017, 12, 10, 10, 0, 2))
         self.assertEqual(devicestats[0].aircraft_type, 3)
@@ -118,7 +118,7 @@ class TestStats(TestBaseDB):
         self.ab04.altitude = 250
         self.ab04.software_version = 6.01
         self.ab04.hardware_version = 15
-        self.ab04.real_address = 'DDALFA'
+        self.ab04.real_address = "DDALFA"
         db.session.add(self.ab04)
         db.session.commit()
 
@@ -131,14 +131,14 @@ class TestStats(TestBaseDB):
         self.assertEqual(devicestats[0].max_altitude, 250)
         self.assertEqual(devicestats[0].receiver_count, 2)
         self.assertEqual(devicestats[0].aircraft_beacon_count, 3)
-        self.assertEqual(devicestats[0].date, datetime.strptime('2017-12-10', '%Y-%m-%d').date())
+        self.assertEqual(devicestats[0].date, datetime.strptime("2017-12-10", "%Y-%m-%d").date())
         self.assertEqual(devicestats[0].firstseen, datetime(2017, 12, 10, 10, 0, 1))
         self.assertEqual(devicestats[0].lastseen, datetime(2017, 12, 10, 10, 0, 4))
         self.assertEqual(devicestats[0].aircraft_type, 3)
         self.assertEqual(devicestats[0].stealth, False)
         self.assertEqual(devicestats[0].software_version, 6.01)
         self.assertEqual(devicestats[0].hardware_version, 15)
-        self.assertEqual(devicestats[0].real_address, 'DDALFA')
+        self.assertEqual(devicestats[0].real_address, "DDALFA")
 
         # Compute 5. beacon: lower altitude, stealth
         self.ab05.device = self.d01
@@ -157,14 +157,14 @@ class TestStats(TestBaseDB):
         self.assertEqual(devicestats[0].max_altitude, 250)
         self.assertEqual(devicestats[0].receiver_count, 2)
         self.assertEqual(devicestats[0].aircraft_beacon_count, 4)
-        self.assertEqual(devicestats[0].date, datetime.strptime('2017-12-10', '%Y-%m-%d').date())
+        self.assertEqual(devicestats[0].date, datetime.strptime("2017-12-10", "%Y-%m-%d").date())
         self.assertEqual(devicestats[0].firstseen, datetime(2017, 12, 10, 10, 0, 1))
         self.assertEqual(devicestats[0].lastseen, datetime(2017, 12, 10, 10, 0, 5))
         self.assertEqual(devicestats[0].aircraft_type, 3)
         self.assertEqual(devicestats[0].stealth, True)
         self.assertEqual(devicestats[0].software_version, 6.01)
         self.assertEqual(devicestats[0].hardware_version, 15)
-        self.assertEqual(devicestats[0].real_address, 'DDALFA')
+        self.assertEqual(devicestats[0].real_address, "DDALFA")
 
         # Compute 6. beacon: beacon from past, greater altitude, newer version
         self.ab06.device = self.d01
@@ -184,15 +184,15 @@ class TestStats(TestBaseDB):
         self.assertEqual(devicestats[0].max_altitude, 300)
         self.assertEqual(devicestats[0].receiver_count, 2)
         self.assertEqual(devicestats[0].aircraft_beacon_count, 5)
-        self.assertEqual(devicestats[0].date, datetime.strptime('2017-12-10', '%Y-%m-%d').date())
+        self.assertEqual(devicestats[0].date, datetime.strptime("2017-12-10", "%Y-%m-%d").date())
         self.assertEqual(devicestats[0].firstseen, datetime(2017, 12, 10, 9, 59, 50))
         self.assertEqual(devicestats[0].lastseen, datetime(2017, 12, 10, 10, 0, 5))
         self.assertEqual(devicestats[0].aircraft_type, 3)
         self.assertEqual(devicestats[0].stealth, True)
         self.assertEqual(devicestats[0].software_version, 6.01)
         self.assertEqual(devicestats[0].hardware_version, 15)
-        self.assertEqual(devicestats[0].real_address, 'DDALFA')
+        self.assertEqual(devicestats[0].real_address, "DDALFA")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
