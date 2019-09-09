@@ -1,26 +1,30 @@
+sudo: false
 language: python
 
-python:
-  - 3.5
-  - 3.6
-  - 3.7
-  - 3.8-dev
-
-addons:
-  postgresql: "9.6"
-  apt:
-    packages:
-      - postgresql-9.6-postgis-2.4
+install:
+  - pip install tox
 
 before_script:
-  - flake8 tests ogn_test
   - psql -U postgres -c 'CREATE DATABASE ogn_test;'
   - psql -U postgres -c 'CREATE EXTENSION postgis;'
 
 script:
-  - nosetests --with-coverage --cover-package=app
-  - pip install . --upgrade
-  - python -c 'import app'
+  - tox
+
+addons:
+  postgresql: 9.6
+  apt:
+    packages:
+      - postgresql-9.6-postgis-2.4
+
+matrix:
+  include:
+    - python: "3.6"
+      env: TOXENV='py36'
+    - python: "3.7"
+      env: TOXENV='py37'
+    - python: "3.7"
+      env: TOXENV='flake8'
 
 after_success:
-  - coveralls
+  - tox -e codecov
