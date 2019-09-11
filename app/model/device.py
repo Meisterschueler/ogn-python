@@ -37,6 +37,8 @@ class Device(db.Model):
         return [info for info in query.all()]
 
     EXPIRY_DATES = {
+        6.81: datetime.date(2021, 1, 31),
+        6.80: datetime.date(2021, 1, 31),
         6.67: datetime.date(2020, 10, 31),
         6.63: datetime.date(2020, 5, 31),
         6.62: datetime.date(2020, 5, 31),
