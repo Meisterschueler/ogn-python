@@ -20,7 +20,7 @@ user_cli.help = "Tools for accelerated data import."
 
 
 # define message types we want to proceed
-AIRCRAFT_BEACON_TYPES = ["aprs_aircraft", "flarm", "tracker", "fanet", "lt24", "naviter", "skylines", "spider", "spot"]
+AIRCRAFT_BEACON_TYPES = ["aprs_aircraft", "flarm", "tracker", "fanet", "lt24", "naviter", "skylines", "spider", "spot", "flymaster"]
 RECEIVER_BEACON_TYPES = ["aprs_receiver", "receiver"]
 
 # define fields we want to proceed
