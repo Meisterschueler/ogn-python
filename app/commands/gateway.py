@@ -1,10 +1,9 @@
+from flask import current_app
 from flask.cli import AppGroup
 import click
 
 from ogn.client import AprsClient
 from app.gateway.bulkimport import ContinuousDbFeeder
-
-from app import app
 
 user_cli = AppGroup("gateway")
 user_cli.help = "Connection to APRS servers."
@@ -21,14 +20,14 @@ def run(aprs_user="anon-dev"):
         print("aprs_user must be a string of 3-9 characters.")
         return
 
-    app.logger.warning("Start ogn gateway")
+    current_app.logger.warning("Start ogn gateway")
     client = AprsClient(aprs_user)
     client.connect()
 
     try:
         client.run(callback=saver.add, autoreconnect=True)
     except KeyboardInterrupt:
-        app.logger.warning("\nStop ogn gateway")
+        current_app.logger.warning("\nStop ogn gateway")
 
     saver.flush()
     client.disconnect()

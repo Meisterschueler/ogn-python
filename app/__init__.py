@@ -7,21 +7,32 @@ from celery import Celery
 
 from app.flask_celery import make_celery
 
-# Initialize Flask
-app = Flask(__name__)
+bootstrap = Bootstrap()
+db = SQLAlchemy()
+cache = Cache()
 
-# Load the configuration
-app.config.from_object('app.config.default')
-app.config.from_envvar("OGN_CONFIG_MODULE", silent=True)
+def create_app(config_name='development'):
+    # Initialize Flask
+    app = Flask(__name__)
 
-# Initialize other things
-bootstrap = Bootstrap(app)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-cache = Cache(app)
-celery = make_celery(app)
+    # Load the configuration
+    if config_name == 'testing':
+        app.config.from_object('app.config.test')
+    else:
+        app.config.from_object('app.config.default')
+    app.config.from_envvar("OGN_CONFIG_MODULE", silent=True)
 
-from app.main import bp as bp_main
-app.register_blueprint(bp_main)
+    # Initialize other things
+    bootstrap.init_app(app)
+    db.init_app(app)
+    cache.init_app(app)
+    
+    #migrate = Migrate(app, db)
+    #celery = make_celery(app)
+    
+    from app.main import bp as bp_main
+    app.register_blueprint(bp_main)
 
-from app import commands
+    #from app import commands
+    
+    return app

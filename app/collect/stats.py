@@ -1,12 +1,11 @@
+from flask import current_app
 from sqlalchemy import insert, distinct, between, literal
 from sqlalchemy.sql import null, and_, func, or_, update
 from sqlalchemy.sql.expression import case
 
 from app.model import AircraftBeacon, DeviceStats, Country, CountryStats, ReceiverStats, ReceiverBeacon, RelationStats, Receiver, Device
-
 from app.utils import date_to_timestamps
 
-from app import app
 
 # 40dB@10km is enough for 640km
 MAX_PLAUSIBLE_QUALITY = 40
@@ -16,7 +15,7 @@ def create_device_stats(session, date, logger=None):
     """Add/update device stats."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     (start, end) = date_to_timestamps(date)
 
@@ -83,7 +82,7 @@ def create_receiver_stats(session, date, logger=None):
     """Add/update receiver stats."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     (start, end) = date_to_timestamps(date)
 
@@ -155,7 +154,7 @@ def create_receiver_stats(session, date, logger=None):
 
 def create_country_stats(session, date, logger=None):
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     (start, end) = date_to_timestamps(date)
 
@@ -181,7 +180,7 @@ def update_device_stats_jumps(session, date, logger=None):
     """Update device stats jumps."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     (start, end) = date_to_timestamps(date)
 
@@ -237,7 +236,7 @@ def create_relation_stats(session, date, logger=None):
     """Add/update relation stats."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     (start, end) = date_to_timestamps(date)
 
@@ -274,7 +273,7 @@ def update_qualities(session, date, logger=None):
     """Calculate relative qualities of receivers and devices."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     # Calculate avg quality of devices
     dev_sq = session.query(RelationStats.device_id, func.avg(RelationStats.quality).label("quality")).filter(RelationStats.date == date).group_by(RelationStats.device_id).subquery()
@@ -339,7 +338,7 @@ def update_receivers(session, logger=None):
     """Update receivers with stats."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     receiver_stats = (
         session.query(
@@ -394,7 +393,7 @@ def update_devices(session, logger=None):
     """Update devices with stats."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     device_stats = (
         session.query(

@@ -9,6 +9,8 @@ from app.collect.logbook import update_entries
 
 class TestLogbook(TestBaseDB):
     def setUp(self):
+        super().setUp()
+
         # Create basic data and insert
         self.dd0815 = Device(address="DD0815")
         self.dd4711 = Device(address="DD4711")

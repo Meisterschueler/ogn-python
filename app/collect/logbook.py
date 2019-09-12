@@ -1,18 +1,17 @@
 from sqlalchemy import and_, or_, insert, update, exists, between
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import true, false
+from flask import current_app
 
 from app.model import TakeoffLanding, Logbook, AircraftBeacon
 from app.utils import date_to_timestamps
-
-from app import app
 
 
 def update_entries(session, date, logger=None):
     """Add/update logbook entries."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     logger.info("Compute logbook.")
 
@@ -167,7 +166,7 @@ def update_max_altitudes(session, date, logger=None):
     """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     logger.info("Update logbook max altitude.")
 

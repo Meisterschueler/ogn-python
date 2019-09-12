@@ -1,19 +1,18 @@
 from datetime import timedelta
 
+from flask import current_app
 from sqlalchemy import and_, or_, insert, between, exists
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import case
 
 from app.model import AircraftBeacon, TakeoffLanding, Airport
 
-from app import app
-
 
 def update_entries(session, start, end, logger=None):
     """Compute takeoffs and landings."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     logger.info("Compute takeoffs and landings.")
 
