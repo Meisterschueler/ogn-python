@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from io import StringIO
 
+from flask import current_app
 from flask.cli import AppGroup
 import click
 from tqdm import tqdm
@@ -13,7 +14,6 @@ from app.utils import open_file
 from app.gateway.process_tools import *
 
 from app import db
-from app import app
 
 user_cli = AppGroup("bulkimport")
 user_cli.help = "Tools for accelerated data import."
@@ -91,16 +91,16 @@ def string_to_message(raw_string, reference_date):
     try:
         message = parse(raw_string, reference_date)
     except NotImplementedError as e:
-        app.logger.error("No parser implemented for message: {}".format(raw_string))
+        current_app.logger.error("No parser implemented for message: {}".format(raw_string))
         return None
     except ParseError as e:
-        app.logger.error("Parsing error with message: {}".format(raw_string))
+        current_app.logger.error("Parsing error with message: {}".format(raw_string))
         return None
     except TypeError as e:
-        app.logger.error("TypeError with message: {}".format(raw_string))
+        current_app.logger.error("TypeError with message: {}".format(raw_string))
         return None
     except Exception as e:
-        app.logger.error("Other Exception with string: {}".format(raw_string))
+        current_app.logger.error("Other Exception with string: {}".format(raw_string))
         return None
 
     # update reference receivers and distance to the receiver
@@ -160,7 +160,7 @@ class ContinuousDbFeeder:
             self.receiver_buffer.write(complete_message)
             self.receiver_buffer.write("\n")
         else:
-            app.logger.error("Ignore beacon_type: {}".format(message["beacon_type"]))
+            current_app.logger.error("Ignore beacon_type: {}".format(message["beacon_type"]))
             return
 
         if datetime.utcnow() - self.last_flush >= timedelta(seconds=20):
@@ -243,7 +243,7 @@ class FileDbFeeder:
             self.receiver_buffer.write(complete_message)
             self.receiver_buffer.write("\n")
         else:
-            app.logger.error("Ignore beacon_type: {}".format(message["beacon_type"]))
+            current_app.logger.error("Ignore beacon_type: {}".format(message["beacon_type"]))
             return
 
     def prepare(self):

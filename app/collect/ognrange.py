@@ -1,18 +1,17 @@
 from sqlalchemy import Date
 from sqlalchemy import and_, insert, update, exists, between
 from sqlalchemy.sql import func, null
+from flask import current_app
 
 from app.model import AircraftBeacon, ReceiverCoverage
 from app.utils import date_to_timestamps
-
-from app import app
 
 
 def update_entries(session, date, logger=None):
     """Create receiver coverage stats for Melissas ognrange."""
 
     if logger is None:
-        logger = app.logger
+        logger = current_app.logger
 
     logger.info("Compute receiver coverages.")
 

@@ -1,12 +1,10 @@
 language: python
 
-env:
-  - OGN_CONFIG_MODULE='config/test.py'
-
 python:
   - 3.5
   - 3.6
-  - 3.7-dev
+  - 3.7
+  - 3.8-dev
 
 addons:
   postgresql: "9.6"

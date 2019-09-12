@@ -1,3 +1,4 @@
+from flask import current_app
 from flask.cli import AppGroup
 import click
 
@@ -8,7 +9,6 @@ from app.collect.database import update_device_infos, update_country_code
 from app.model import *
 from app.utils import get_airports, get_days
 
-from app import app
 from app import db
 
 user_cli = AppGroup("database")
@@ -36,8 +36,8 @@ def get_database_days(start, end):
 
 @user_cli.command("info")
 def info():
-    print(app.config)
-    print(app.config["SQLALCHEMY_DATABASE_URI"])
+    print(current_app.config)
+    print(current_app.config["SQLALCHEMY_DATABASE_URI"])
 
 
 @user_cli.command("init")
