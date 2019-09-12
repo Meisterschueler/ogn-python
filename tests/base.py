@@ -7,6 +7,9 @@ class TestBaseDB(unittest.TestCase):
         self.app = create_app('testing')
         self.app_context = self.app.app_context()
         self.app_context.push()
+
+        db.session.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+        db.session.commit()
         db.create_all()
 
     def tearDown(self):
