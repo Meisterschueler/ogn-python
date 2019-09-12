@@ -21,4 +21,7 @@ migrate = Migrate(app, db)
 cache = Cache(app)
 celery = make_celery(app)
 
-from app import routes, commands
+from app.main import bp as bp_main
+app.register_blueprint(bp_main)
+
+from app import commands

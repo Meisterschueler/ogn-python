@@ -2,11 +2,11 @@ import datetime
 
 from flask import request, render_template, send_file
 
-from app import app
 from app import db
 from app import cache
-
 from app.model import *
+
+from app.main import bp
 
 
 @cache.cached(key_prefix="countries_in_receivers")
@@ -43,19 +43,19 @@ def get_dates_for_airport(sel_airport):
     return [{"date": date, "logbook_count": logbook_count} for (date, logbook_count) in query.all()]
 
 
-@app.route("/")
-@app.route("/index.html")
+@bp.route("/")
+@bp.route("/index.html")
 def index():
     return render_template("base.html")
 
 
-@app.route("/devices.html", methods=["GET", "POST"])
+@bp.route("/devices.html", methods=["GET", "POST"])
 def devices():
     devices = db.session.query(Device).order_by(Device.address).limit(100)
     return render_template("devices.html", devices=devices)
 
 
-@app.route("/device_detail.html", methods=["GET", "POST"])
+@bp.route("/device_detail.html", methods=["GET", "POST"])
 def device_detail():
     device_id = request.args.get("id")
     device = db.session.query(Device).filter(Device.id == device_id).one()
@@ -63,7 +63,7 @@ def device_detail():
     return render_template("device_detail.html", title="Device", device=device)
 
 
-@app.route("/receivers.html")
+@bp.route("/receivers.html")
 def receivers():
     sel_country = request.args.get("country")
 
@@ -78,7 +78,7 @@ def receivers():
     return render_template("receivers.html", title="Receivers", sel_country=sel_country, countries=countries, receivers=receivers)
 
 
-@app.route("/receiver_detail.html")
+@bp.route("/receiver_detail.html")
 def receiver_detail():
     sel_receiver_id = request.args.get("receiver_id")
 
@@ -98,7 +98,7 @@ def receiver_detail():
     return render_template("receiver_detail.html", title="Receiver Detail", receiver=receiver, airport=airport.first())
 
 
-@app.route("/airports.html", methods=["GET", "POST"])
+@bp.route("/airports.html", methods=["GET", "POST"])
 def airports():
     sel_country = request.args.get("country")
 
@@ -114,7 +114,7 @@ def airports():
     return render_template("airports.html", sel_country=sel_country, countries=countries, airports=airports)
 
 
-@app.route("/airport_detail.html")
+@bp.route("/airport_detail.html")
 def airport_detail():
     sel_airport = request.args.get("airport")
 
@@ -125,7 +125,7 @@ def airport_detail():
     return render_template("airport_detail.html", title="Airport Detail", airport=airport.one(), devices=devices)
 
 
-@app.route("/logbook.html", methods=["GET", "POST"])
+@bp.route("/logbook.html", methods=["GET", "POST"])
 def logbook():
     sel_country = request.args.get("country")
     sel_airport = request.args.get("airport")
@@ -175,7 +175,7 @@ def logbook():
     return render_template("logbook.html", title="Logbook", sel_country=sel_country, countries=countries, sel_airport=sel_airport, airports=airports, sel_date=sel_date, dates=dates, logbook=logbook)
 
 
-@app.route("/download.html")
+@bp.route("/download.html")
 def download_flight():
     from io import StringIO
 
@@ -186,7 +186,7 @@ def download_flight():
     return send_file(buffer, as_attachment=True, attachment_filename="wtf.igc", mimetype="text/plain")
 
 
-@app.route("/statistics.html")
+@bp.route("/statistics.html")
 def statistics():
 
     today = datetime.date.today()
