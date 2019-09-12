@@ -20,9 +20,9 @@ before_script:
   - psql -U postgres -c 'CREATE EXTENSION postgis;'
 
 script:
-  - nosetests --with-coverage --cover-package=ogn_python
+  - nosetests --with-coverage --cover-package=app
   - pip install . --upgrade
-  - python -c 'import ogn_python'
+  - python -c 'import app'
 
 after_success:
   - coveralls
