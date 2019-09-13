@@ -5,8 +5,8 @@ services:
     image: timescale/timescaledb-postgis:latest-pg11
     networks:
       - ogn
-    # volumes:
-    #   - ./postgres-data:/var/lib/postgresql/data
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ogn
