@@ -1,0 +1,121 @@
+version: "3"
+services:
+  db:
+    restart: always
+    image: timescale/timescaledb-postgis:latest-pg11
+    networks:
+      - ogn
+    # volumes:
+    #   - ./postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ogn
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    restart: always
+    image: redis
+    networks:
+      - ogn
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  ogn-pg-importer:
+    image: ogn-pg-importer
+    networks:
+      - ogn
+    depends_on:
+      - db
+      - backend
+    volumes:
+      - ./data:/data
+    environment:
+      PGHOST: db
+      PGDATABASE: ogn
+      PGPASSWORD: postgres
+      PGUSER: postgres
+      BACKENDHOST: backend
+      BACKENDPORT: 80
+
+  backend:
+    restart: always
+    image: ogn:latest
+    networks:
+      - ogn
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "0.0.0.0:8080:80"
+    volumes:
+      - ./cups:/cups
+    environment:
+      PGHOST: db
+      SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@db:5432/ogn"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      MODULE_NAME: "app"
+
+  gateway:
+    restart: always
+    image: ogn:latest
+    networks:
+      - ogn
+    depends_on:
+      - db
+      - redis
+      - backend
+    command: "./wait.sh flask gateway run"
+    environment:
+      SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@db:5432/ogn"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      BACKENDHOST: backend
+      BACKENDPORT: 80
+  worker:
+    restart: always
+    image: ogn:latest
+    networks:
+      - ogn
+    depends_on:
+      - db
+      - redis
+      - backend
+    command: "./wait.sh celery -A app.collect worker -l info"
+    environment:
+      SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@db:5432/ogn"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      BACKENDHOST: backend
+      BACKENDPORT: 80
+  beat:
+    restart: always
+    image: ogn:latest
+    networks:
+      - ogn
+    depends_on:
+      - db
+      - redis
+      - backend
+    command: "./wait.sh celery -A app.collect beat -l info"
+    environment:
+      SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@db:5432/ogn"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      BACKENDHOST: backend
+      BACKENDPORT: 80
+  flower:
+    restart: always
+    image: mher/flower
+    networks:
+      - ogn
+    depends_on:
+      - redis
+    ports:
+      - "0.0.0.0:5555:5555"
+    command: "flower --port=5555 -l info --broker=redis://redis:6379/0"
+
+networks:
+  ogn:
+    driver: bridge
