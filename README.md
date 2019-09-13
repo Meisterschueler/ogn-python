@@ -34,11 +34,11 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
     apt-get install redis-server
     ```
 
-5.	Set the configuration.
-	Let the environment variable `OGN_CONFIG_MODULE` point to the configuration file:
+5.	Optional: Custom configuration file
+	Write a custom configuration file and let the environment variable `OGN_CONFIG_MODULE` point to the configuration file:
 
 	```
-	export OGN_CONFIG_MODULE="config/default.py"
+	export OGN_CONFIG_MODULE="config/my_custom_configuration.py"
 	```
 
 6. Create database
@@ -95,7 +95,13 @@ For best performance you should use [TimescaleDB](https://www.timescale.com), wh
 	```
 	flask database import_ddb
 	```
-	
+
+14. Optional: Use supervisord
+	You can use [Supervisor](http://supervisord.org/) to control the complete system. In the directory deployment/supervisor
+	we have some configuration files to feed the database (ogn-feed), run the celery worker (celeryd), the celery beat
+	(celerybeatd), the celery monitor (flower), and the python wsgi server (gunicorn). All files assume that
+	we use a virtual environment in "/home/pi/ogn-python/venv". Please edit if necessary.
+
 There is also a [Vagrant](https://www.vagrantup.com/) environment for the development of ogn-python.
 You can create and start this virtual machine with `vagrant up` and login with `vagrant ssh`.
 The code of ogn-python will be available in the shared folder `/vagrant`.
@@ -116,13 +122,13 @@ The following scripts run in the foreground and should be deamonized
 - Start a task server (make sure redis is up and running)
 
   ```
-  celery -A ogn_python.collect worker -l info
+  celery -A app.collect worker -l info
   ```
 
 - Start the task scheduler (make sure a task server is up and running)
 
   ```
-  celery -A ogn_python.collect beat -l info
+  celery -A app.collect beat -l info
   ```
 
 ### Flask - Command Line Interface
@@ -161,20 +167,20 @@ Most commands are command groups, so if you execute this command you will get fu
 
 ### Available tasks
 
-- `ogn_python.collect.celery.update_takeoff_landings` - Compute takeoffs and landings.
-- `ogn_python.collect.celery.update_logbook_entries` - Add/update logbook entries.
-- `ogn_python.collect.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
-- `ogn_python.collect.celery.import_ddb` - Import registered devices from the DDB.
-- `ogn_python.collect.celery.update_receivers_country_code` - Update country code in receivers table if None.
-- `ogn_python.collect.celery.purge_old_data` - Delete AircraftBeacons and ReceiverBeacons older than given 'age'.
-- `ogn_python.collect.celery.update_stats` - Create stats and update receivers/devices with stats.
-- `ogn_python.collect.celery.update_ognrange` - Create receiver coverage stats for Melissas ognrange.
+- `app.collect.celery.update_takeoff_landings` - Compute takeoffs and landings.
+- `app.collect.celery.update_logbook_entries` - Add/update logbook entries.
+- `app.collect.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
+- `app.collect.celery.import_ddb` - Import registered devices from the DDB.
+- `app.collect.celery.update_receivers_country_code` - Update country code in receivers table if None.
+- `app.collect.celery.purge_old_data` - Delete AircraftBeacons and ReceiverBeacons older than given 'age'.
+- `app.collect.celery.update_stats` - Create stats and update receivers/devices with stats.
+- `app.collect.celery.update_ognrange` - Create receiver coverage stats for Melissas ognrange.
 
 If the task server is up and running, tasks could be started manually. Here we compute takeoffs and landings for the past 90 minutes:
 
 ```
 python3
->>>from ogn_python.collect.celery import update_takeoff_landings
+>>>from app.collect.celery import update_takeoff_landings
 >>>update_takeoff_landings.delay(last_minutes=90)
 ```
 
