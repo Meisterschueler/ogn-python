@@ -4,6 +4,7 @@ from io import StringIO
 from datetime import datetime, timedelta
 
 from aerofiles.seeyou import Reader
+from aerofiles.errors import ParserError
 from ogn.parser.utils import FEETS_TO_METER
 import requests
 
@@ -18,6 +19,8 @@ address_prefixes = {"F": "FLR", "O": "OGN", "I": "ICA"}
 
 nm2m = 1852
 mi2m = 1609.34
+
+missing_frequency = 0.0
 
 
 def get_days(start, end):
@@ -93,6 +96,17 @@ def get_airports(cupfile):
     with open(cupfile) as f:
         for line in f:
             try:
+                # Do not trigger execption for empty frequency
+                components = line.split(',')
+                fixed_frequency = False
+                if len(components) == 11 and (components[-2] == '""' or components[-2] == ''):
+                    print("Airport: ", line, " -> set missing frequency to 0.0")
+                    # Reader uses a regular expression for checking the frequency, let's provide
+                    # it with a good value
+                    components[-2] = '"130.00"'
+                    line = ','.join(components)
+                    fixed_frequency = True
+
                 for waypoint in Reader([line]):
                     if waypoint["style"] > 5:  # reject unlandable places
                         continue
@@ -114,10 +128,10 @@ def get_airports(cupfile):
                         airport.altitude = airport.altitude * nm2m
                     elif waypoint["runway_length"]["unit"] == "ml":
                         airport.altitude = airport.altitude * mi2m
-                    airport.frequency = waypoint["frequency"]
+                    airport.frequency = missing_frequency if fixed_frequency else waypoint["frequency"]
 
                     airports.append(airport)
-            except AttributeError as e:
+            except ParserError as e:
                 print("Failed to parse line: {} {}".format(line, e))
 
     return airports
