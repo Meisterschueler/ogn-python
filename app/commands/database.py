@@ -2,11 +2,11 @@ from flask import current_app
 from flask.cli import AppGroup
 import click
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy.sql import func
 
 from app.collect.database import update_device_infos, update_country_code
-from app.model import *
+from app.model import AircraftBeacon, DeviceInfoOrigin
 from app.utils import get_airports, get_days
 
 from app import db

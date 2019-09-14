@@ -18,6 +18,7 @@ from app.collect.stats import (
 )
 
 from app.collect.ognrange import update_entries as update_receiver_coverages
+from app.model import Device
 
 from app import db
 
@@ -56,9 +57,6 @@ def create_country(start, end):
     for single_date in pbar:
         pbar.set_description(datetime.strftime(single_date, "%Y-%m-%d"))
         result = create_country_stats(session=db.session, date=single_date)
-
-
-from app.model import *
 
 
 @user_cli.command("update_devices_name")

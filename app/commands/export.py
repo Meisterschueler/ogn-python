@@ -6,7 +6,7 @@ import re
 import csv
 
 from aerofiles.igc import Writer
-from app.model import *
+from app.model import AircraftBeacon, Device
 from app import db
 
 user_cli = AppGroup("export")
@@ -64,7 +64,7 @@ def igc(address, date):
         print("Address {} not valid.".format(address))
         return
 
-    if not re.match("\d{4}-\d{2}-\d{2}", date):
+    if not re.match(r"\d{4}-\d{2}-\d{2}", date):
         print("Date {} not valid.".format(date))
         return
 

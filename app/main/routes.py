@@ -4,7 +4,7 @@ from flask import request, render_template, send_file
 
 from app import db
 from app import cache
-from app.model import *
+from app.model import Airport, Country, Device, Logbook, Receiver, ReceiverStats
 
 from app.main import bp
 
