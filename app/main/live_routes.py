@@ -1,11 +1,9 @@
-from flask import request, render_template, make_response, send_file, current_app
+from flask import request, render_template, current_app
 from flask_cors import cross_origin
 
 from app.backend.liveglidernet import rec, lxml
-from app import db
-from app import cache
-
 from app.main import bp
+
 
 @bp.route("/live.html")
 @cross_origin()

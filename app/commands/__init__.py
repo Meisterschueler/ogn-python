@@ -5,6 +5,7 @@ from .gateway import user_cli as gateway_cli
 from .logbook import user_cli as logbook_cli
 from .stats import user_cli as stats_cli
 
+
 def register(app):
     app.cli.add_command(database_cli)
     app.cli.add_command(export_cli)

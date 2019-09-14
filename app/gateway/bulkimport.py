@@ -11,7 +11,7 @@ from ogn.parser import parse, ParseError
 
 from app.model import AircraftBeacon, ReceiverBeacon, Location
 from app.utils import open_file
-from app.gateway.process_tools import *
+from app.gateway.process_tools import create_indices, add_missing_devices, add_missing_receivers, update_aircraft_beacons, update_receiver_beacons, update_receiver_location, transfer_aircraft_beacons, transfer_receiver_beacons, delete_aircraft_beacons, delete_receiver_beacons, update_aircraft_beacons_bigdata, update_receiver_beacons_bigdata, create_tables
 
 from app import db
 
@@ -264,26 +264,28 @@ def get_aircraft_beacons_postfixes():
     """Get the postfixes from imported aircraft_beacons logs."""
 
     postfixes = db.session.execute(
-        """
+        r"""
         SELECT DISTINCT(RIGHT(tablename, 8))
         FROM pg_catalog.pg_tables
         WHERE schemaname = 'public' AND tablename LIKE 'aircraft\_beacons\_20______'
         ORDER BY RIGHT(tablename, 10);
-    """
+        """
     ).fetchall()
 
     return [postfix for postfix in postfixes]
 
 
 def export_to_path(postfix):
-    import os, gzip
+    import os
+    import gzip
 
-    aircraft_beacons_file = os.path.join(path, "aircraft_beacons_{0}.csv.gz".format(postfix))
-    with gzip.open(aircraft_beacons_file, "wt", encoding="utf-8") as gzip_file:
-        self.cur.copy_expert("COPY ({}) TO STDOUT WITH (DELIMITER ',', FORMAT CSV, HEADER, ENCODING 'UTF-8');".format(self.get_merged_aircraft_beacons_subquery()), gzip_file)
-    receiver_beacons_file = os.path.join(path, "receiver_beacons_{0}.csv.gz".format(postfix))
-    with gzip.open(receiver_beacons_file, "wt") as gzip_file:
-        self.cur.copy_expert("COPY ({}) TO STDOUT WITH (DELIMITER ',', FORMAT CSV, HEADER, ENCODING 'UTF-8');".format(self.get_merged_receiver_beacons_subquery()), gzip_file)
+    pass  # wtf is this?
+    # aircraft_beacons_file = os.path.join(path, "aircraft_beacons_{0}.csv.gz".format(postfix))
+    # with gzip.open(aircraft_beacons_file, "wt", encoding="utf-8") as gzip_file:
+    #     self.cur.copy_expert("COPY ({}) TO STDOUT WITH (DELIMITER ',', FORMAT CSV, HEADER, ENCODING 'UTF-8');".format(self.get_merged_aircraft_beacons_subquery()), gzip_file)
+    # receiver_beacons_file = os.path.join(path, "receiver_beacons_{0}.csv.gz".format(postfix))
+    # with gzip.open(receiver_beacons_file, "wt") as gzip_file:
+    #     self.cur.copy_expert("COPY ({}) TO STDOUT WITH (DELIMITER ',', FORMAT CSV, HEADER, ENCODING 'UTF-8');".format(self.get_merged_receiver_beacons_subquery()), gzip_file)
 
 
 def convert(sourcefile, datestr, saver):
@@ -315,7 +317,8 @@ def convert(sourcefile, datestr, saver):
         if message is None:
             continue
 
-        dictfilt = lambda x, y: dict([(i, x[i]) for i in x if i in set(y)])
+        def dictfilt(x, y):
+            return dict([(i, x[i]) for i in x if i in set(y)])
 
         try:
             if message["beacon_type"] in AIRCRAFT_BEACON_TYPES:
@@ -385,11 +388,11 @@ def file_import(path):
     results = list()
     for (root, dirs, files) in os.walk(path):
         for file in sorted(files):
-            match = re.match("OGN_log\.txt_([0-9]{4}\-[0-9]{2}\-[0-9]{2})\.gz$", file)
+            match = re.match(r"OGN_log\.txt_([0-9]{4}\-[0-9]{2}\-[0-9]{2})\.gz$", file)
             if match:
                 results.append({"filepath": os.path.join(root, file), "datestr": match.group(1)})
 
-    with LogfileDbSaver() as saver:
+    with LogfileDbSaver() as saver:     # noqa: F821
         already_imported = saver.get_datestrs()
 
         results = list(filter(lambda x: x["datestr"] not in already_imported, results))

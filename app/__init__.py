@@ -9,7 +9,9 @@ from app.flask_celery import make_celery
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
+migrate = Migrate()
 cache = Cache()
+
 
 def create_app(config_name='development'):
     # Initialize Flask
@@ -25,14 +27,12 @@ def create_app(config_name='development'):
     # Initialize other things
     bootstrap.init_app(app)
     db.init_app(app)
+    migrate.init_app(app, db)
     cache.init_app(app)
-    
-    #migrate = Migrate(app, db)
-    #celery = make_celery(app)
-    
+
+    # celery = make_celery(app)
+
     from app.main import bp as bp_main
     app.register_blueprint(bp_main)
 
-    #from app import commands
-    
     return app
