@@ -1,6 +1,5 @@
 from flask import current_app
 from flask.cli import AppGroup
-import click
 
 from ogn.client import AprsClient
 from app.gateway.bulkimport import ContinuousDbFeeder

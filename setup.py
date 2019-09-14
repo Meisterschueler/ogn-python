@@ -51,13 +51,10 @@ setup(
         'tqdm==4.35.0',
 	'requests==2.22.0',
     ],
-    extras_require={
-        'dev': [
-            'nose==1.3.7',
-            'coveralls==1.8.2',
-            'flake8==3.7.8',
-            'xmlunittest==0.4.0'
-        ]
-    },
+    test_require=[
+        'pytest==5.0.1',
+        'flake8==1.1.1',
+        'xmlunittest==0.4.0',
+    ],
     zip_safe=False
 )

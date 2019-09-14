@@ -1,5 +1,5 @@
 from sqlalchemy.ext.hybrid import hybrid_property
-
+from sqlalchemy.sql import null, case
 from app import db
 
 

@@ -171,7 +171,7 @@ def update_max_altitudes(session, date, logger=None):
     logger.info("Update logbook max altitude.")
 
     if session is None:
-        session = app.session
+        session = current_app.session
 
     (start, end) = date_to_timestamps(date)
 
