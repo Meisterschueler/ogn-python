@@ -1,22 +1,7 @@
-class DeviceInfoOrigin:
-    unknown = 0
-    ogn_ddb = 1
-    flarmnet = 2
-    user_defined = 3
+import enum
 
-    def __init__(self, origin=0):
-        if origin in [0, 1, 2, 3]:
-            self.origin = origin
-        else:
-            raise ValueError("no address origin with id {} known".format(origin))
-
-    def name(self):
-        if self.origin == self.unknown:
-            return "unknown"
-        elif self.origin == self.ogn_ddb:
-            return "OGN-DDB"
-        elif self.origin == self.flarmnet:
-            return "FlarmNet"
-        elif self.origin == self.user_defined:
-            return "user-defined"
-        return ""
+class DeviceInfoOrigin(enum.Enum):
+    UNKNOWN = 0
+    OGN_DDB = 1
+    FLARMNET = 2
+    USER_DEFINED = 3
