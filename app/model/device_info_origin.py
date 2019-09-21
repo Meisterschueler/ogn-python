@@ -1,5 +1,6 @@
 import enum
 
+
 class DeviceInfoOrigin(enum.Enum):
     UNKNOWN = 0
     OGN_DDB = 1
