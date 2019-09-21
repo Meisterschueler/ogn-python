@@ -5,12 +5,11 @@ from flask_migrate import Migrate
 from flask_caching import Cache
 from celery import Celery
 
-from app.flask_celery import make_celery
-
 bootstrap = Bootstrap()
 db = SQLAlchemy()
 migrate = Migrate()
 cache = Cache()
+celery = Celery(__name__, broker='redis://localhost:6379/0')
 
 
 def create_app(config_name='development'):
@@ -23,14 +22,13 @@ def create_app(config_name='development'):
     else:
         app.config.from_object('app.config.default')
     app.config.from_envvar("OGN_CONFIG_MODULE", silent=True)
+    celery.config_from_object(app.config)
 
     # Initialize other things
     bootstrap.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
     cache.init_app(app)
-
-    # celery = make_celery(app)
 
     from app.main import bp as bp_main
     app.register_blueprint(bp_main)
