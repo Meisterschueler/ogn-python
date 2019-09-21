@@ -94,7 +94,7 @@ def import_ddb():
     """Import registered devices from the DDB."""
 
     print("Import registered devices fom the DDB...")
-    counter = update_device_infos(db.session, DeviceInfoOrigin.ogn_ddb)
+    counter = update_device_infos(db.session, DeviceInfoOrigin.OGN_DDB)
     print("Imported %i devices." % counter)
 
 
@@ -104,7 +104,7 @@ def import_file(path="tests/custom_ddb.txt"):
     """Import registered devices from a local file."""
 
     print("Import registered devices from '{}'...".format(path))
-    counter = update_device_infos(db.session, DeviceInfoOrigin.user_defined, path=path)
+    counter = update_device_infos(db.session, DeviceInfoOrigin.USER_DEFINED, path=path)
     print("Imported %i devices." % counter)
 
 
@@ -114,7 +114,7 @@ def import_flarmnet(path=None):
     """Import registered devices from a local file."""
 
     print("Import registered devices from '{}'...".format("internet" if path is None else path))
-    counter = update_device_infos(db.session, DeviceInfoOrigin.flarmnet, path=path)
+    counter = update_device_infos(db.session, DeviceInfoOrigin.FLARMNET, path=path)
     print("Imported %i devices." % counter)
 
 

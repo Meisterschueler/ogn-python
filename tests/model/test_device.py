@@ -4,13 +4,14 @@ import unittest
 
 from tests.base import TestBaseDB, db
 from app.model import Device, DeviceInfo
+from app.model.device_info_origin import DeviceInfoOrigin
 
 
 class TestStringMethods(TestBaseDB):
     def test_device_info(self):
         device = Device(name="FLRDD0815", address="DD0815")
-        device_info1 = DeviceInfo(address="DD0815", address_origin=1, registration="D-0815")
-        device_info2 = DeviceInfo(address="DD0815", address_origin=2, registration="15")
+        device_info1 = DeviceInfo(address="DD0815", address_origin=DeviceInfoOrigin.OGN_DDB, registration="D-0815")
+        device_info2 = DeviceInfo(address="DD0815", address_origin=DeviceInfoOrigin.FLARMNET, registration="15")
 
         db.session.add(device)
         db.session.add(device_info1)

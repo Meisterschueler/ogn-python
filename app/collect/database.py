@@ -22,7 +22,7 @@ def upsert(session, model, rows, update_cols):
 
 
 def update_device_infos(session, address_origin, path=None):
-    if address_origin == DeviceInfoOrigin.flarmnet:
+    if address_origin == DeviceInfoOrigin.FLARMNET:
         device_infos = get_flarmnet(fln_file=path)
     else:
         device_infos = get_ddb(csv_file=path)
@@ -46,7 +46,7 @@ def import_ddb(session, logger=None):
         logger = current_app.logger
 
     logger.info("Import registered devices fom the DDB...")
-    counter = update_device_infos(session, DeviceInfoOrigin.ogn_ddb)
+    counter = update_device_infos(session, DeviceInfoOrigin.OGN_DDB)
 
     finish_message = "DeviceInfo: {} inserted.".format(counter)
     logger.info(finish_message)

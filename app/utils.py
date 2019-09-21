@@ -31,7 +31,7 @@ def date_to_timestamps(date):
     return (start, end)
 
 
-def get_ddb(csv_file=None, address_origin=DeviceInfoOrigin.unknown):
+def get_ddb(csv_file=None, address_origin=DeviceInfoOrigin.UNKNOWN):
     if csv_file is None:
         r = requests.get(DDB_URL)
         rows = "\n".join(i for i in r.text.splitlines() if i[0] != "#")
@@ -59,7 +59,7 @@ def get_ddb(csv_file=None, address_origin=DeviceInfoOrigin.unknown):
     return device_infos
 
 
-def get_flarmnet(fln_file=None, address_origin=DeviceInfoOrigin.flarmnet):
+def get_flarmnet(fln_file=None, address_origin=DeviceInfoOrigin.FLARMNET):
     if fln_file is None:
         r = requests.get(FLARMNET_URL)
         rows = [bytes.fromhex(line).decode("latin1") for line in r.text.split("\n") if len(line) == 172]
