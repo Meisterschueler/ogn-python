@@ -17,7 +17,7 @@
 	<tr>
 	  <td><a href="{{ url_for('main.device_detail', id=device.id) }}">{{ device.address }}</a></td>
 	  <td>{% if device.info is not none %}{{ device.info.registration }}{% else %} - {% endif %}</td>
-	  <td {% if device.software_version and device.software_version < 6.6 %}class="text-danger"{% endif %}>{% if device.software_version is not none %}{{ device.software_version }}{% else %} - {% endif %}</td>
+	  <td {% if device.software_version and device.software_version < 6.6 %}class="danger"{% endif %}>{% if device.software_version is not none %}{{ device.software_version }}{% else %} - {% endif %}</td>
 	</tr>
 	{% endfor %}
   </table>
