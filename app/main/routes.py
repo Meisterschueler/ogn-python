@@ -51,7 +51,7 @@ def index():
 
 @bp.route("/devices.html", methods=["GET", "POST"])
 def devices():
-    devices = db.session.query(Device).order_by(Device.address).limit(100)
+    devices = db.session.query(Device).order_by(Device.address)
     return render_template("devices.html", devices=devices)
 
 
