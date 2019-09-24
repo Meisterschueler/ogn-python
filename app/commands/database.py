@@ -52,8 +52,6 @@ def init():
     db.session.commit()
     db.create_all()
 
-    # alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
-    # command.stamp(alembic_cfg, "head")
     print("Done.")
 
 
@@ -66,16 +64,7 @@ def init_timescaledb():
     db.session.execute("SELECT create_hypertable('receiver_beacons', 'timestamp', chunk_target_size => '2GB', if_not_exists => TRUE);")
     db.session.commit()
 
-
-@user_cli.command("upgrade")
-def upgrade():
-    """Upgrade database to the latest version."""
-
-    from alembic.config import Config
-    from alembic import command
-
-    alembic_cfg = Config(ALEMBIC_CONFIG_FILE)
-    command.upgrade(alembic_cfg, "head")
+    print("Done.")
 
 
 @user_cli.command("drop")
