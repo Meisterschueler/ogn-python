@@ -1,7 +1,8 @@
 from sqlalchemy.sql import func
-from .beacon import Beacon
-
 from app import db
+
+from .beacon import Beacon
+from .aircraft_type import AircraftType
 
 
 class AircraftBeacon(Beacon):
@@ -9,7 +10,7 @@ class AircraftBeacon(Beacon):
 
     # Flarm specific data
     address_type = db.Column(db.SmallInteger)
-    aircraft_type = db.Column(db.SmallInteger)
+    aircraft_type = db.Column(db.Enum(AircraftType), nullable=False, default=AircraftType.UNKNOWN)
     stealth = db.Column(db.Boolean)
     address = db.Column(db.String)
     climb_rate = db.Column(db.Float(precision=2))

@@ -9,7 +9,7 @@ from mgrs import MGRS
 
 from ogn.parser import parse, ParseError
 
-from app.model import AircraftBeacon, ReceiverBeacon, Location
+from app.model import AircraftBeacon, AircraftType, ReceiverBeacon, Location
 from app.utils import open_file
 from app.gateway.process_tools import create_indices, add_missing_devices, add_missing_receivers, update_aircraft_beacons, update_receiver_beacons, update_receiver_location, transfer_aircraft_beacons, transfer_receiver_beacons, delete_aircraft_beacons, delete_receiver_beacons, update_aircraft_beacons_bigdata, update_receiver_beacons_bigdata, create_tables
 
@@ -114,6 +114,9 @@ def string_to_message(raw_string, reference_date):
             location_mgrs = myMGRS.toMGRS(latitude, longitude).decode("utf-8")
             message["location_mgrs"] = location_mgrs
             message["location_mgrs_short"] = location_mgrs[0:5] + location_mgrs[5:7] + location_mgrs[10:12]
+
+        if message["beacon_type"] in AIRCRAFT_BEACON_TYPES and "aircraft_type" in message:
+            message["aircraft_type"] = AircraftType(message["aircraft_type"]).name if message["aircraft_type"] else AircraftType.UNKNOWN.name
 
         if message["beacon_type"] in AIRCRAFT_BEACON_TYPES and "gps_quality" in message:
             if message["gps_quality"] is not None and "horizontal" in message["gps_quality"]:
