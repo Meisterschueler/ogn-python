@@ -40,7 +40,7 @@ setup(
         'Flask-Caching==1.7.2',
         'geopy==1.20.0',
         'celery==4.3.0',
-	'redis==3.3.8',
+	'redis==3.3.10',
         'aerofiles==1.0.0',
         'geoalchemy2==0.6.3',
         'shapely==1.6.4.post2',
