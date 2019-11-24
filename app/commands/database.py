@@ -60,8 +60,8 @@ def init_timescaledb():
     """Initialize TimescaleDB features."""
 
     db.session.execute("CREATE EXTENSION IF NOT EXISTS timescaledb;")
-    db.session.execute("SELECT create_hypertable('aircraft_beacons', 'timestamp', chunk_target_size => '2GB', if_not_exists => TRUE);")
-    db.session.execute("SELECT create_hypertable('receiver_beacons', 'timestamp', chunk_target_size => '2GB', if_not_exists => TRUE);")
+    db.session.execute("SELECT create_hypertable('aircraft_beacons', 'timestamp', chunk_time_interval => interval '6 hours', if_not_exists => TRUE);")
+    db.session.execute("SELECT create_hypertable('receiver_beacons', 'timestamp', chunk_time_interval => interval '6 hours', if_not_exists => TRUE);")
     db.session.commit()
 
     print("Done.")
