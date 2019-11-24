@@ -1,7 +1,4 @@
-from sqlalchemy.sql import func
 from .beacon import Beacon
-
-from app import db
 
 
 class ReceiverBeacon(Beacon):
@@ -13,7 +10,14 @@ class ReceiverBeacon(Beacon):
     ground_speed = None
 
     def __repr__(self):
-        return "<ReceiverBeacon {name}: {location},{altitude}{dstcall}{receiver_name}{timestamp}>".format(**self)
+        return "<ReceiverBeacon %s: %s,%s,%s,%s,%s>" % (
+            self.name,
+            self.location,
+            self.altitude,
+            self.dstcall,
+            self.receiver_name,
+            self.timestamp,
+        )
 
     @classmethod
     def get_columns(self):

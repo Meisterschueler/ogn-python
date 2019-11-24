@@ -5,7 +5,7 @@ from sqlalchemy import and_, or_, insert, between, exists
 from sqlalchemy.sql import func, null
 from sqlalchemy.sql.expression import case
 
-from app.model import AircraftBeacon, TakeoffLanding, Airport
+from app.model import AircraftBeacon, Device, TakeoffLanding, Airport
 
 
 def update_entries(session, start, end, logger=None):
@@ -38,11 +38,11 @@ def update_entries(session, start, end, logger=None):
     radius = 5000  # the points must not exceed this radius around the 2nd point
     max_agl = 200  # takeoff / landing must not exceed this altitude AGL
 
-    # get beacons for selected time range, one per device_id and timestamp
+    # get beacons for selected time range, one per address and timestamp
     sq = (
         session.query(AircraftBeacon)
-        .distinct(AircraftBeacon.device_id, AircraftBeacon.timestamp)
-        .order_by(AircraftBeacon.device_id, AircraftBeacon.timestamp, AircraftBeacon.error_count)
+        .distinct(AircraftBeacon.address, AircraftBeacon.timestamp)
+        .order_by(AircraftBeacon.address, AircraftBeacon.timestamp, AircraftBeacon.error_count)
         .filter(AircraftBeacon.agl < max_agl)
         .filter(between(AircraftBeacon.timestamp, start, end))
         .subquery()
@@ -50,33 +50,33 @@ def update_entries(session, start, end, logger=None):
 
     # make a query with current, previous and next position
     sq2 = session.query(
-        sq.c.device_id,
-        func.lag(sq.c.device_id).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("device_id_prev"),
-        func.lead(sq.c.device_id).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("device_id_next"),
+        sq.c.address,
+        func.lag(sq.c.address).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("address_prev"),
+        func.lead(sq.c.address).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("address_next"),
         sq.c.timestamp,
-        func.lag(sq.c.timestamp).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("timestamp_prev"),
-        func.lead(sq.c.timestamp).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("timestamp_next"),
+        func.lag(sq.c.timestamp).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("timestamp_prev"),
+        func.lead(sq.c.timestamp).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("timestamp_next"),
         sq.c.location,
-        func.lag(sq.c.location).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("location_wkt_prev"),
-        func.lead(sq.c.location).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("location_wkt_next"),
+        func.lag(sq.c.location).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("location_wkt_prev"),
+        func.lead(sq.c.location).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("location_wkt_next"),
         sq.c.track,
-        func.lag(sq.c.track).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("track_prev"),
-        func.lead(sq.c.track).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("track_next"),
+        func.lag(sq.c.track).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("track_prev"),
+        func.lead(sq.c.track).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("track_next"),
         sq.c.ground_speed,
-        func.lag(sq.c.ground_speed).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("ground_speed_prev"),
-        func.lead(sq.c.ground_speed).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("ground_speed_next"),
+        func.lag(sq.c.ground_speed).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("ground_speed_prev"),
+        func.lead(sq.c.ground_speed).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("ground_speed_next"),
         sq.c.altitude,
-        func.lag(sq.c.altitude).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("altitude_prev"),
-        func.lead(sq.c.altitude).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("altitude_next"),
+        func.lag(sq.c.altitude).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("altitude_prev"),
+        func.lead(sq.c.altitude).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("altitude_next"),
         sq.c.climb_rate,
-        func.lag(sq.c.climb_rate).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("climb_rate_prev"),
-        func.lead(sq.c.climb_rate).over(partition_by=sq.c.device_id, order_by=sq.c.timestamp).label("climb_rate_next"),
+        func.lag(sq.c.climb_rate).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("climb_rate_prev"),
+        func.lead(sq.c.climb_rate).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("climb_rate_next"),
     ).subquery()
 
     # consider only positions with predecessor and successor and limit distance and duration between points
     sq3 = (
         session.query(sq2)
-        .filter(and_(sq2.c.device_id_prev != null(), sq2.c.device_id_next != null()))
+        .filter(and_(sq2.c.address_prev != null(), sq2.c.address_next != null()))
         .filter(and_(func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_prev) < radius, func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_next) < radius))
         .filter(sq2.c.timestamp_next - sq2.c.timestamp_prev < timedelta(seconds=duration))
         .subquery()
@@ -98,7 +98,7 @@ def update_entries(session, start, end, logger=None):
             sq3.c.ground_speed,
             sq3.c.altitude,
             case([(sq3.c.ground_speed > takeoff_speed, True), (sq3.c.ground_speed < landing_speed, False)]).label("is_takeoff"),
-            sq3.c.device_id,
+            sq3.c.address,
         )
         .filter(
             or_(
@@ -109,20 +109,22 @@ def update_entries(session, start, end, logger=None):
         .subquery()
     )
 
-    # consider them if the are near airports ...
+    # get the device id instead of the address and consider them if the are near airports ...
     sq5 = (
         session.query(
-            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, sq4.c.device_id, Airport.id.label("airport_id"), func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance")
+            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, Device.id.label("device_id"), Airport.id.label("airport_id"), func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance")
         )
-        .filter(and_(func.ST_Within(sq4.c.location, Airport.border), between(Airport.style, 2, 5)))
+        .filter(and_(sq4.c.address == Device.address,
+                     func.ST_Within(sq4.c.location, Airport.border),
+                     between(Airport.style, 2, 5)))
         .subquery()
     )
 
     # ... and take the nearest airport
     sq6 = (
         session.query(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_id)
-        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id)
-        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_distance)
+        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.address)
+        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.address, sq5.c.airport_distance)
         .subquery()
     )
 
