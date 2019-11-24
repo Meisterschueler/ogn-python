@@ -40,7 +40,7 @@ setup(
         'Flask-Caching==1.7.2',
         'geopy==1.20.0',
         'celery==4.3.0',
-	'redis==3.3.11',
+        'redis==3.3.11',
         'aerofiles==1.0.0',
         'geoalchemy2==0.6.3',
         'shapely==1.6.4.post2',
@@ -49,7 +49,8 @@ setup(
         'mgrs==1.3.5',
         'xmlunittest==0.5.0',
         'tqdm==4.38.0',
-	'requests==2.22.0',
+        'requests==2.22.0',
+        'flower==0.9.3'
     ],
     test_require=[
         'pytest==5.0.1',
