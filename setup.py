@@ -37,7 +37,7 @@ setup(
         'Flask-Migrate==2.5.2',
         'Flask-Bootstrap==3.3.7.1',
         'Flask-WTF==0.14.2',
-        'Flask-Caching==1.7.2',
+        'Flask-Caching==1.8.0',
         'geopy==1.20.0',
         'celery==4.3.0',
 	'redis==3.3.11',
