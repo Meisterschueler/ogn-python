@@ -36,6 +36,7 @@ class TestOGNrange(TestBaseDB):
         db.session.add(self.ab02)
         db.session.commit()
 
+    @unittest.skip('stats will replaced by timescaledb aggregates')
     def test_update_receiver_coverage(self):
         update_entries(db.session, date=date(2017, 12, 10))
 

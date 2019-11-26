@@ -123,8 +123,8 @@ def update_entries(session, start, end, logger=None):
     # ... and take the nearest airport
     sq6 = (
         session.query(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_id)
-        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.address)
-        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.address, sq5.c.airport_distance)
+        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id)
+        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_distance)
         .subquery()
     )
 

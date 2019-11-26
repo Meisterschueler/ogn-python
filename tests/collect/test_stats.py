@@ -33,6 +33,7 @@ class TestStats(TestBaseDB):
         db.session.add(self.d01)
         db.session.commit()
 
+    @unittest.skip('stats will replaced by timescaledb aggregates')
     def test_create_device_stats(self):
         # Compute 1st beacon
         self.ab01.device = self.d01

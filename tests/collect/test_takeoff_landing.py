@@ -162,6 +162,7 @@ class TestTakeoffLanding(TestBaseDB):
         db.session.execute(
             "INSERT INTO aircraft_beacons(name, receiver_name, address, aircraft_type, location, altitude, timestamp, track, ground_speed, climb_rate, turn_rate) VALUES('FLRDDEFF7', 'Koenigsdf', 'DDEFF7', 'GLIDER_OR_MOTOR_GLIDER','0101000020E610000013AB192CAFEF264074029A081BEA4740',603,'2016-07-02 10:50:16',0,0,-0.096520193,0)"
         )
+        db.session.execute("UPDATE aircraft_beacons SET agl = altitude - 602;")
         db.session.commit()
 
         # find the takeoff and the landing
@@ -386,6 +387,7 @@ class TestTakeoffLanding(TestBaseDB):
         db.session.execute(
             "INSERT INTO aircraft_beacons(name, receiver_name, address, aircraft_type, location, altitude, timestamp, track, ground_speed, climb_rate, turn_rate) VALUES('FLRDDAC7C','Koenigsd2','DDAC7C','GLIDER_OR_MOTOR_GLIDER','0101000020E61000001FF46C567DEE2640A01A2FDD24EA4740',593,'2019-04-13 09:25:59',0,0,-0.096519999,0)"
         )
+        db.session.execute("UPDATE aircraft_beacons SET agl = altitude - 602;")
         db.session.commit()
 
         # find the takeoff and the landing
