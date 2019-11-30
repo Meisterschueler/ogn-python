@@ -1,5 +1,7 @@
 from app import db
 
+from .aircraft_type import AircraftType
+
 
 class DeviceStats(db.Model):
     __tablename__ = "device_stats"
@@ -12,7 +14,7 @@ class DeviceStats(db.Model):
     name = db.Column(db.String)
     firstseen = db.Column(db.DateTime)
     lastseen = db.Column(db.DateTime)
-    aircraft_type = db.Column(db.SmallInteger)
+    aircraft_type = db.Column(db.Enum(AircraftType), nullable=False, default=AircraftType.UNKNOWN)
     stealth = db.Column(db.Boolean)
     software_version = db.Column(db.Float(precision=2))
     hardware_version = db.Column(db.SmallInteger)

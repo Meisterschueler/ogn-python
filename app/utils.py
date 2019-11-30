@@ -7,7 +7,7 @@ from aerofiles.seeyou import Reader
 from ogn.parser.utils import FEETS_TO_METER
 import requests
 
-from .model import DeviceInfoOrigin, DeviceInfo, Airport, Location
+from .model import AircraftType, DeviceInfoOrigin, DeviceInfo, Airport, Location
 
 
 DDB_URL = "http://ddb.glidernet.org/download/?t=1"
@@ -51,7 +51,7 @@ def get_ddb(csv_file=None, address_origin=DeviceInfoOrigin.UNKNOWN):
         device_info.competition = row[4]
         device_info.tracked = row[5] == "Y"
         device_info.identified = row[6] == "Y"
-        device_info.aircraft_type = int(row[7])
+        device_info.aircraft_type = AircraftType(int(row[7]))
         device_info.address_origin = address_origin
 
         device_infos.append(device_info)

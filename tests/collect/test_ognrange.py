@@ -27,15 +27,16 @@ class TestOGNrange(TestBaseDB):
 
         # Create beacons and insert
         self.ab01 = AircraftBeacon(
-            name="FLRDD0815", receiver_name="Koenigsdf", device_id=self.dd0815.id, receiver_id=self.r01.id, timestamp="2017-12-10 10:00:00", location_mgrs_short="89ABC1267", altitude=800
+            name="FLRDD0815", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:00", location_mgrs_short="89ABC1267", altitude=800
         )
         self.ab02 = AircraftBeacon(
-            name="FLRDD0815", receiver_name="Koenigsdf", device_id=self.dd0815.id, receiver_id=self.r01.id, timestamp="2017-12-10 10:00:01", location_mgrs_short="89ABC1267", altitude=850
+            name="FLRDD0815", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:01", location_mgrs_short="89ABC1267", altitude=850
         )
         db.session.add(self.ab01)
         db.session.add(self.ab02)
         db.session.commit()
 
+    @unittest.skip('stats will replaced by timescaledb aggregates')
     def test_update_receiver_coverage(self):
         update_entries(db.session, date=date(2017, 12, 10))
 

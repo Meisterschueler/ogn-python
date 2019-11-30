@@ -1,16 +1,23 @@
-class AircraftType:
-    unknown = 0
-    glider_or_motor_glider = 1
-    tow_tug_plane = 2
-    helicopter_rotorcraft = 3
-    parachute = 4
-    drop_plane = 5
-    hang_glider = 6
-    para_glider = 7
-    powered_aircraft = 8
-    jet_aircraft = 9
-    flying_saucer = 10
-    balloon = 11
-    airship = 12
-    unmanned_aerial_vehicle = 13
-    static_object = 15
+import enum
+
+
+class AircraftType(enum.Enum):
+    UNKNOWN = 0
+    GLIDER_OR_MOTOR_GLIDER = 1
+    TOW_TUG_PLANE = 2
+    HELICOPTER_ROTORCRAFT = 3
+    PARACHUTE = 4
+    DROP_PLANE = 5
+    HANG_GLIDER = 6
+    PARA_GLIDER = 7
+    POWERED_AIRCRAFT = 8
+    JET_AIRCRAFT = 9
+    FLYING_SAUCER = 10
+    BALLOON = 11
+    AIRSHIP = 12
+    UNMANNED_AERIAL_VEHICLE = 13
+    STATIC_OBJECT = 15
+
+    @staticmethod
+    def list():
+        return list(map(lambda c: c.value, AircraftType))

@@ -20,9 +20,9 @@ class TestStats(TestBaseDB):
         self.ab05 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:05")
         self.ab06 = AircraftBeacon(name="FLRDD4711", receiver_name="Koenigsdf", timestamp="2017-12-10 10:00:05")
 
-        self.rb01 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 09:55:00", altitude=601, version="0.2.5", platform="ARM")
-        self.rb02 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 10:00:00", altitude=601, version="0.2.7", platform="ARM")
-        self.rb03 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 10:05:00", altitude=601, version="0.2.6", platform="ARM")
+        self.rb01 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 09:55:00", altitude=601)
+        self.rb02 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 10:00:00", altitude=601)
+        self.rb03 = ReceiverBeacon(name="Koenigsdf", receiver_name="GLIDERN1", timestamp="2017-12-10 10:05:00", altitude=601)
 
         self.r01 = Receiver(name="Koenigsdf")
         self.r02 = Receiver(name="Bene")
@@ -33,6 +33,7 @@ class TestStats(TestBaseDB):
         db.session.add(self.d01)
         db.session.commit()
 
+    @unittest.skip('stats will replaced by timescaledb aggregates')
     def test_create_device_stats(self):
         # Compute 1st beacon
         self.ab01.device = self.d01

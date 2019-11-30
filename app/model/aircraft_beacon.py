@@ -1,7 +1,8 @@
 from sqlalchemy.sql import func
-from .beacon import Beacon
-
 from app import db
+
+from .beacon import Beacon
+from .aircraft_type import AircraftType
 
 
 class AircraftBeacon(Beacon):
@@ -9,7 +10,7 @@ class AircraftBeacon(Beacon):
 
     # Flarm specific data
     address_type = db.Column(db.SmallInteger)
-    aircraft_type = db.Column(db.SmallInteger)
+    aircraft_type = db.Column(db.Enum(AircraftType), nullable=False, default=AircraftType.UNKNOWN)
     stealth = db.Column(db.Boolean)
     address = db.Column(db.String)
     climb_rate = db.Column(db.Float(precision=2))
@@ -32,17 +33,6 @@ class AircraftBeacon(Beacon):
     location_mgrs = db.Column(db.String(15))  # full mgrs (15 chars)
     location_mgrs_short = db.Column(db.String(9))  # reduced mgrs (9 chars), e.g. used for melissas range tool
     agl = db.Column(db.Float(precision=2))
-
-    # Relations
-    receiver_id = db.Column(db.Integer, db.ForeignKey("receivers.id", ondelete="SET NULL"))
-    receiver = db.relationship("Receiver", foreign_keys=[receiver_id], backref="aircraft_beacons")
-
-    device_id = db.Column(db.Integer, db.ForeignKey("devices.id", ondelete="SET NULL"))
-    device = db.relationship("Device", foreign_keys=[device_id], backref="aircraft_beacons")
-
-    # Multi-column indices
-    db.Index("ix_aircraft_beacons_receiver_id_distance", "receiver_id", "distance")
-    db.Index("ix_aircraft_beacons_device_id_timestamp", "device_id", "timestamp")
 
     def __repr__(self):
         return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
@@ -138,7 +128,3 @@ class AircraftBeacon(Beacon):
             self.location_mgrs,
             self.location_mgrs_short,
         ]
-
-
-db.Index("ix_aircraft_beacons_date_device_id_address", func.date(AircraftBeacon.timestamp), AircraftBeacon.device_id, AircraftBeacon.address)
-db.Index("ix_aircraft_beacons_date_receiver_id_distance", func.date(AircraftBeacon.timestamp), AircraftBeacon.receiver_id, AircraftBeacon.distance)

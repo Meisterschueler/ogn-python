@@ -1,5 +1,6 @@
 from app import db
 from .device_info_origin import DeviceInfoOrigin
+from .aircraft_type import AircraftType
 
 
 class DeviceInfo(db.Model):
@@ -14,7 +15,7 @@ class DeviceInfo(db.Model):
     competition = db.Column(db.String(3))
     tracked = db.Column(db.Boolean)
     identified = db.Column(db.Boolean)
-    aircraft_type = db.Column(db.SmallInteger)
+    aircraft_type = db.Column(db.Enum(AircraftType), nullable=False, default=AircraftType.UNKNOWN)
 
     address_origin = db.Column(db.Enum(DeviceInfoOrigin), nullable=False, default=DeviceInfoOrigin.UNKNOWN)
 

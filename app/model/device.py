@@ -4,6 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
 from .device_info import DeviceInfo
+from app.model.aircraft_type import AircraftType
 
 
 class Device(db.Model):
@@ -16,7 +17,7 @@ class Device(db.Model):
     address = db.Column(db.String, index=True)
     firstseen = db.Column(db.DateTime, index=True)
     lastseen = db.Column(db.DateTime, index=True)
-    aircraft_type = db.Column(db.SmallInteger, index=True)
+    aircraft_type = db.Column(db.Enum(AircraftType), nullable=False, default=AircraftType.UNKNOWN)
     stealth = db.Column(db.Boolean)
     software_version = db.Column(db.Float(precision=2))
     hardware_version = db.Column(db.SmallInteger)

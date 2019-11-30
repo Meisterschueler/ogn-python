@@ -1,4 +1,5 @@
 import os
+from enum import EnumMeta
 
 import unittest
 import inspect
@@ -10,14 +11,17 @@ import app.model  # noqa: E402
 
 class TestStringMethods(unittest.TestCase):
     def test_string(self):
-
-        try:
-            for name, obj in inspect.getmembers(app.model):
-                print("Testing: {}".format(name))
-                if inspect.isclass(obj):
+        failures = 0
+        for name, obj in inspect.getmembers(app.model):
+            try:
+                if inspect.isclass(obj) and not isinstance(obj, EnumMeta):
                     print(obj())
-        except AttributeError as e:
-            raise AssertionError(e)
+            except AttributeError as e:
+                print("Failed: {}".format(name))
+                failures += 1
+
+        if failures > 0:
+            raise AssertionError("Not all classes are good")
 
 
 if __name__ == "__main__":
