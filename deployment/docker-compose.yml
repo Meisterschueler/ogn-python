@@ -1,0 +1,27 @@
+version: "3.7"
+
+services:
+  timescaledb:
+    image: timescale/timescaledb-postgis:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_INITDB_ARGS="--auth=trust"
+      - PGDATA=/var/lib/postgresql/data/ogn_data
+      - TIMESCALEDB_TELEMETRY=off
+    ports:
+      - "5432:5432"
+    volumes:
+      - type: bind
+        source: /Volumes/Datenhalde/pg_ogndata
+        target: /var/lib/postgresql/data/ogn_data
+
+  pgadmin4:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@localhost
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "80:80"
+  
