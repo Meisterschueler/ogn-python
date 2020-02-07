@@ -36,7 +36,7 @@ setup(
         'Flask-SQLAlchemy==2.4.1',
         'Flask-Migrate==2.5.2',
         'Flask-Bootstrap==3.3.7.1',
-        'Flask-WTF==0.14.2',
+        'Flask-WTF==0.14.3',
         'Flask-Caching==1.8.0',
         'geopy==1.21.0',
         'celery==4.4.0',
