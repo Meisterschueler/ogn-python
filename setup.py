@@ -49,7 +49,7 @@ setup(
         'mgrs==1.3.6',
         'xmlunittest==0.5.0',
         'flower==0.9.3',
-        'tqdm==4.43.0',
+        'tqdm==4.44.1',
 	'requests==2.23.0',
     ],
     test_require=[
