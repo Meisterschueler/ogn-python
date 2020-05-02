@@ -48,7 +48,7 @@ setup(
         'psycopg2-binary==2.8.4',
         'mgrs==1.3.6',
         'xmlunittest==0.5.0',
-        'flower==0.9.3',
+        'flower==0.9.4',
         'tqdm==4.45.0',
 	'requests==2.23.0',
     ],
