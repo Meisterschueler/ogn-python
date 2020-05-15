@@ -35,7 +35,7 @@ class AircraftBeacon(Beacon):
     agl = db.Column(db.Float(precision=2))
 
     def __repr__(self):
-        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
+        return "<AircraftBeacon %s: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
             self.address_type,
             self.aircraft_type,
             self.stealth,
