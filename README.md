@@ -16,43 +16,50 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
 
     ```
     git clone https://github.com/glidernet/ogn-python.git
+    cd ogn-python
     ```
 
-2. Install python requirements
+2. Optional: Create and use a virtual environment
+    ```
+    python3 -m venv my_environment
+    source my_environment/bin/activate
+    ```
+
+3. Install python requirements
 
     ```
     pip install -r requirements.txt
     ```
 
-3. Install [PostgreSQL](http://www.postgresql.org/) with [PostGIS](http://www.postgis.net/) and [TimescaleDB](https://www.timescale.com) Extension.
+4. Install [PostgreSQL](http://www.postgresql.org/) with [PostGIS](http://www.postgis.net/) and [TimescaleDB](https://www.timescale.com) Extension.
     Create a database (use "ogn" as default, otherwise you have to modify the configuration, see below)
 
-4.  Optional: Install redis for asynchronous tasks (like takeoff/landing-detection)
+5.  Optional: Install redis for asynchronous tasks (like takeoff/landing-detection)
 
     ```
     apt-get install redis-server
     ```
 
-5.	Optional: Custom configuration file
+6.	Optional: Custom configuration file
 	Write a custom configuration file and let the environment variable `OGN_CONFIG_MODULE` point to the configuration file:
 
 	```
 	export OGN_CONFIG_MODULE="config/my_custom_configuration.py"
 	```
 
-6. Create database
+7. Create database
 
     ```
     ./flask database init
     ```
 
-7. Optional: Prepare tables for TimescaleDB
+8. Optional: Prepare tables for TimescaleDB
 
     ```
     ./flask database init_timescaledb
     ```
 
-8. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
+9. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
     Get the [World Borders Dataset](http://thematicmapping.org/downloads/world_borders.php) and unpack it.
     Then import it into your database (we use "ogn" as database name).
     
@@ -62,14 +69,14 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
     psql -d ogn -c "DROP TABLE world_borders_temp;"
     ```
     
-9. Get world elevation data (needed for AGL calculation)
+10. Get world elevation data (needed for AGL calculation)
 	Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database which is 4326.
 	The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world with SRID 4326. Just download the data you need.
 	
 	For Europe we can get the DEM as GeoTIFF files from the [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
     Because the SRID of these files is 3035 and we want 4326 we have to convert them (next step)
     
-10. Optional: Convert the elevation data into correct SRID
+11. Optional: Convert the elevation data into correct SRID
 
 	We convert elevation from one SRID (here: 3035) to target SRID (4326):
     
@@ -77,25 +84,25 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
     gdalwarp -s_srs "EPSG:3035" -t_srs "EPSG:4326" source.tif target.tif
     ```
     
-11. Import the GeoTIFF into the elevation table:
+12. Import the GeoTIFF into the elevation table:
     
     ```
     raster2pgsql -s 4326 -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
     ```
 
-12. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
+13. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
 	
 	```
 	flask database import_airports tests/SeeYou.cup 
 	```
 
-13. Import DDB (needed for registration signs in the logbook).
+14. Import DDB (needed for registration signs in the logbook).
 
 	```
 	flask database import_ddb
 	```
 
-14. Optional: Use supervisord
+15. Optional: Use supervisord
 	You can use [Supervisor](http://supervisord.org/) to control the complete system. In the directory deployment/supervisor
 	we have some configuration files to feed the database (ogn-feed), run the celery worker (celeryd), the celery beat
 	(celerybeatd), the celery monitor (flower), and the python wsgi server (gunicorn). All files assume that
