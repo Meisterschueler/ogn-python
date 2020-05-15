@@ -10,9 +10,8 @@ from app.model.aircraft_type import AircraftType
 class Device(db.Model):
     __tablename__ = "devices"
 
-    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, primary_key=True)
 
-    name = db.Column(db.String, index=True)
     # address = db.Column(db.String(6), index=True)
     address = db.Column(db.String, index=True)
     firstseen = db.Column(db.DateTime, index=True)
@@ -38,6 +37,9 @@ class Device(db.Model):
         return [info for info in query.all()]
 
     EXPIRY_DATES = {
+        7.0: datetime.date(2021, 10, 31),
+        6.83: datetime.date(2021, 10, 31),
+        6.82: datetime.date(2021, 5, 31),
         6.81: datetime.date(2021, 1, 31),
         6.80: datetime.date(2021, 1, 31),
         6.67: datetime.date(2020, 10, 31),

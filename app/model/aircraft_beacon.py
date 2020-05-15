@@ -30,8 +30,8 @@ class AircraftBeacon(Beacon):
     distance = db.Column(db.Float(precision=2))
     radial = db.Column(db.SmallInteger)
     quality = db.Column(db.Float(precision=2))  # signal quality normalized to 10km
-    location_mgrs = db.Column(db.String(15))  # full mgrs (15 chars)
-    location_mgrs_short = db.Column(db.String(9))  # reduced mgrs (9 chars), e.g. used for melissas range tool
+    location_mgrs = db.Column(db.String(15))    # full mgrs (15 chars)
+    location_mgrs_short = db.Column(db.String(9))   # reduced mgrs (9 chars), e.g. used for melissas range tool
     agl = db.Column(db.Float(precision=2))
 
     def __repr__(self):
@@ -56,75 +56,5 @@ class AircraftBeacon(Beacon):
             self.quality,
             self.location_mgrs,
             self.location_mgrs_short,
+            self.agl,
         )
-
-    @classmethod
-    def get_columns(self):
-        return [
-            "location",
-            "altitude",
-            "name",
-            "dstcall",
-            "relay",
-            "receiver_name",
-            "timestamp",
-            "track",
-            "ground_speed",
-            # 'raw_message',
-            # 'reference_timestamp',
-            "address_type",
-            "aircraft_type",
-            "stealth",
-            "address",
-            "climb_rate",
-            "turn_rate",
-            "signal_quality",
-            "error_count",
-            "frequency_offset",
-            "gps_quality_horizontal",
-            "gps_quality_vertical",
-            "software_version",
-            "hardware_version",
-            "real_address",
-            "signal_power",
-            "distance",
-            "radial",
-            "quality",
-            "location_mgrs",
-            "location_mgrs_short",
-        ]
-
-    def get_values(self):
-        return [
-            self.location_wkt,
-            int(self.altitude) if self.altitude else None,
-            self.name,
-            self.dstcall,
-            self.relay,
-            self.receiver_name,
-            self.timestamp,
-            self.track,
-            self.ground_speed,
-            # self.raw_message,
-            # self.reference_timestamp,
-            self.address_type,
-            self.aircraft_type,
-            self.stealth,
-            self.address,
-            self.climb_rate,
-            self.turn_rate,
-            self.signal_quality,
-            self.error_count,
-            self.frequency_offset,
-            self.gps_quality_horizontal,
-            self.gps_quality_vertical,
-            self.software_version,
-            self.hardware_version,
-            self.real_address,
-            self.signal_power,
-            self.distance,
-            self.radial,
-            self.quality,
-            self.location_mgrs,
-            self.location_mgrs_short,
-        ]

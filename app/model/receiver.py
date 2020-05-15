@@ -9,14 +9,13 @@ from app import db
 class Receiver(db.Model):
     __tablename__ = "receivers"
 
-    id = db.Column(db.Integer, primary_key=True)
-
+    name = db.Column(db.String(9), primary_key=True)
     location_wkt = db.Column("location", Geometry("POINT", srid=4326))
     altitude = db.Column(db.Float(precision=2))
 
-    name = db.Column(db.String(9), index=True)
     firstseen = db.Column(db.DateTime, index=True)
     lastseen = db.Column(db.DateTime, index=True)
+    timestamp = db.Column(db.DateTime, index=True)
     version = db.Column(db.String)
     platform = db.Column(db.String)
 

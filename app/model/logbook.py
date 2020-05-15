@@ -9,6 +9,7 @@ class Logbook(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     reftime = db.Column(db.DateTime, index=True)
+    address = db.Column(db.String, index=True)
     takeoff_timestamp = db.Column(db.DateTime)
     takeoff_track = db.Column(db.SmallInteger)
     landing_timestamp = db.Column(db.DateTime)
@@ -21,9 +22,6 @@ class Logbook(db.Model):
 
     landing_airport_id = db.Column(db.Integer, db.ForeignKey("airports.id", ondelete="CASCADE"), index=True)
     landing_airport = db.relationship("Airport", foreign_keys=[landing_airport_id])
-
-    device_id = db.Column(db.Integer, db.ForeignKey("devices.id", ondelete="CASCADE"), index=True)
-    device = db.relationship("Device", foreign_keys=[device_id], backref=db.backref("logbook", order_by="Logbook.reftime"))
 
     @hybrid_property
     def duration(self):

@@ -4,7 +4,7 @@ from flask import request, render_template, send_file
 
 from app import db
 from app import cache
-from app.model import Airport, Country, Device, Logbook, Receiver, ReceiverStats
+from app.model import Airport, Country, Device, Logbook, Receiver
 
 from app.main import bp
 
@@ -184,14 +184,3 @@ def download_flight():
     buffer.seek(0)
 
     return send_file(buffer, as_attachment=True, attachment_filename="wtf.igc", mimetype="text/plain")
-
-
-@bp.route("/statistics.html")
-def statistics():
-
-    today = datetime.date.today()
-    today = datetime.date(2018, 7, 31)
-
-    receiverstats = db.session.query(ReceiverStats).filter(ReceiverStats.date == today)
-
-    return render_template("statistics.html", title="Receiver Statistics", receiverstats=receiverstats)
