@@ -7,7 +7,6 @@ from app.collect.database import upsert
 
 
 class TestDatabase(TestBaseDB):
-    @unittest.skip("wip")
     def test_insert_duplicate_beacons(self):
         row1 = {"name": "FLRDD0815", "receiver_name": "Koenigsdf", "timestamp": "2019-01-26 11:51:00", "ground_speed": None}
         row2 = {"name": "FLRDD0815", "receiver_name": "Koenigsdf", "timestamp": "2019-01-26 11:52:00", "ground_speed": 0}

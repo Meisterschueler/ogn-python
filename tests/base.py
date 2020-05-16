@@ -8,6 +8,12 @@ class TestBaseDB(unittest.TestCase):
         self.app_context = self.app.app_context()
         self.app_context.push()
 
+        # Remove tables...
+        db.drop_all()
+        db.session.execute("DROP TABLE IF EXISTS elevation;")
+        db.session.commit()
+
+        # ... and create them again
         db.session.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
         db.create_all()
         db.session.commit()
@@ -17,10 +23,6 @@ class TestBaseDB(unittest.TestCase):
 
     def tearDown(self):
         db.session.remove()
-        db.drop_all()
-
-        db.session.execute("DROP TABLE IF EXISTS elevaion;")
-        db.session.commit()
 
         self.app_context.pop()
 
