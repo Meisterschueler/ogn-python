@@ -24,7 +24,7 @@ user_cli.help = "Tools for accelerated data import."
 basepath = os.path.dirname(os.path.realpath(__file__))
 
 # define message types we want to proceed
-AIRCRAFT_BEACON_TYPES = ["aprs_aircraft", "flarm", "tracker", "fanet", "lt24", "naviter", "skylines", "spider", "spot", "flymaster"]
+AIRCRAFT_BEACON_TYPES = ["aprs_aircraft", "flarm", "tracker", "fanet", "lt24", "naviter", "skylines", "spider", "spot", "flymaster", "capturs"]
 RECEIVER_BEACON_TYPES = ["aprs_receiver", "receiver"]
 
 # define fields we want to proceed
@@ -151,7 +151,7 @@ class StringConverter:
     def _get_aircraft_beacon_csv_string(self, message, none_character=''):
         csv_string = "{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29}\n".format(
             message['location'],
-            int(message['altitude']),
+            int(message['altitude']) if message['altitude'] else none_character,
             message['name'],
             message['dstcall'],
             message['relay'] if 'relay' in message and message['relay'] else none_character,
@@ -240,6 +240,8 @@ class DbFeeder(StringConverter):
         self.flush()
 
     def add(self, raw_string):
+        raw_string = raw_string.strip()
+
         message = self._convert(raw_string)
         if not message:
             return
@@ -250,6 +252,8 @@ class DbFeeder(StringConverter):
         elif message['beacon_type'] in RECEIVER_BEACON_TYPES:
             csv_string = self._get_receiver_beacon_csv_string(message, none_character=r'\N')
             self.receiver_beacons_buffer.write(csv_string)
+        else:
+            current_app.logger.error(f"Not supported beacon type, skipped: {raw_string}")
 
         if datetime.utcnow() - self.last_flush >= timedelta(seconds=1):
             self.flush()
