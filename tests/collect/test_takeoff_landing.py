@@ -18,8 +18,8 @@ class TestTakeoffLanding(TestBaseDB):
         db.session.execute("INSERT INTO airports(name, location, altitude, style) VALUES('Unterbuchen','0101000020E6100000462575029AF8264089F7098D4DE44740',635,3)")
         db.session.execute("UPDATE airports SET border = ST_Expand(location, 0.05)")
 
-        db.session.execute("INSERT INTO devices(address, aircraft_type) VALUES('DDEFF7', 'GLIDER_OR_MOTOR_GLIDER')")
-        db.session.execute("INSERT INTO devices(address, aircraft_type) VALUES('DDAC7C', 'GLIDER_OR_MOTOR_GLIDER')")
+        db.session.execute("INSERT INTO devices(name, address, aircraft_type) VALUES('FLRDDEFF7', 'DDEFF7', 'GLIDER_OR_MOTOR_GLIDER')")
+        db.session.execute("INSERT INTO devices(name, address, aircraft_type) VALUES('FLRDDAC7C', 'DDAC7C', 'GLIDER_OR_MOTOR_GLIDER')")
 
     def test_broken_rope(self):
         """Fill the db with a winch launch where the rope breaks. The algorithm should detect one takeoff and one landing."""

@@ -29,6 +29,12 @@ def update_entries(session, start, end, logger=None):
         logger.warn(abort_message)
         return abort_message
 
+    # delete existing elements
+    session.query(TakeoffLanding)\
+        .filter(between(TakeoffLanding.timestamp, start, end))\
+        .delete(synchronize_session='fetch')
+    session.commit()
+
     # takeoff / landing detection is based on 3 consecutive points all below a certain altitude AGL
     takeoff_speed = 55  # takeoff detection: 1st point below, 2nd and 3rd above this limit
     landing_speed = 40  # landing detection: 1st point above, 2nd and 3rd below this limit
@@ -38,13 +44,13 @@ def update_entries(session, start, end, logger=None):
     radius = 5000  # the points must not exceed this radius around the 2nd point
     max_agl = 200  # takeoff / landing must not exceed this altitude AGL
 
-    # get beacons for selected time range, one per address and timestamp
+    # get beacons for selected time range (+ buffer for duration), one per address and timestamp
     sq = (
         session.query(AircraftBeacon)
         .distinct(AircraftBeacon.address, AircraftBeacon.timestamp)
         .order_by(AircraftBeacon.address, AircraftBeacon.timestamp, AircraftBeacon.error_count)
-        .filter(AircraftBeacon.agl < max_agl)
-        .filter(between(AircraftBeacon.timestamp, start, end))
+        .filter(AircraftBeacon.agl <= max_agl)
+        .filter(between(AircraftBeacon.timestamp, start - timedelta(seconds=duration), end + timedelta(seconds=duration)))
         .subquery()
     )
 
@@ -73,12 +79,13 @@ def update_entries(session, start, end, logger=None):
         func.lead(sq.c.climb_rate).over(partition_by=sq.c.address, order_by=sq.c.timestamp).label("climb_rate_next"),
     ).subquery()
 
-    # consider only positions with predecessor and successor and limit distance and duration between points
+    # consider only positions between start and end and with predecessor and successor and limit distance and duration between points
     sq3 = (
         session.query(sq2)
         .filter(and_(sq2.c.address_prev != null(), sq2.c.address_next != null()))
         .filter(and_(func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_prev) < radius, func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_next) < radius))
         .filter(sq2.c.timestamp_next - sq2.c.timestamp_prev < timedelta(seconds=duration))
+        .filter(between(sq2.c.timestamp, start, end))
         .subquery()
     )
 
@@ -112,29 +119,23 @@ def update_entries(session, start, end, logger=None):
     # get the device id instead of the address and consider them if the are near airports ...
     sq5 = (
         session.query(
-            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, Device.id.label("device_id"), Airport.id.label("airport_id"), func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance")
+            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, sq4.c.address, Airport.id.label("airport_id"), func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance")
         )
-        .filter(and_(sq4.c.address == Device.address,
-                     func.ST_Within(sq4.c.location, Airport.border),
+        .filter(and_(func.ST_Within(sq4.c.location, Airport.border),
                      between(Airport.style, 2, 5)))
         .subquery()
     )
 
     # ... and take the nearest airport
-    sq6 = (
-        session.query(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_id)
-        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id)
-        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_distance)
+    takeoff_landing_query = (
+        session.query(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.address, sq5.c.airport_id)
+        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.address)
+        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.address, sq5.c.airport_distance)
         .subquery()
     )
 
-    # consider them only if they are not already existing in db
-    takeoff_landing_query = session.query(sq6).filter(
-        ~exists().where(and_(TakeoffLanding.timestamp == sq6.c.timestamp, TakeoffLanding.device_id == sq6.c.device_id, TakeoffLanding.airport_id == sq6.c.airport_id))
-    )
-
     # ... and save them
-    ins = insert(TakeoffLanding).from_select((TakeoffLanding.timestamp, TakeoffLanding.track, TakeoffLanding.is_takeoff, TakeoffLanding.device_id, TakeoffLanding.airport_id), takeoff_landing_query)
+    ins = insert(TakeoffLanding).from_select((TakeoffLanding.timestamp, TakeoffLanding.track, TakeoffLanding.is_takeoff, TakeoffLanding.address, TakeoffLanding.airport_id), takeoff_landing_query)
 
     result = session.execute(ins)
     session.commit()
