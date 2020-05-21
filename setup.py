@@ -26,8 +26,11 @@ setup(
         'Topic :: Scientific/Engineering :: GIS',
         'License :: OSI Approved :: GNU Affero General Public License v3',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9-dev'
     ],
     keywords='gliding ogn',
     packages=find_packages(exclude=['tests', 'tests.*']),
