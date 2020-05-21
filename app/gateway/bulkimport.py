@@ -24,7 +24,7 @@ user_cli.help = "Tools for accelerated data import."
 basepath = os.path.dirname(os.path.realpath(__file__))
 
 # define message types we want to proceed
-AIRCRAFT_BEACON_TYPES = ["aprs_aircraft", "flarm", "tracker", "fanet", "lt24", "naviter", "skylines", "spider", "spot", "flymaster", "capturs"]
+AIRCRAFT_BEACON_TYPES = ["aprs_aircraft", "flarm", "tracker", "fanet", "lt24", "naviter", "pilot_aware", "skylines", "spider", "spot", "flymaster", "capturs"]
 RECEIVER_BEACON_TYPES = ["aprs_receiver", "receiver"]
 
 # define fields we want to proceed
@@ -111,7 +111,9 @@ class StringConverter:
             current_app.logger.error("No parser implemented for message: {}".format(raw_string))
             return
         except ParseError as e:
-            current_app.logger.error("Parsing error with message: {}".format(raw_string))
+            if not raw_string.startswith('RND'):    # skip errors with RND since they are common
+                current_app.logger.error("Parsing error with message: {}".format(raw_string))
+
             return
         except TypeError as e:
             current_app.logger.error("TypeError with message: {}".format(raw_string))
