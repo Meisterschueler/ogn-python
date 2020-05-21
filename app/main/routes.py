@@ -57,8 +57,8 @@ def devices():
 
 @bp.route("/device_detail.html", methods=["GET", "POST"])
 def device_detail():
-    device_id = request.args.get("id")
-    device = db.session.query(Device).filter(Device.id == device_id).one()
+    device_name = request.args.get("device_name")
+    device = db.session.query(Device).filter(Device.name == device_name).one()
 
     return render_template("device_detail.html", title="Device", device=device)
 
@@ -80,15 +80,15 @@ def receivers():
 
 @bp.route("/receiver_detail.html")
 def receiver_detail():
-    sel_receiver_id = request.args.get("receiver_id")
+    receiver_name = request.args.get("receiver_name")
 
-    receiver = db.session.query(Receiver).filter(Receiver.id == sel_receiver_id).one()
+    receiver = db.session.query(Receiver).filter(Receiver.name == receiver_name).one()
 
     airport = (
         db.session.query(Airport)
         .filter(
             db.and_(
-                Receiver.id == sel_receiver_id,
+                Receiver.name == receiver_name,
                 db.func.st_contains(db.func.st_buffer(Receiver.location_wkt, 0.5), Airport.location_wkt),
                 db.func.st_distance_sphere(Airport.location_wkt, Receiver.location_wkt) < 1000,
             )
