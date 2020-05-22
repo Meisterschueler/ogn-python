@@ -30,4 +30,4 @@ class Beacon(AbstractConcreteBase, db.Model):
 
     # Debug information
     raw_message = None
-    reference_timestamp = None
+    reference_timestamp = db.Column(db.DateTime, nullable=False)
