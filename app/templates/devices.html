@@ -16,7 +16,7 @@
     {% for device in devices %}
 	<tr>
 	  <td><a href="{{ url_for('main.device_detail', device_name=device.name) }}">{{ device.name }}</a></td>
-	  <td>{% if device.info is not none %}{{ device.info.registration }}{% else %} - {% endif %}</td>
+	  <td>{{ device.info.registration if device.info else '-' }}</td>
 	  <td {% if device.software_version and device.software_version < 6.6 %}class="danger"{% endif %}>{% if device.software_version is not none %}{{ device.software_version }}{% else %} - {% endif %}</td>
 	</tr>
 	{% endfor %}

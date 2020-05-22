@@ -24,12 +24,16 @@
     <tr>
    	  <th>Name</th>
       <th>Altitude</th>
+      <th>Version</th>
+      <th>Platform</th>
     </tr>
 
     {% for receiver in receivers %}
 	<tr>
 	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/> <a href="{{ url_for('main.receiver_detail', receiver_name=receiver.name) }}">{{ receiver.name }}</a></td>
 	  <td>{{ receiver.altitude|int }} m</td>
+	  <td>{{ receiver.version if receiver.version else '-' }}</td>
+	  <td>{{ receiver.platform if receiver.platform else '-' }}</td>
 	</tr>
 	{% endfor %}
   </table>
