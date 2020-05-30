@@ -60,7 +60,7 @@ AIRCRAFT_POSITION_BEACON_FIELDS = [
     "location_mgrs_short",
     "agl",
 
-    "reference_timestamp"
+    "reference_timestamp",
 ]
 
 RECEIVER_POSITION_BEACON_FIELDS = [
@@ -71,7 +71,7 @@ RECEIVER_POSITION_BEACON_FIELDS = [
     "receiver_name",
     "timestamp",
 
-    "reference_timestamp"
+    "reference_timestamp",
 ]
 
 RECEIVER_STATUS_BEACON_FIELDS = [
@@ -82,6 +82,8 @@ RECEIVER_STATUS_BEACON_FIELDS = [
 
     "version",
     "platform",
+    
+    "reference_timestamp",
 ]
 
 
@@ -103,24 +105,17 @@ def initial_file_scan(file):
 
 
 class StringConverter:
-    def __init__(self, reference_timestamp, auto_update_timestamp):
-        self.reference_timestamp = reference_timestamp
-        self.auto_update_timestamp = auto_update_timestamp
-
-        self.mgrs = MGRS()
-
+    mgrs = MGRS()
+    
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
         pass
 
-    def _convert(self, raw_string):
-        if raw_string.strip() == '':
-            return
-
+    def _convert(self, raw_string, reference_timestamp):
         try:
-            message = parse(raw_string, reference_timestamp=self.reference_timestamp)
+            message = parse(raw_string, reference_timestamp)
         except NotImplementedError as e:
             current_app.logger.error("No parser implemented for message: {}".format(raw_string))
             return
@@ -136,11 +131,7 @@ class StringConverter:
             current_app.logger.error("Other Exception with string: {}".format(raw_string))
             return
 
-        if message['aprs_type'] not in ('server', 'position', 'status'):
-            return
-
-        elif message['aprs_type'] == 'server' and self.auto_update_timestamp is True:
-            self.reference_timestamp = message['timestamp']
+        if message['aprs_type'] not in ('position', 'status'):
             return
 
         elif message['aprs_type'] == 'position':
@@ -215,7 +206,7 @@ class StringConverter:
         return csv_string
 
     def _get_receiver_status_beacon_csv_string(self, message, none_character=''):
-        csv_string = "{0},{1},{2},{3},{4},{5}\n".format(
+        csv_string = "{0},{1},{2},{3},{4},{5},{6}\n".format(
             message['name'],
             message['dstcall'],
             message['receiver_name'],
@@ -223,6 +214,8 @@ class StringConverter:
 
             message['version'] if 'version' in message and message['version'] else none_character,
             message['platform'] if 'platform' in message and message['platform'] else none_character,
+            
+            message['reference_timestamp']
         )
         return csv_string
 
@@ -257,10 +250,7 @@ class FileFeeder(StringConverter):
 
 
 class DbFeeder(StringConverter):
-    def __init__(self, reference_timestamp, reference_timestamp_autoupdate):
-        self.reference_timestamp = reference_timestamp
-        self.reference_timestamp_autoupdate = reference_timestamp_autoupdate
-
+    def __init__(self):
         self.aircraft_position_beacons_buffer = StringIO()
         self.aircraft_status_beacons_buffer = StringIO()
         self.receiver_position_beacons_buffer = StringIO()
@@ -268,18 +258,17 @@ class DbFeeder(StringConverter):
 
         self.last_flush = datetime.utcnow()
 
-        super().__init__(reference_timestamp, reference_timestamp_autoupdate)
-
     def __exit__(self, *args):
         self.flush()
 
-    def add(self, raw_string):
+    def add(self, raw_string, reference_timestamp):
         raw_string = raw_string.strip()
 
-        message = self._convert(raw_string)
+        message = self._convert(raw_string, reference_timestamp=reference_timestamp)
         if not message:
             return
 
+        message['reference_timestamp'] = reference_timestamp
         if message['beacon_type'] in AIRCRAFT_BEACON_TYPES and message['aprs_type'] == 'position':
             csv_string = self._get_aircraft_position_beacon_csv_string(message, none_character=r'\N')
             self.aircraft_position_beacons_buffer.write(csv_string)
@@ -293,10 +282,6 @@ class DbFeeder(StringConverter):
             self.receiver_status_beacons_buffer.write(csv_string)
         else:
             current_app.logger.error(f"Not supported. beacon_type: '{message['beacon_type']}', aprs_type: '{message['aprs_type']}', skipped: {raw_string}")
-
-        if datetime.utcnow() - self.last_flush >= timedelta(seconds=1):
-            self.flush()
-            self.last_flush = datetime.utcnow()
 
     def _flush_position_beacons(self):
         connection = db.engine.raw_connection()
@@ -447,14 +432,15 @@ class DbFeeder(StringConverter):
 
         # Update receiver_beacons
         cursor.execute("""
-            INSERT INTO receiver_beacons AS rb (name, dstcall, receiver_name, timestamp, version, platform)
+            INSERT INTO receiver_beacons AS rb (name, dstcall, receiver_name, timestamp, version, platform, reference_timestamp)
             SELECT DISTINCT ON (rsbt.name)
                 rsbt.name,
                 rsbt.dstcall,
                 rsbt.receiver_name,
                 rsbt.timestamp,
                 rsbt.version,
-                rsbt.platform
+                rsbt.platform,
+                rsbt.reference_timestamp
             FROM receiver_status_beacons_temp AS rsbt,
             (
                 SELECT

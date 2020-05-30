@@ -18,6 +18,8 @@ class TestBaseDB(unittest.TestCase):
 
         # ... and create them again
         db.session.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+        db.session.commit()
+
         db.create_all()
         db.session.commit()
 
@@ -28,6 +30,7 @@ class TestBaseDB(unittest.TestCase):
         db.session.execute("CREATE EXTENSION IF NOT EXISTS timescaledb;")
         db.session.execute("SELECT create_hypertable('aircraft_beacons', 'timestamp', chunk_time_interval => interval '1 day', if_not_exists => TRUE);")
         db.session.execute("SELECT create_hypertable('receiver_beacons', 'timestamp', chunk_time_interval => interval '1 day', if_not_exists => TRUE);")
+        db.session.commit()
 
     def tearDown(self):
         db.session.remove()
