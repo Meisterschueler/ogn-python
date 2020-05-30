@@ -51,9 +51,9 @@
 	</tr>
 	{% for entry in logbook %}
 	<tr>
-		<td>{{ loop.index }}</td>
-        <td><a href="{{ url_for('main.device_detail', id=entry.device.id) }}">{% if entry.device.info is not none and entry.device.info.registration|length %}{{ entry.device.info.registration }}{% else %}[{{ entry.device.address }}]{% endif %}</a></td>
-        <td>{% if entry.device.info is not none and entry.device.info.aircraft|length %}{{ entry.device.info.aircraft }}{% else %}-{% endif %}</td>
+		<td>{{ loop.index }}</td>{% set device = entry.get_device() %}
+        <td><a href="{{ url_for('main.device_detail', device_name=device.name) }}">{% if device.info is not none and device.info.registration|length %}{{ device.info.registration }}{% else %}[{{ device.address }}]{% endif %}</a></td>
+        <td>{% if device.info is not none and device.info.aircraft|length %}{{ device.info.aircraft }}{% else %}-{% endif %}</td>
         <td>{% if entry.takeoff_timestamp is not none and entry.takeoff_airport.id == sel_airport %} {{ entry.takeoff_timestamp.strftime('%H:%M') }} {% endif %}</td>
         <td>{% if entry.takeoff_track is not none and entry.takeoff_airport.id == sel_airport %} {{ '%02d' | format(entry.takeoff_track/10) }} {% endif %}</td>
         <td>{% if entry.landing_timestamp is not none and entry.landing_airport.id == sel_airport %} {{ entry.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>

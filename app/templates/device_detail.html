@@ -9,11 +9,11 @@
 <table class="datatable table table-striped table-bordered">
 	<tr><td>Name:</td><td>{{ device.name }}</td></tr>
 	<tr><td>Address:</td><td>{{ device.address }}</td></tr>
-	<tr><td>Real Address:</td><td>{{ device.real_address }}</td></tr>
-	<tr><td>Stealth:</td><td>{{ device.stealth }}</td></tr>
+	<tr><td>Real Address:</td><td>{{ device.real_address if device.real_address else '-' }}</td></tr>
+	<tr><td>Stealth:</td><td>{{ device.stealth if device.stealth else '-' }}</td></tr>
 	<tr><td>Aircraft Type:</td><td>{{ device.aircraft_type }}</td></tr>
-	<tr><td>Software Version:</td><td>{{ device.software_version }}</td></tr>
-	<tr><td>Hardware Version:</td><td>{{ device.hardware_version }}</td></tr>
+	<tr><td>Software Version:</td><td>{{ device.software_version if device.software_version else '-' }}</td></tr>
+	<tr><td>Hardware Version:</td><td>{{ device.hardware_version if device.hardware_version else '-' }}</td></tr>
 	<tr><td>First seen:</td><td>{{ device.firstseen }}</td></tr>
 	<tr><td>Last seen:</td><td>{{ device.lastseen }}</td></tr>
 </table>

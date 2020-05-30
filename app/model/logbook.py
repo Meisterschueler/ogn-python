@@ -1,6 +1,7 @@
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql import null, case
 from app import db
+from app.model import Device
 
 
 class Logbook(db.Model):
@@ -22,6 +23,9 @@ class Logbook(db.Model):
 
     landing_airport_id = db.Column(db.Integer, db.ForeignKey("airports.id", ondelete="CASCADE"), index=True)
     landing_airport = db.relationship("Airport", foreign_keys=[landing_airport_id])
+
+    def get_device(self):
+        return db.session.query(Device).filter(Device.address == self.address).one()
 
     @hybrid_property
     def duration(self):
