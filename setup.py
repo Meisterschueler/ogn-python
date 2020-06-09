@@ -39,7 +39,7 @@ setup(
         'Flask-WTF==0.14.3',
         'Flask-Caching==1.9.0',
         'geopy==1.22.0',
-        'celery==4.4.4',
+        'celery==4.4.5',
         'redis==3.5.3',
         'aerofiles==1.0.0',
         'geoalchemy2==0.8.3',
