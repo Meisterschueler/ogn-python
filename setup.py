@@ -42,7 +42,7 @@ setup(
         'celery==4.4.5',
         'redis==3.5.3',
         'aerofiles==1.0.0',
-        'geoalchemy2==0.8.3',
+        'geoalchemy2==0.8.4',
         'shapely==1.7.0',
         'ogn-client==0.9.7',
         'psycopg2-binary==2.8.5',
