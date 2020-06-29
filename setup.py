@@ -38,7 +38,7 @@ setup(
         'Flask-Bootstrap==3.3.7.1',
         'Flask-WTF==0.14.3',
         'Flask-Caching==1.9.0',
-        'geopy==1.22.0',
+        'geopy==2.0.0',
         'celery==4.4.6',
         'redis==3.5.3',
         'aerofiles==1.0.0',
