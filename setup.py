@@ -49,7 +49,7 @@ setup(
         'psycopg2-binary==2.8.6',
         'xmlunittest==0.5.0',
         'flower==0.9.5',
-        'tqdm==4.50.2',
+        'tqdm==4.51.0',
 	'requests==2.24.0',
     ],
     test_require=[
