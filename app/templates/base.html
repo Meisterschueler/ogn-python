@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block navbar %}
-<link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+
 <nav class="navbar navbar-default">
     <div class="container">
         <div class="navbar-header">
@@ -15,15 +15,17 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">OGN DDB</a>
+            <a class="navbar-brand" href="#">OGN</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('main.devices') }}">Devices</a></li>
+                <li><a href="{{ url_for('main.senders') }}">Senders</a></li>
                 <li><a href="{{ url_for('main.receivers') }}">Receivers</a></li>
                 <li><a href="{{ url_for('main.airports') }}">Airports</a></li>
                 <li><a href="{{ url_for('main.logbook') }}">Logbook</a></li>
+                <li><a href="{{ url_for('main.sender_ranking') }}">Sender Ranking</a></li>
+                <li><a href="{{ url_for('main.receiver_ranking') }}">Receiver Ranking</a></li>
             </ul>
         </div>
     </div>

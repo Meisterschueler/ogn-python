@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+import time
 
 from flask import current_app
 from flask.cli import AppGroup
@@ -7,39 +8,66 @@ import click
 from tqdm import tqdm
 
 from ogn.client import AprsClient
+from ogn.parser import parse
 
 from app import redis_client
-from app.gateway.bulkimport import convert, calculate
+from app.gateway.beacon_conversion import aprs_string_to_message
+from app.gateway.message_handling import receiver_status_message_to_csv_string, receiver_position_message_to_csv_string, sender_position_message_to_csv_string
+from app.collect.gateway import transfer_from_redis_to_database
 
 user_cli = AppGroup("gateway")
 user_cli.help = "Connection to APRS servers."
 
 
 @user_cli.command("run")
-def run(aprs_user="anon-dev"):
-    """Run the aprs client and feed the redis db with incoming data."""
-
-    # User input validation
-    if len(aprs_user) < 3 or len(aprs_user) > 9:
-        print("aprs_user must be a string of 3-9 characters.")
-        return
+@click.option("--aprs_filter", default='')
+def run(aprs_filter):
+    """
+    Run the aprs client, parse the incoming data and put it to redis.
+    """
 
     current_app.logger.warning("Start ogn gateway")
-    client = AprsClient(aprs_user)
+    client = AprsClient(current_app.config['APRS_USER'], aprs_filter)
     client.connect()
 
     def insert_into_redis(aprs_string):
-        redis_client.set(f"ogn-python {datetime.utcnow()}", aprs_string.strip(), ex=100)
+        # Convert aprs_string to message dict, add MGRS Position, flatten gps precision, etc. etc. ...
+        message = aprs_string_to_message(aprs_string)
+        if message is None:
+            return
+
+        # separate between tables (receiver/sender) and aprs_type (status/position)
+        if message['beacon_type'] in ('aprs_receiver', 'receiver'):
+            if message['aprs_type'] == 'status':
+                redis_target = 'receiver_status'
+                csv_string = receiver_status_message_to_csv_string(message, none_character=r'\N')
+            elif message['aprs_type'] == 'position':
+                redis_target = 'receiver_position'
+                csv_string = receiver_position_message_to_csv_string(message, none_character=r'\N')
+            else:
+                return
+        else:
+            if message['aprs_type'] == 'status':
+                return  # no interesting data we want to keep
+            elif message['aprs_type'] == 'position':
+                redis_target = 'sender_position'
+                csv_string = sender_position_message_to_csv_string(message, none_character=r'\N')
+            else:
+                return
+
+        mapping = {csv_string: str(time.time())}
+
+        redis_client.zadd(name=redis_target, mapping=mapping, nx=True)
         insert_into_redis.beacon_counter += 1
-        
-        delta = (datetime.utcnow() - insert_into_redis.last_update).total_seconds()
-        if delta >= 60.0:
-            print(f"{insert_into_redis.beacon_counter/delta:05.1f}/s")
-            insert_into_redis.last_update = datetime.utcnow()
+
+        current_minute = datetime.utcnow().minute
+        if current_minute != insert_into_redis.last_minute:
+            current_app.logger.warning(f"{insert_into_redis.beacon_counter:7d}")
             insert_into_redis.beacon_counter = 0
-    
+        insert_into_redis.last_minute = current_minute
+
     insert_into_redis.beacon_counter = 0
-    insert_into_redis.last_update = datetime.utcnow()
+    insert_into_redis.last_minute = datetime.utcnow().minute
 
     try:
         client.run(callback=insert_into_redis, autoreconnect=True)
@@ -48,12 +76,21 @@ def run(aprs_user="anon-dev"):
 
     client.disconnect()
 
+
+@user_cli.command("transfer")
+def transfer():
+    """Transfer data from redis to the database."""
+
+    transfer_from_redis_to_database()
+       
+
 @user_cli.command("printout")
-def printout():
+@click.option("--aprs_filter", default='')
+def printout(aprs_filter):
     """Run the aprs client and just print out the data stream."""
-    
+
     current_app.logger.warning("Start ogn gateway")
-    client = AprsClient("anon-dev")
+    client = AprsClient(current_app.config['APRS_USER'], aprs_filter=aprs_filter)
     client.connect()
 
     try:

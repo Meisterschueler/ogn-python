@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
@@ -33,14 +35,17 @@ def create_app(config_name='default'):
     redis_client.init_app(app)
     
     init_celery(app)
+    register_blueprints(app)
     
+    return app
+
+def register_blueprints(app):
     from app.main import bp as bp_main
     app.register_blueprint(bp_main)
 
-    return app
-
-def init_celery(app):
-    celery.conf.broker_url = app.config['CELERY_BROKER_URL']
+def init_celery(app=None):
+    app = app or create_app(os.getenv('FLASK_CONFIG') or 'default')
+    celery.conf.broker_url = app.config['BROKER_URL']
     celery.conf.result_backend = app.config['CELERY_RESULT_BACKEND']
     celery.conf.update(app.config)
 
@@ -52,8 +57,3 @@ def init_celery(app):
 
     celery.Task = ContextTask
     return celery
-
-# Do we need this? Otherwise I cant the celery worker run...
-app = create_app()
-from app.gateway.bulkimport import DbFeeder
-from app.collect.celery_tasks import *

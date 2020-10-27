@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Sender Ranking</h3></div>
+<div class="panel-body">
+  <table class="datatable table table-striped table-bordered">
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Aircraft</th>
+      <th class="text-right">Maximum distance [km]</th>
+      <th class="text-right">Maximal normalized signal quality [dB]</th>
+      <th class="text-right">Receiver counter</th>
+      <th class="text-right">Coverage counter</th>
+      <th class="text-right">Message counter</th>
+    </tr>
+
+    {% for entry in ranking %}
+	<tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ entry.sender|to_html_link|safe }}</a></td>
+    <td>{% if entry.sender.infos|length > 0 %}{{ entry.sender.infos[0].aircraft }}{% endif %}</td>
+    <td class="text-right">{{ '%0.1f' | format(entry.max_distance/1000.0) }}</td>
+    <td class="text-right">{{ '%0.1f' | format(entry.max_normalized_quality) }}</td>
+    <td class="text-right">{{ entry.receivers_count }}</td>
+    <td class="text-right">{{ entry.coverages_count }}</td>
+    <td class="text-right">{{ entry.messages_count }}</td>
+	</tr>
+	{% endfor %}
+  </table>
+
+</div>
+</div>
+
+{% endblock %}
+
+

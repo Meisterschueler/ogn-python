@@ -3,8 +3,8 @@ import unittest
 
 from tests.base import TestBaseDB, db
 
-from app.model import Logbook, Airport, Device, TakeoffLanding
-from app.collect.logbook import update_entries
+from app.model import Logbook, Airport, Sender, TakeoffLanding
+from app.collect.logbook import update_logbook
 
 
 class TestLogbook(TestBaseDB):
@@ -12,8 +12,8 @@ class TestLogbook(TestBaseDB):
         super().setUp()
 
         # Create basic data and insert
-        self.dd0815 = Device(name="FLRDD0815", address="DD0815")
-        self.dd4711 = Device(name="FLRDD4711", address="DD4711")
+        self.dd0815 = Sender(name="FLRDD0815", address="DD0815")
+        self.dd4711 = Sender(name="FLRDD4711", address="DD4711")
 
         self.koenigsdorf = Airport(name="Koenigsdorf")
         self.ohlstadt = Airport(name="Ohlstadt")
@@ -26,19 +26,19 @@ class TestLogbook(TestBaseDB):
         db.session.commit()
 
         # Prepare takeoff and landings
-        self.takeoff_koenigsdorf_dd0815 = TakeoffLanding(is_takeoff=True, timestamp="2016-06-01 10:00:00", airport_id=self.koenigsdorf.id, address=self.dd0815.address)
-        self.landing_koenigsdorf_dd0815 = TakeoffLanding(is_takeoff=False, timestamp="2016-06-01 10:05:00", airport_id=self.koenigsdorf.id, address=self.dd0815.address)
-        self.landing_koenigsdorf_dd0815_later = TakeoffLanding(is_takeoff=False, timestamp="2016-06-02 10:05:00", airport_id=self.koenigsdorf.id, address=self.dd0815.address)
-        self.takeoff_ohlstadt_dd4711 = TakeoffLanding(is_takeoff=True, timestamp="2016-06-01 10:00:00", airport_id=self.ohlstadt.id, address=self.dd4711.address)
+        self.takeoff_koenigsdorf_dd0815 = TakeoffLanding(is_takeoff=True, timestamp="2016-06-01 10:00:00", airport_id=self.koenigsdorf.id, sender_id=self.dd0815.id)
+        self.landing_koenigsdorf_dd0815 = TakeoffLanding(is_takeoff=False, timestamp="2016-06-01 10:05:00", airport_id=self.koenigsdorf.id, sender_id=self.dd0815.id)
+        self.landing_koenigsdorf_dd0815_later = TakeoffLanding(is_takeoff=False, timestamp="2016-06-02 10:05:00", airport_id=self.koenigsdorf.id, sender_id=self.dd0815.id)
+        self.takeoff_ohlstadt_dd4711 = TakeoffLanding(is_takeoff=True, timestamp="2016-06-01 10:00:00", airport_id=self.ohlstadt.id, sender_id=self.dd4711.id)
 
     def get_logbook_entries(self):
-        return db.session.query(Logbook).order_by(Logbook.takeoff_airport_id, Logbook.reftime).all()
+        return db.session.query(Logbook).order_by(Logbook.takeoff_airport_id, Logbook.reference).all()
 
     def test_single_takeoff(self):
         db.session.add(self.takeoff_koenigsdorf_dd0815)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
@@ -48,7 +48,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.landing_koenigsdorf_dd0815)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].takeoff_airport_id, None)
@@ -59,7 +59,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.takeoff_ohlstadt_dd4711)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 2)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
@@ -70,7 +70,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.landing_koenigsdorf_dd0815)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
@@ -81,8 +81,8 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.landing_koenigsdorf_dd0815_later)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
-        update_entries(session=db.session, date=datetime.date(2016, 6, 2))
+        update_logbook(date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 2))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 2)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
@@ -94,7 +94,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.takeoff_koenigsdorf_dd0815)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
@@ -102,7 +102,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.landing_koenigsdorf_dd0815)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
@@ -111,7 +111,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.takeoff_ohlstadt_dd4711)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 2)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
@@ -121,7 +121,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.landing_koenigsdorf_dd0815)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].takeoff_airport_id, None)
@@ -131,7 +131,7 @@ class TestLogbook(TestBaseDB):
         db.session.add(self.takeoff_koenigsdorf_dd0815)
         db.session.commit()
 
-        update_entries(session=db.session, date=datetime.date(2016, 6, 1))
+        update_logbook(date=datetime.date(2016, 6, 1))
         entries = self.get_logbook_entries()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)

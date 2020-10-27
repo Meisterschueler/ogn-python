@@ -1,19 +1,19 @@
 import datetime
 
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Index
 
 from app import db
-from .device_info import DeviceInfo
 from app.model.aircraft_type import AircraftType
 
 
-class Device(db.Model):
-    __tablename__ = "devices"
+class Sender(db.Model):
+    __tablename__ = "senders"
 
-    name = db.Column(db.String, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
 
-    # address = db.Column(db.String(6), index=True)
-    address = db.Column(db.String, index=True)
+    address = db.Column(db.String(6), index=True)
     firstseen = db.Column(db.DateTime, index=True)
     lastseen = db.Column(db.DateTime, index=True)
     aircraft_type = db.Column(db.Enum(AircraftType), nullable=False, default=AircraftType.UNKNOWN)
@@ -22,21 +22,13 @@ class Device(db.Model):
     hardware_version = db.Column(db.SmallInteger)
     real_address = db.Column(db.String(6))
 
+    __table_args__ = (Index('idx_senders_name_uc', 'name', unique=True), )
+
     def __repr__(self):
-        return "<Device: %s,%s,%s,%s,%s,%s>" % (self.address, self.aircraft_type, self.stealth, self.software_version, self.hardware_version, self.real_address)
-
-    @hybrid_property
-    def info(self):
-        query = db.session.query(DeviceInfo).filter(DeviceInfo.address == self.address).order_by(DeviceInfo.address_origin)
-
-        return query.first()
-
-    def get_infos(self):
-        query = db.session.query(DeviceInfo).filter(DeviceInfo.address == self.address).order_by(DeviceInfo.address_origin)
-
-        return [info for info in query.all()]
+        return "<Sender: %s,%s,%s,%s,%s,%s>" % (self.address, self.aircraft_type, self.stealth, self.software_version, self.hardware_version, self.real_address)
 
     EXPIRY_DATES = {
+        7.01: datetime.date(2022, 2, 28),
         7.0: datetime.date(2021, 10, 31),
         6.83: datetime.date(2021, 10, 31),
         6.82: datetime.date(2021, 5, 31),

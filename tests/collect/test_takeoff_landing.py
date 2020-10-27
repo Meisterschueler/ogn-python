@@ -5,7 +5,7 @@ from tests.base import TestBaseDB, db
 
 from app.model import TakeoffLanding
 
-from app.collect.takeoff_landings import update_entries
+from app.collect.logbook import update_takeoff_landings
 
 
 class TestTakeoffLanding(TestBaseDB):
@@ -13,10 +13,10 @@ class TestTakeoffLanding(TestBaseDB):
         """The algorithm should detect one takeoff and one landing."""
 
         self.insert_airports_and_devices()
-        self.insert_aircraft_beacons_broken_rope()
+        self.insert_sender_positions_broken_rope()
 
         # find the takeoff and the landing
-        update_entries(db.session, start=datetime.datetime(2016, 7, 2, 0, 0, 0), end=datetime.datetime(2016, 7, 2, 23, 59, 59))
+        update_takeoff_landings(start=datetime.datetime(2016, 7, 2, 0, 0, 0), end=datetime.datetime(2016, 7, 2, 23, 59, 59))
         takeoff_landing_query = db.session.query(TakeoffLanding).filter(db.between(TakeoffLanding.timestamp, datetime.datetime(2016, 7, 2, 0, 0, 0), datetime.datetime(2016, 7, 2, 23, 59, 59)))
 
         self.assertEqual(len(takeoff_landing_query.all()), 2)
@@ -24,17 +24,17 @@ class TestTakeoffLanding(TestBaseDB):
             self.assertEqual(entry.airport.name, "Koenigsdorf")
 
         # we should not find the takeoff and the landing again
-        update_entries(db.session, start=datetime.datetime(2016, 7, 2, 0, 0, 0), end=datetime.datetime(2016, 7, 2, 23, 59, 59))
+        update_takeoff_landings(start=datetime.datetime(2016, 7, 2, 0, 0, 0), end=datetime.datetime(2016, 7, 2, 23, 59, 59))
         self.assertEqual(len(takeoff_landing_query.all()), 2)
 
     def test_broken_rope_with_stall(self):
         """Here we have a broken rope where the glider passes again the threshold for take off."""
 
         self.insert_airports_and_devices()
-        self.insert_aircraft_beacons_broken_rope_with_stall()
+        self.insert_sender_positions_broken_rope_with_stall()
 
         # find the takeoff and the landing
-        update_entries(db.session, start=datetime.datetime(2019, 4, 13, 0, 0, 0), end=datetime.datetime(2019, 4, 13, 23, 59, 59))
+        update_takeoff_landings(start=datetime.datetime(2019, 4, 13, 0, 0, 0), end=datetime.datetime(2019, 4, 13, 23, 59, 59))
         takeoff_landings = db.session.query(TakeoffLanding).filter(db.between(TakeoffLanding.timestamp, datetime.datetime(2019, 4, 13, 0, 0, 0), datetime.datetime(2019, 4, 13, 23, 59, 59))).all()
 
         self.assertEqual(len(takeoff_landings), 2)

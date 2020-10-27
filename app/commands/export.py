@@ -4,13 +4,85 @@ import click
 import datetime
 import re
 import csv
+import os
 
 from aerofiles.igc import Writer
-from app.model import AircraftBeacon, Device
+from app.model import SenderPosition, Sender
 from app import db
 
 user_cli = AppGroup("export")
 user_cli.help = "Export data in several file formats."
+
+@user_cli.command("debug_sql")
+@click.argument("start")
+@click.argument("end")
+@click.argument("name")
+def debug_sql(start, end, name):
+    """Export data (sender_positions and receivers) as sql for debugging (and/or creating test cases)."""
+
+    # First: get all the positions (and the receiver names for later)
+    sql_sender_positions = f"""
+        SELECT reference_timestamp, name, receiver_name, timestamp, location, track, ground_speed, altitude, aircraft_type, climb_rate, turn_rate, distance, bearing, agl 
+        FROM sender_positions
+        WHERE reference_timestamp BETWEEN '{start}' AND '{end}' AND name = '{name}'
+        ORDER BY reference_timestamp;
+    """
+
+    receiver_names = []
+    sender_position_values = []
+    results = db.session.execute(sql_sender_positions)
+    for row in results:
+        if row[2] not in receiver_names:
+            receiver_names.append("'" + row[2] + "'")
+        row = [f"'{r}'" if r else "DEFAULT" for r in row]
+        sender_position_values.append(f"({','.join(row)})")
+    
+    # Second: get the receivers
+    sql_receivers = f"""
+        SELECT name, location
+        FROM receivers
+        WHERE name IN ({','.join(receiver_names)});
+    """
+
+    receiver_values = []
+    results = db.session.execute(sql_receivers)
+    for row in results:
+        row = [f"'{r}'" if r else "DEFAULT" for r in row]
+        receiver_values.append(f"({','.join(row)})")    
+    
+    # Third: get the airports
+    sql_airports = f"""
+        SELECT DISTINCT a.name, a.location, a.altitude, a.style, a.border
+        FROM airports AS a, receivers AS r
+        WHERE
+            r.name IN ({','.join(receiver_names)})
+            AND ST_Within(r.location, ST_Buffer(a.location, 0.2))
+            AND a.style IN (2,4,5);
+        """
+
+    airport_values = []
+    results = db.session.execute(sql_airports)
+    for row in results:
+        row = [f"'{r}'" if r else "DEFAULT" for r in row]
+        airport_values.append(f"({','.join(row)})")  
+
+    # Last: write all into file
+    with open(f'{start}_{end}_{name}.sql', 'w') as file:
+        file.write(f'/*\n')
+        file.write(f'OGN Python SQL Export\n')
+        file.write(f'Created by: {os.getlogin()}\n')
+        file.write(f'Created at: {datetime.datetime.utcnow()}\n')
+        file.write(f'*/\n\n')
+
+
+        file.write("INSERT INTO airports(name, location, altitude, style, border) VALUES\n")
+        file.write(',\n'.join(airport_values) + ';\n\n')
+
+        file.write("INSERT INTO receivers(name, location) VALUES\n")
+        file.write(',\n'.join(receiver_values) + ';\n\n')
+        
+        file.write("INSERT INTO sender_positions(reference_timestamp, name, receiver_name, timestamp, location, track, ground_speed, altitude, aircraft_type, climb_rate, turn_rate, distance, bearing, agl) VALUES\n")
+        file.write(',\n'.join(sender_position_values) + ';\n\n')
 
 
 @user_cli.command("cup")
@@ -68,7 +140,7 @@ def igc(address, date):
         print("Date {} not valid.".format(date))
         return
 
-    device_id = db.session.query(Device.id).filter(Device.address == address).first()
+    device_id = db.session.query(Sender.id).filter(Sender.address == address).first()
 
     if device_id is None:
         print("Device with address '{}' not found.".format(address))
@@ -98,11 +170,11 @@ def igc(address, date):
         )
 
         points = (
-            db.session.query(AircraftBeacon)
-            .filter(AircraftBeacon.device_id == device_id)
-            .filter(AircraftBeacon.timestamp > date + " 00:00:00")
-            .filter(AircraftBeacon.timestamp < date + " 23:59:59")
-            .order_by(AircraftBeacon.timestamp)
+            db.session.query(SenderPosition)
+            .filter(SenderPosition.device_id == device_id)
+            .filter(SenderPosition.timestamp > date + " 00:00:00")
+            .filter(SenderPosition.timestamp < date + " 23:59:59")
+            .order_by(SenderPosition.timestamp)
         )
 
         for point in points.all():

@@ -8,7 +8,7 @@ from xmlunittest import XmlTestMixin
 
 from tests.base import TestBaseDB, db
 
-from app.model import AircraftBeacon, AircraftType, Receiver, Device, DeviceInfo, ReceiverCoverage
+from app.model import AircraftBeacon, AircraftType, Receiver, Sender, DeviceInfo, ReceiverCoverage
 
 from app.backend.liveglidernet import rec, lxml
 from app.backend.ognrange import stations2_filtered_pl, max_tile_mgrs_pl
@@ -27,8 +27,8 @@ class TestDB(TestBaseDB, XmlTestMixin):
         db.session.add(self.r03)
         db.session.commit()
 
-        self.d01 = Device(address="DD4711", lastseen="2017-12-20 10:00:02")
-        self.d02 = Device(address="DD0815", lastseen="2017-12-20 09:56:00")
+        self.d01 = Sender(address="DD4711", lastseen="2017-12-20 10:00:02")
+        self.d02 = Sender(address="DD0815", lastseen="2017-12-20 09:56:00")
         db.session.add(self.d01)
         db.session.add(self.d02)
         db.session.commit()

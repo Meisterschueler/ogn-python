@@ -6,7 +6,6 @@ from app.gateway.bulkimport import DbFeeder
 
 from tests.base import TestBaseDB, db
 
-
 class TestDatabase(TestBaseDB):
     def test_valid_messages(self):
         """This test insert all valid beacons. source: https://github.com/glidernet/ogn-aprs-protocol/valid_messages"""
@@ -39,11 +38,19 @@ class TestDatabase(TestBaseDB):
 
     def test_oneminute(self):
         with DbFeeder() as feeder:
-            with open(os.path.dirname(__file__) + '/oneminute.txt') as f:
+            with open(os.path.dirname(__file__) + '/beacon_data/logs/oneminute.txt') as f:
                 for line in f:
                     timestamp = datetime.datetime.strptime(line[:26], '%Y-%m-%d %H:%M:%S.%f')
                     aprs_string = line[28:]
                     feeder.add(aprs_string, reference_timestamp=timestamp)
 
+
 if __name__ == "__main__":
-    unittest.main()
+    #unittest.main()
+    if True:
+        import cProfile
+        
+        from app import create_app
+        app = create_app()
+        with app.app_context():
+            cProfile.run('TestDatabase().test_oneminute()', sort='tottime')

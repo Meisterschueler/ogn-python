@@ -34,7 +34,7 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
 4. Install [PostgreSQL](http://www.postgresql.org/) with [PostGIS](http://www.postgis.net/) and [TimescaleDB](https://www.timescale.com) Extension.
     Create a database (use "ogn" as default, otherwise you have to modify the configuration, see below)
 
-5.  Optional: Install redis for asynchronous tasks (like takeoff/landing-detection)
+5.  Install redis for asynchronous tasks (like database feeding, takeoff/landing-detection, ...)
 
     ```
     apt-get install redis-server
@@ -53,7 +53,7 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
     ./flask database init
     ```
 
-8. Optional: Prepare tables for TimescaleDB
+8. Prepare tables for TimescaleDB
 
     ```
     ./flask database init_timescaledb
@@ -72,37 +72,27 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
 10. Get world elevation data (needed for AGL calculation)
 	Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database which is 4326.
 	The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world with SRID 4326. Just download the data you need.
-	
-	For Europe we can get the DEM as GeoTIFF files from the [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
-    Because the SRID of these files is 3035 and we want 4326 we have to convert them (next step)
     
-11. Optional: Convert the elevation data into correct SRID
-
-	We convert elevation from one SRID (here: 3035) to target SRID (4326):
+    
+11. Import the GeoTIFF into the elevation table:
     
     ```
-    gdalwarp -s_srs "EPSG:3035" -t_srs "EPSG:4326" source.tif target.tif
-    ```
-    
-12. Import the GeoTIFF into the elevation table:
-    
-    ```
-    raster2pgsql -s 4326 -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
+    raster2pgsql *.tif -s 4326 -d -M -C -I -F -t 25x25 public.elevation | psql -d ogn
     ```
 
-13. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
+12. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
 	
 	```
 	flask database import_airports tests/SeeYou.cup 
 	```
 
-14. Import DDB (needed for registration signs in the logbook).
+13. Import DDB (needed for registration signs in the logbook).
 
 	```
 	flask database import_ddb
 	```
 
-15. Optional: Use supervisord
+14. Optional: Use supervisord
 	You can use [Supervisor](http://supervisord.org/) to control the complete system. In the directory deployment/supervisor
 	we have some configuration files to feed the database (ogn-feed), run the celery worker (celeryd), the celery beat
 	(celerybeatd), the celery monitor (flower), and the python wsgi server (gunicorn). All files assume that
