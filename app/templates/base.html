@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block navbar %}
-
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <nav class="navbar navbar-default">
     <div class="container">
         <div class="navbar-header">
@@ -23,7 +23,7 @@
                 <li><a href="{{ url_for('main.senders') }}">Senders</a></li>
                 <li><a href="{{ url_for('main.receivers') }}">Receivers</a></li>
                 <li><a href="{{ url_for('main.airports') }}">Airports</a></li>
-                <li><a href="{{ url_for('main.logbook') }}">Logbook</a></li>
+                <li><a href="{{ url_for('main.logbooks') }}">Logbook</a></li>
                 <li><a href="{{ url_for('main.sender_ranking') }}">Sender Ranking</a></li>
                 <li><a href="{{ url_for('main.receiver_ranking') }}">Receiver Ranking</a></li>
             </ul>

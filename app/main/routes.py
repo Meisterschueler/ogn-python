@@ -17,26 +17,26 @@ def get_countries_in_receivers():
     return [{"iso2": country[0]} for country in query.all()]
 
 
-@cache.cached(key_prefix="countries_in_logbook")
+@cache.cached(key_prefix="countries_in_takeoff_landings")
 def get_used_countries():
-    query = db.session.query(Country.iso2).filter(Country.iso2 == Airport.country_code).filter(Logbook.takeoff_airport_id == Airport.id).order_by(Country.iso2).distinct(Country.iso2)
+    query = db.session.query(Country.iso2).filter(Country.gid == TakeoffLanding.country_id).order_by(Country.iso2).distinct(Country.iso2)
     return [{"iso2": country[0]} for country in query.all()]
 
 
 @cache.memoize()
 def get_used_airports_by_country(sel_country):
-    query = db.session.query(Airport).filter(Airport.country_code == sel_country).filter(Logbook.takeoff_airport_id == Airport.id).order_by(Airport.name).distinct(Airport.name)
+    query = db.session.query(Airport).filter(Airport.country_code == sel_country).filter(TakeoffLanding.airport_id==Airport.id).filter(TakeoffLanding.country_id == Country.gid).order_by(Airport.name).distinct(Airport.name)
     return [used_airport for used_airport in query]
 
 
 @cache.memoize()
 def get_dates_for_airport(sel_airport):
     query = (
-        db.session.query(db.func.date(Logbook.reference), db.func.count(Logbook.id).label("logbook_count"))
+        db.session.query(db.func.date(Logbook.reference_timestamp), db.func.count(Logbook.id).label("logbook_count"))
         .filter(Airport.id == sel_airport)
         .filter(db.or_(Airport.id == Logbook.takeoff_airport_id, Airport.id == Logbook.landing_airport_id))
-        .group_by(db.func.date(Logbook.reference))
-        .order_by(db.func.date(Logbook.reference).desc())
+        .group_by(db.func.date(Logbook.reference_timestamp))
+        .order_by(db.func.date(Logbook.reference_timestamp).desc())
     )
 
     return [{"date": date, "logbook_count": logbook_count} for (date, logbook_count) in query.all()]
@@ -54,7 +54,7 @@ def index():
     sender_positions_today = db.session.query(db.func.sum(ReceiverStatistic.messages_count)).filter(ReceiverStatistic.date==date.today()).one()[0]
     sender_positions_total = db.session.query(db.func.sum(ReceiverStatistic.messages_count)).one()[0]
 
-    last_logbook_entries = db.session.query(Logbook).order_by(Logbook.reference.desc()).limit(10)
+    last_logbook_entries = db.session.query(Logbook).order_by(Logbook.reference_timestamp.desc()).limit(10)
     return render_template("index.html",
         senders_today=senders_today,
         receivers_today=receivers_today,
@@ -150,8 +150,8 @@ def airport_detail():
     return render_template("airport_detail.html", title="Airport Detail", airport=airport.one(), senders=senders)
 
 
-@bp.route("/logbook.html", methods=["GET", "POST"])
-def logbook():
+@bp.route("/logbooks.html", methods=["GET", "POST"])
+def logbooks():
     sel_country = request.args.get("country")
     sel_airport_id = request.args.get("airport_id")
     sel_date = request.args.get("date")
@@ -187,17 +187,17 @@ def logbook():
         filters.append(db.or_(Logbook.takeoff_airport_id == sel_airport_id, Logbook.landing_airport_id == sel_airport_id))
 
     if sel_date:
-        filters.append(db.func.date(Logbook.reference) == sel_date)
+        filters.append(db.func.date(Logbook.reference_timestamp) == sel_date)
 
     if sel_sender_id:
         filters.append(Logbook.sender_id == sel_sender_id)
 
     if len(filters) > 0:
-        logbook = db.session.query(Logbook).filter(*filters).order_by(Logbook.reference)
+        logbooks = db.session.query(Logbook).filter(*filters).order_by(Logbook.reference_timestamp).limit(100)
     else:
-        logbook = None
+        logbooks = None
 
-    return render_template("logbook.html", title="Logbook", sel_country=sel_country, countries=countries, sel_airport_id=sel_airport_id, airports=airports, sel_date=sel_date, dates=dates, logbook=logbook)
+    return render_template("logbooks.html", title="Logbook", sel_country=sel_country, countries=countries, sel_airport_id=sel_airport_id, airports=airports, sel_date=sel_date, dates=dates, logbooks=logbooks)
 
 
 @bp.route("/download.html")

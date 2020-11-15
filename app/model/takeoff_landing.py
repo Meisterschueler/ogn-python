@@ -18,4 +18,7 @@ class TakeoffLanding(db.Model):
     airport_id = db.Column(db.Integer, db.ForeignKey("airports.id", ondelete="SET NULL"))
     airport = db.relationship("Airport", foreign_keys=[airport_id], backref="takeoff_landings")
 
+    country_id = db.Column(db.Integer, db.ForeignKey("countries.gid", ondelete="CASCADE"), index=True)
+    country = db.relationship("Country", foreign_keys=[country_id], backref="takeoff_landings")
+
     __table_args__ = (Index('idx_takeoff_landings_uc', 'timestamp', 'sender_id', 'airport_id', unique=True), )
