@@ -33,7 +33,7 @@
 	  <td>{{ loop.index }}
     <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ sel_country|lower }}" alt="{{ sel_country }}"/></td>
     <td>{{ airport|to_html_link|safe }}</td>
-	  <td><a href="{{ url_for('main.logbook', country=sel_country, airport_id=airport.id) }}">Logbook</a></td>
+	  <td><a href="{{ url_for('main.logbooks', country=sel_country, airport_id=airport.id) }}">Logbook</a></td>
 	</tr>
 	{% endfor %}
   </table>

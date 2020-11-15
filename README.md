@@ -118,13 +118,13 @@ The following scripts run in the foreground and should be deamonized
 - Start a task server (make sure redis is up and running)
 
   ```
-  celery -A app.collect worker -l info
+  celery -A celery_app worker -l info
   ```
 
 - Start the task scheduler (make sure a task server is up and running)
 
   ```
-  celery -A app.collect beat -l info
+  celery -A celery_app beat -l info
   ```
 
 ### Flask - Command Line Interface
@@ -163,14 +163,10 @@ Most commands are command groups, so if you execute this command you will get fu
 
 ### Available tasks
 
-- `app.collect.celery.update_takeoff_landings` - Compute takeoffs and landings.
-- `app.collect.celery.update_logbook_entries` - Add/update logbook entries.
-- `app.collect.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
-- `app.collect.celery.import_ddb` - Import registered devices from the DDB.
-- `app.collect.celery.update_receivers_country_code` - Update country code in receivers table if None.
-- `app.collect.celery.purge_old_data` - Delete AircraftBeacons and ReceiverBeacons older than given 'age'.
-- `app.collect.celery.update_stats` - Create stats and update receivers/devices with stats.
-- `app.collect.celery.update_ognrange` - Create receiver coverage stats for Melissas ognrange.
+- `app.tasks.update_takeoff_landings` - Compute takeoffs and landings.
+- `app.tasks.celery.update_logbook_entries` - Add/update logbook entries.
+- `app.tasks.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
+- `app.tasks.celery.import_ddb` - Import registered devices from the DDB.
 
 If the task server is up and running, tasks could be started manually. Here we compute takeoffs and landings for the past 90 minutes:
 
