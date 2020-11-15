@@ -50,7 +50,7 @@ setup(
         'xmlunittest==0.5.0',
         'flower==0.9.5',
         'tqdm==4.51.0',
-	'requests==2.24.0',
+	'requests==2.25.0',
     ],
     test_require=[
         'pytest==5.0.1',
