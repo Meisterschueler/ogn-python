@@ -43,29 +43,26 @@ def info():
 
 @user_cli.command("init")
 def init():
-    """Initialize the database."""
+    """Initialize the database (with PostGIS and TimescaleDB extensions)."""
 
     from alembic.config import Config
     from alembic import command
 
+    # Create PostGIS and PostGIS extensions
     db.session.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
     db.session.execute("CREATE EXTENSION IF NOT EXISTS btree_gist;")
+    db.session.execute("CREATE EXTENSION IF NOT EXISTS timescaledb;")
     db.session.commit()
+
+    # Create Scheme
     db.create_all()
 
-    print("Done.")
-
-
-@user_cli.command("init_timescaledb")
-def init_timescaledb():
-    """Initialize TimescaleDB features."""
-
-    db.session.execute("CREATE EXTENSION IF NOT EXISTS timescaledb;")
+    # Change (sender|receiver)_positions to TimescaleDB table
     db.session.execute("SELECT create_hypertable('sender_positions', 'reference_timestamp', chunk_time_interval => interval '3 hours', if_not_exists => TRUE);")
     db.session.execute("SELECT create_hypertable('receiver_positions', 'reference_timestamp', chunk_time_interval => interval '1 day', if_not_exists => TRUE);")
     db.session.commit()
 
-    print("Done.")
+    print("Initialized the database (with PostGIS and TimescaleDB extensions).")
 
 
 @user_cli.command("drop")

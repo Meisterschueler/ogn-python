@@ -55,6 +55,7 @@ setup(
         'flower==0.9.5',
         'tqdm==4.51.0',
 	'requests==2.25.0',
+	'matplotlib=3.3.3'
     ],
     test_require=[
         'pytest==5.0.1',

@@ -112,10 +112,10 @@ def update_takeoff_landings(start, end):
         .subquery()
     )
 
-    # get the device id instead of the name and consider them if the are near airports ...
+    # get the sender id instead of the name and consider them if the are near airports ...
     sq5 = (
         db.session.query(
-            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, Sender.id.label("device_id"), Airport.id.label("airport_id"), func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance")
+            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, Sender.id.label("sender_id"), Airport.id.label("airport_id"), func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance"), Airport.country_code
         )
         .filter(and_(func.ST_Within(sq4.c.location, Airport.border),
                      between(Airport.style, 2, 5)))
@@ -125,17 +125,16 @@ def update_takeoff_landings(start, end):
 
     # ... and take the nearest airport
     sq6 = (
-        db.session.query(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_id)
-        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id)
-        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.device_id, sq5.c.airport_distance)
+        db.session.query(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.sender_id, sq5.c.airport_id, sq5.c.country_code)
+        .distinct(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.sender_id)
+        .order_by(sq5.c.timestamp, sq5.c.track, sq5.c.is_takeoff, sq5.c.sender_id, sq5.c.airport_distance)
         .subquery()
     )
 
     # ... add the country
     takeoff_landing_query = (
-        db.session.query(sq6.c.timestamp, sq6.c.track, sq6.c.is_takeoff, sq6.c.device_id, sq6.c.airport_id, Country.gid)
-            .join(Airport, sq6.c.airport_id==Airport.id)
-            .join(Country,  Airport.country_code==Country.iso2, isouter=True)
+        db.session.query(sq6.c.timestamp, sq6.c.track, sq6.c.is_takeoff, sq6.c.sender_id, sq6.c.airport_id, Country.gid)
+            .join(Country,  sq6.c.country_code==Country.iso2, isouter=True)
             .subquery()
     )
 
@@ -288,6 +287,7 @@ def update_logbook(offset_days=None):
             Logbook.landing_airport_id==complete_flight_query.c.landing_airport_id
         )) \
         .values(takeoff_timestamp=complete_flight_query.c.takeoff_timestamp,
+                takeoff_track=complete_flight_query.c.takeoff_track,
                 takeoff_airport_id=complete_flight_query.c.takeoff_airport_id
         )
     result = db.session.execute(upd)
@@ -305,6 +305,7 @@ def update_logbook(offset_days=None):
             Logbook.landing_airport_id==null()
         )) \
         .values(landing_timestamp=complete_flight_query.c.landing_timestamp,
+                landing_track=complete_flight_query.c.landing_track,
                 landing_airport_id=complete_flight_query.c.landing_airport_id
         )
     result = db.session.execute(upd)

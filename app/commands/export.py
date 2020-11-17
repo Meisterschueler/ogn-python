@@ -6,6 +6,8 @@ import re
 import csv
 import os
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from aerofiles.igc import Writer
 from app.model import SenderPosition, Sender
 from app import db
@@ -132,18 +134,18 @@ def cup():
 @click.argument("date")
 def igc(address, date):
     """Export igc file for <address> at <date>."""
-    if not re.match(".{6}", address):
-        print("Address {} not valid.".format(address))
+    if not re.match("[0-9A-F]{6}", address):
+        print(f"Address '{address}' not valid.")
+        return
+
+    try:
+        sender = db.session.query(Sender).filter(Sender.address==address).one()
+    except NoResultFound as e:
+        print(f"No data for '{address}' in the DB")
         return
 
     if not re.match(r"\d{4}-\d{2}-\d{2}", date):
-        print("Date {} not valid.".format(date))
-        return
-
-    device_id = db.session.query(Sender.id).filter(Sender.address == address).first()
-
-    if device_id is None:
-        print("Device with address '{}' not found.".format(address))
+        print(f"Date {date} not valid.")
         return
 
     with open("sample.igc", "wb") as fp:
@@ -155,27 +157,26 @@ def igc(address, date):
                 "logger_id": "OGN",
                 "date": datetime.date(1987, 2, 24),
                 "fix_accuracy": 50,
-                "pilot": "Konstantin Gruendger",
+                "pilot": "Unknown",
                 "copilot": "",
-                "glider_type": "Duo Discus",
-                "glider_id": "D-KKHH",
-                "firmware_version": "2.2",
-                "hardware_version": "2",
-                "logger_type": "LXNAVIGATION,LX8000F",
-                "gps_receiver": "uBLOX LEA-4S-2,16,max9000m",
-                "pressure_sensor": "INTERSEMA,MS5534A,max10000m",
-                "competition_id": "2H",
-                "competition_class": "Doubleseater",
+                "glider_type": sender.infos[0].aircraft if len(sender.infos) > 0 else '',
+                "glider_id": sender.infos[0].registration if len(sender.infos) > 0 else '',
+                "firmware_version": sender.software_version,
+                "hardware_version": sender.hardware_version,
+                "logger_type": "OGN",
+                "gps_receiver": "unknown",
+                "pressure_sensor": "unknown",
+                "competition_id": sender.infos[0].competition if len(sender.infos) > 0 else '',
+                "competition_class": "unknown",
             }
         )
 
         points = (
             db.session.query(SenderPosition)
-            .filter(SenderPosition.device_id == device_id)
-            .filter(SenderPosition.timestamp > date + " 00:00:00")
-            .filter(SenderPosition.timestamp < date + " 23:59:59")
-            .order_by(SenderPosition.timestamp)
+                .filter(db.between(SenderPosition.reference_timestamp, f"{date} 00:00:00", f"{date} 23:59:59"))
+                .filter(SenderPosition.name == sender.name)
+                .order_by(SenderPosition.timestamp)
         )
 
-        for point in points.all():
+        for point in points:
             writer.write_fix(point.timestamp.time(), latitude=point.location.latitude, longitude=point.location.longitude, valid=True, pressure_alt=point.altitude, gps_alt=point.altitude)

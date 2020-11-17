@@ -59,9 +59,9 @@
     {% for entry in logbook %}
     <tr>
       <td>{{ loop.index }}</td>
-      <td>{% if ns.mydate != entry.reference.strftime('%Y-%m-%d') %}{% set ns.mydate = entry.reference.strftime('%Y-%m-%d') %}{{ ns.mydate }}{% endif %}</td>
-      <td>{% if entry.takeoff_airport is not none %}<a href="{{ url_for('main.logbooks', country=entry.takeoff_airport.country_code, airport_id=entry.takeoff_airport.id, date=entry.reference.strftime('%Y-%m-%d')) }}">{{ entry.takeoff_airport.name }}</a>{% endif %}</td>
-      <td>{% if entry.landing_airport is not none %}<a href="{{ url_for('main.logbooks', country=entry.landing_airport.country_code, airport_id=entry.landing_airport.id, date=entry.reference.strftime('%Y-%m-%d')) }}">{{ entry.landing_airport.name }}</a>{% endif %}</td>
+      <td>{% if ns.mydate != entry.reference_timestamp.strftime('%Y-%m-%d') %}{% set ns.mydate = entry.reference_timestamp.strftime('%Y-%m-%d') %}{{ ns.mydate }}{% endif %}</td>
+      <td>{% if entry.takeoff_airport is not none %}<a href="{{ url_for('main.logbooks', country=entry.takeoff_airport.country_code, airport_id=entry.takeoff_airport.id, date=entry.reference_timestamp.strftime('%Y-%m-%d')) }}">{{ entry.takeoff_airport.name }}</a>{% endif %}</td>
+      <td>{% if entry.landing_airport is not none %}<a href="{{ url_for('main.logbooks', country=entry.landing_airport.country_code, airport_id=entry.landing_airport.id, date=entry.reference_timestamp.strftime('%Y-%m-%d')) }}">{{ entry.landing_airport.name }}</a>{% endif %}</td>
       <td>{% if entry.takeoff_timestamp is not none %} {{ entry.takeoff_timestamp.strftime('%H:%M') }} {% endif %}</td>
       <td>{% if entry.landing_timestamp is not none %} {{ entry.landing_timestamp.strftime('%H:%M') }} {% endif %}</td>
       <td>{% if entry.duration is not none %}{{ entry.duration }}{% endif %}</td>

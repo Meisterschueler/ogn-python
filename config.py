@@ -25,12 +25,15 @@ class DefaultConfig(BaseConfig):
     from datetime import timedelta
 
     CELERYBEAT_SCHEDULE = {
-        #"update-ddb": {"task": "import_ddb", "schedule": timedelta(hours=1)},
-        #"update-country-codes": {"task": "update_receivers_country_code", "schedule": timedelta(days=1)},
-        #"update-takeoff-and-landing": {"task": "update_takeoff_landings", "schedule": timedelta(hours=1), "kwargs": {"last_minutes": 90}},
-        #"update-logbook": {"task": "update_logbook_entries", "schedule": timedelta(hours=2), "kwargs": {"day_offset": 0}},
-        #"update-max-altitudes": {"task": "update_logbook_max_altitude", "schedule": timedelta(hours=1), "kwargs": {"day_offset": 0}},
-        #"update-logbook-daily": {"task": "update_logbook_entries", "schedule": crontab(hour=1, minute=0), "kwargs": {"day_offset": -1}},
+        "transfer_to_database": {"task": "transfer_to_database", "schedule": timedelta(minutes=1)},
+        "update_statistics": {"task": "update_statistics", "schedule": timedelta(minutes=5)},
+        "update_takeoff_landings": {"task": "update_takeoff_landings", "schedule": timedelta(minutes=1), "kwargs": {"last_minutes": 20}},
+        "update_logbook": {"task": "update_logbook", "schedule": timedelta(minutes=1)},
+        "update_logbook_previous_day": {"task": "update_logbook", "schedule": crontab(hour=1, minute=0), "kwargs": {"day_offset": -1}},
+
+        "update_ddb_daily": {"task": "import_ddb", "schedule": timedelta(days=1)},
+        #"update_logbook_max_altitude": {"task": "update_logbook_max_altitude", "schedule": timedelta(minutes=1), "kwargs": {"offset_days": 0}},
+        
         #"purge_old_data": {"task": "purge_old_data", "schedule": timedelta(hours=1), "kwargs": {"max_hours": 48}},
     }
 

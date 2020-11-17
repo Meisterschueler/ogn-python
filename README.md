@@ -53,13 +53,7 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
     ./flask database init
     ```
 
-8. Prepare tables for TimescaleDB
-
-    ```
-    ./flask database init_timescaledb
-    ```
-
-9. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
+8. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
     Get the [World Borders Dataset](http://thematicmapping.org/downloads/world_borders.php) and unpack it.
     Then import it into your database (we use "ogn" as database name).
     
@@ -69,30 +63,30 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
     psql -d ogn -c "DROP TABLE world_borders_temp;"
     ```
     
-10. Get world elevation data (needed for AGL calculation)
+9. Get world elevation data (needed for AGL calculation)
 	Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database which is 4326.
 	The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world with SRID 4326. Just download the data you need.
     
     
-11. Import the GeoTIFF into the elevation table:
+10. Import the GeoTIFF into the elevation table:
     
     ```
     raster2pgsql *.tif -s 4326 -d -M -C -I -F -t 25x25 public.elevation | psql -d ogn
     ```
 
-12. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
+11. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
 	
 	```
 	flask database import_airports tests/SeeYou.cup 
 	```
 
-13. Import DDB (needed for registration signs in the logbook).
+12. Import DDB (needed for registration signs in the logbook).
 
 	```
 	flask database import_ddb
 	```
 
-14. Optional: Use supervisord
+13. Optional: Use supervisord
 	You can use [Supervisor](http://supervisord.org/) to control the complete system. In the directory deployment/supervisor
 	we have some configuration files to feed the database (ogn-feed), run the celery worker (celeryd), the celery beat
 	(celerybeatd), the celery monitor (flower), and the python wsgi server (gunicorn). All files assume that
@@ -175,6 +169,10 @@ python3
 >>>from app.collect.celery import update_takeoff_landings
 >>>update_takeoff_landings.delay(last_minutes=90)
 ```
+
+## Notes for Raspberry Pi
+For matplotlib we need several apt packages installed:
+apt install libatlas3-base libopenjp2-7 libtiff5
 
 ## License
 Licensed under the [AGPLv3](LICENSE).
