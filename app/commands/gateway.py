@@ -26,6 +26,9 @@ def run(aprs_filter):
     Run the aprs client, parse the incoming data and put it to redis.
     """
 
+    import logging
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)-17s %(levelname)-8s %(message)s')
+
     current_app.logger.warning("Start ogn gateway")
     client = AprsClient(current_app.config['APRS_USER'], aprs_filter)
     client.connect()
@@ -62,7 +65,7 @@ def run(aprs_filter):
 
         current_minute = datetime.utcnow().minute
         if current_minute != insert_into_redis.last_minute:
-            current_app.logger.warning(f"{insert_into_redis.beacon_counter:7d}")
+            current_app.logger.info(f"{insert_into_redis.beacon_counter:7d}/min")
             insert_into_redis.beacon_counter = 0
         insert_into_redis.last_minute = current_minute
 
