@@ -1,13 +1,13 @@
 from mgrs import MGRS
-import rasterio as rs
 
 from ogn.parser import parse
 
 from app.model import AircraftType
 
+#import rasterio as rs
+#elevation_dataset = rs.open('/Volumes/LaCieBlack/Wtf4.tiff')
 
 mgrs = MGRS()
-#elevation_dataset = rs.open('/Volumes/LaCieBlack/Wtf4.tiff')
 
 
 def aprs_string_to_message(aprs_string):
