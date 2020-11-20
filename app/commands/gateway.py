@@ -8,7 +8,6 @@ import click
 from tqdm import tqdm
 
 from ogn.client import AprsClient
-from ogn.parser import parse
 
 from app import redis_client
 from app.gateway.beacon_conversion import aprs_string_to_message

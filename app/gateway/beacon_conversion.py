@@ -1,3 +1,5 @@
+from flask import current_app
+
 from mgrs import MGRS
 
 from ogn.parser import parse
@@ -14,7 +16,7 @@ def aprs_string_to_message(aprs_string):
     try:
         message = parse(aprs_string, calculate_relations=True)
     except Exception as e:
-        print(e)
+        current_app.logger.debug(e)
         return None
 
     if message['aprs_type'] not in ('position', 'status'):

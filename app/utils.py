@@ -3,6 +3,8 @@ import gzip
 from io import StringIO
 from datetime import datetime, timedelta
 
+from flask import current_app
+
 from aerofiles.seeyou import Reader
 from ogn.parser.utils import FEETS_TO_METER
 import requests
@@ -118,7 +120,7 @@ def get_airports(cupfile):
 
                     airports.append(airport)
             except AttributeError as e:
-                print("Failed to parse line: {} {}".format(line, e))
+                current_app.logger.error("Failed to parse line: {} {}".format(line, e))
 
     return airports
 
