@@ -339,11 +339,19 @@ def receiver_position_csv_strings_to_db(lines):
             agl = EXCLUDED.agl;
     """)
 
-    # Update receiver country and nearest airport
+    # Update receiver country
     cursor.execute(f"""
         UPDATE receivers AS r
         SET 
-            country_id = c.gid,
+            country_id = c.gid
+        FROM countries AS c
+        WHERE r.country_id IS NULL AND ST_Within(r.location, c.geom);
+    """)
+
+    # Update receiver airport
+    cursor.execute(f"""
+        UPDATE receivers AS r
+        SET 
             airport_id = (
                 SELECT id
                 FROM airports AS a
@@ -353,8 +361,7 @@ def receiver_position_csv_strings_to_db(lines):
                 ORDER BY ST_DistanceSphere(a.location, r.location)
                 LIMIT 1
             )
-        FROM countries AS c
-        WHERE r.country_id IS NULL AND ST_Within(r.location, c.geom);
+        WHERE r.airport_id IS NULL;
     """)
 
     # Insert all the beacons
