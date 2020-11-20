@@ -170,9 +170,18 @@ python3
 >>>update_takeoff_landings.delay(last_minutes=90)
 ```
 
+or directly from command line:
+
+```
+celery -A celery_app call takeoff_landings
+```
+
 ## Notes for Raspberry Pi
 For matplotlib we need several apt packages installed:
+
+```
 apt install libatlas3-base libopenjp2-7 libtiff5
+```
 
 ## License
 Licensed under the [AGPLv3](LICENSE).

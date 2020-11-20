@@ -21,7 +21,7 @@
 	<tr>
     <td>{{ loop.index }}</td>
     <td>{{ entry.sender|to_html_link|safe }}</a></td>
-    <td>{% if entry.sender.infos|length > 0 %}{{ entry.sender.infos[0].aircraft }}{% endif %}</td>
+    <td>{% if entry.sender.infos|length > 0 %}{{ entry.sender.infos[0].aircraft }}{% else %}-{% endif %}</td>
     <td class="text-right">{{ '%0.1f' | format(entry.max_distance/1000.0) }}</td>
     <td class="text-right">{{ '%0.1f' | format(entry.max_normalized_quality) }}</td>
     <td class="text-right">{{ entry.receivers_count }}</td>

@@ -4,8 +4,6 @@ import click
 from datetime import datetime
 
 from app.collect.logbook import update_takeoff_landings, update_logbook
-from app.model import Airport, Logbook
-from sqlalchemy.sql import func
 from tqdm import tqdm
 from app.commands.database import get_database_days
 from app.utils import date_to_timestamps

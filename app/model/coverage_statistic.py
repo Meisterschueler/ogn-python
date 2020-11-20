@@ -1,8 +1,5 @@
 from app import db
 
-from sqlalchemy import Index
-from sqlalchemy.orm import backref
-
 
 class CoverageStatistic(db.Model):
     __tablename__ = "coverage_statistics"
@@ -20,9 +17,9 @@ class CoverageStatistic(db.Model):
 
     # Relations
     sender_id = db.Column(db.Integer, db.ForeignKey("senders.id", ondelete="CASCADE"), index=True)
-    sender = db.relationship("Sender", foreign_keys=[sender_id], backref=backref("coverage_stats", order_by=date))
+    sender = db.relationship("Sender", foreign_keys=[sender_id], backref=db.backref("coverage_stats", order_by=date))
 
     receiver_id = db.Column(db.Integer, db.ForeignKey("receivers.id", ondelete="CASCADE"), index=True)
-    receiver = db.relationship("Receiver", foreign_keys=[receiver_id], backref=backref("coverage_stats", order_by=date))
+    receiver = db.relationship("Receiver", foreign_keys=[receiver_id], backref=db.backref("coverage_stats", order_by=date))
 
-    __table_args__ = (Index('idx_coverage_statistics_uc', 'date', 'location_mgrs_short', 'sender_id', 'receiver_id', 'is_trustworthy', unique=True), )
+    __table_args__ = (db.Index('idx_coverage_statistics_uc', 'date', 'location_mgrs_short', 'sender_id', 'receiver_id', 'is_trustworthy', unique=True), )

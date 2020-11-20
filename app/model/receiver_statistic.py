@@ -1,8 +1,5 @@
 from app import db
 
-from sqlalchemy import Index
-from sqlalchemy.orm import backref
-
 
 class ReceiverStatistic(db.Model):
     __tablename__ = "receiver_statistics"
@@ -20,6 +17,6 @@ class ReceiverStatistic(db.Model):
 
     # Relations
     receiver_id = db.Column(db.Integer, db.ForeignKey("receivers.id", ondelete="CASCADE"), index=True)
-    receiver = db.relationship("Receiver", foreign_keys=[receiver_id], backref=backref("statistics", order_by=date.desc()))
+    receiver = db.relationship("Receiver", foreign_keys=[receiver_id], backref=db.backref("statistics", order_by=date.desc()))
 
-    __table_args__ = (Index('idx_receiver_statistics_uc', 'date', 'receiver_id', 'is_trustworthy', unique=True), )
+    __table_args__ = (db.Index('idx_receiver_statistics_uc', 'date', 'receiver_id', 'is_trustworthy', unique=True), )

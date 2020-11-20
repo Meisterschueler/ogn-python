@@ -1,4 +1,3 @@
-from sqlalchemy.sql import null, and_, func, case
 from sqlalchemy.dialects.postgresql import insert
 from flask import current_app
 
@@ -15,7 +14,7 @@ def upsert(model, rows, update_cols):
     stmt = insert(table).values(rows)
 
     on_conflict_stmt = stmt.on_conflict_do_update(
-        index_elements=table.primary_key.columns, set_={k: case([(getattr(stmt.excluded, k) != null(), getattr(stmt.excluded, k))], else_=getattr(model, k)) for k in update_cols}
+        index_elements=table.primary_key.columns, set_={k: db.case([(getattr(stmt.excluded, k) != db.null(), getattr(stmt.excluded, k))], else_=getattr(model, k)) for k in update_cols}
     )
 
     # print(compile_query(on_conflict_stmt))

@@ -1,6 +1,3 @@
-from sqlalchemy import and_, or_, insert, update, exists, between
-from sqlalchemy.sql import func, null
-from sqlalchemy.sql.expression import case, true, false
 from sqlalchemy.dialects.postgresql import insert   # special insert for upsert ("ON CONFLICT ...")
 from flask import current_app
 
@@ -46,42 +43,42 @@ def update_takeoff_landings(start, end):
         .distinct(SenderPosition.name, SenderPosition.timestamp)
         .order_by(SenderPosition.name, SenderPosition.timestamp, SenderPosition.error_count)
         .filter(SenderPosition.agl <= MAX_EVENT_AGL)
-        .filter(between(SenderPosition.reference_timestamp, start - timedelta(seconds=MAX_EVENT_DURATION), end + timedelta(seconds=MAX_EVENT_DURATION)))
+        .filter(db.between(SenderPosition.reference_timestamp, start - timedelta(seconds=MAX_EVENT_DURATION), end + timedelta(seconds=MAX_EVENT_DURATION)))
         .subquery()
     )
     
     # make a query with current, previous and next position
     sq2 = db.session.query(
         sq.c.name,
-        func.lag(sq.c.name).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("name_prev"),
-        func.lead(sq.c.name).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("name_next"),
+        db.func.lag(sq.c.name).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("name_prev"),
+        db.func.lead(sq.c.name).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("name_next"),
         sq.c.timestamp,
-        func.lag(sq.c.timestamp).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("timestamp_prev"),
-        func.lead(sq.c.timestamp).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("timestamp_next"),
+        db.func.lag(sq.c.timestamp).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("timestamp_prev"),
+        db.func.lead(sq.c.timestamp).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("timestamp_next"),
         sq.c.location,
-        func.lag(sq.c.location).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("location_wkt_prev"),
-        func.lead(sq.c.location).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("location_wkt_next"),
+        db.func.lag(sq.c.location).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("location_wkt_prev"),
+        db.func.lead(sq.c.location).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("location_wkt_next"),
         sq.c.track,
-        func.lag(sq.c.track).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("track_prev"),
-        func.lead(sq.c.track).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("track_next"),
+        db.func.lag(sq.c.track).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("track_prev"),
+        db.func.lead(sq.c.track).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("track_next"),
         sq.c.ground_speed,
-        func.lag(sq.c.ground_speed).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("ground_speed_prev"),
-        func.lead(sq.c.ground_speed).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("ground_speed_next"),
+        db.func.lag(sq.c.ground_speed).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("ground_speed_prev"),
+        db.func.lead(sq.c.ground_speed).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("ground_speed_next"),
         sq.c.altitude,
-        func.lag(sq.c.altitude).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("altitude_prev"),
-        func.lead(sq.c.altitude).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("altitude_next"),
+        db.func.lag(sq.c.altitude).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("altitude_prev"),
+        db.func.lead(sq.c.altitude).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("altitude_next"),
         sq.c.climb_rate,
-        func.lag(sq.c.climb_rate).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("climb_rate_prev"),
-        func.lead(sq.c.climb_rate).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("climb_rate_next"),
+        db.func.lag(sq.c.climb_rate).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("climb_rate_prev"),
+        db.func.lead(sq.c.climb_rate).over(partition_by=sq.c.name, order_by=sq.c.timestamp).label("climb_rate_next"),
     ).subquery()
 
     # consider only positions between start and end and with predecessor and successor and limit distance and duration between points
     sq3 = (
         db.session.query(sq2)
-            .filter(and_(sq2.c.name_prev != null(), sq2.c.name_next != null()))
-            .filter(and_(func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_prev) < MAX_EVENT_RADIUS, func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_next) < MAX_EVENT_RADIUS))
+            .filter(db.and_(sq2.c.name_prev != db.null(), sq2.c.name_next != db.null()))
+            .filter(db.and_(db.func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_prev) < MAX_EVENT_RADIUS, db.func.ST_DistanceSphere(sq2.c.location, sq2.c.location_wkt_next) < MAX_EVENT_RADIUS))
             .filter(sq2.c.timestamp_next - sq2.c.timestamp_prev < timedelta(seconds=MAX_EVENT_DURATION))
-            .filter(between(sq2.c.timestamp, start, end))
+            .filter(db.between(sq2.c.timestamp, start, end))
             .subquery()
     )
 
@@ -89,24 +86,24 @@ def update_takeoff_landings(start, end):
     sq4 = (
         db.session.query(
             sq3.c.timestamp,
-            case(
+            db.case(
                 [
                     (sq3.c.ground_speed > MIN_TAKEOFF_SPEED, sq3.c.location_wkt_prev),  # on takeoff we take the location from the previous fix because it is nearer to the airport
                     (sq3.c.ground_speed <= MIN_TAKEOFF_SPEED, sq3.c.location),
                 ]
             ).label("location"),
-            case([(sq3.c.ground_speed > MAX_LANDING_SPEED, sq3.c.track), (sq3.c.ground_speed <= MAX_LANDING_SPEED, sq3.c.track_prev)]).label(
+            db.case([(sq3.c.ground_speed > MAX_LANDING_SPEED, sq3.c.track), (sq3.c.ground_speed <= MAX_LANDING_SPEED, sq3.c.track_prev)]).label(
                 "track"
             ),  # on landing we take the track from the previous fix because gliders tend to leave the runway quickly
             sq3.c.ground_speed,
             sq3.c.altitude,
-            case([(sq3.c.ground_speed > MIN_TAKEOFF_SPEED, True), (sq3.c.ground_speed < MAX_LANDING_SPEED, False)]).label("is_takeoff"),
+            db.case([(sq3.c.ground_speed > MIN_TAKEOFF_SPEED, True), (sq3.c.ground_speed < MAX_LANDING_SPEED, False)]).label("is_takeoff"),
             sq3.c.name,
         )
         .filter(
-            or_(
-                and_(sq3.c.ground_speed_prev < MIN_TAKEOFF_SPEED, sq3.c.ground_speed > MIN_TAKEOFF_SPEED, sq3.c.ground_speed_next > MIN_TAKEOFF_SPEED, sq3.c.climb_rate > MIN_TAKEOFF_CLIMB_RATE),  # takeoff
-                and_(sq3.c.ground_speed_prev > MAX_LANDING_SPEED, sq3.c.ground_speed < MAX_LANDING_SPEED, sq3.c.ground_speed_next < MAX_LANDING_SPEED, sq3.c.climb_rate < MAX_LANDING_SINK_RATE),  # landing
+            db.or_(
+                db.and_(sq3.c.ground_speed_prev < MIN_TAKEOFF_SPEED, sq3.c.ground_speed > MIN_TAKEOFF_SPEED, sq3.c.ground_speed_next > MIN_TAKEOFF_SPEED, sq3.c.climb_rate > MIN_TAKEOFF_CLIMB_RATE),  # takeoff
+                db.and_(sq3.c.ground_speed_prev > MAX_LANDING_SPEED, sq3.c.ground_speed < MAX_LANDING_SPEED, sq3.c.ground_speed_next < MAX_LANDING_SPEED, sq3.c.climb_rate < MAX_LANDING_SINK_RATE),  # landing
             )
         )
         .subquery()
@@ -115,10 +112,10 @@ def update_takeoff_landings(start, end):
     # get the sender id instead of the name and consider them if the are near airports ...
     sq5 = (
         db.session.query(
-            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, Sender.id.label("sender_id"), Airport.id.label("airport_id"), func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance"), Airport.country_code
+            sq4.c.timestamp, sq4.c.track, sq4.c.is_takeoff, Sender.id.label("sender_id"), Airport.id.label("airport_id"), db.func.ST_DistanceSphere(sq4.c.location, Airport.location_wkt).label("airport_distance"), Airport.country_code
         )
-        .filter(and_(func.ST_Within(sq4.c.location, Airport.border),
-                     between(Airport.style, 2, 5)))
+        .filter(db.and_(db.func.ST_Within(sq4.c.location, Airport.border),
+                        db.between(Airport.style, 2, 5)))
         .filter(sq4.c.name == Sender.name)
         .subquery()
     )
@@ -163,26 +160,26 @@ def update_logbook(offset_days=None):
     else:
         (start, end) = date_to_timestamps(datetime.utcnow().date())
     pa = TakeoffLanding.sender_id
-    wo = and_(TakeoffLanding.sender_id, TakeoffLanding.timestamp, TakeoffLanding.airport_id)
+    wo = db.and_(TakeoffLanding.sender_id, TakeoffLanding.timestamp, TakeoffLanding.airport_id)
 
     # make a query with previous, current and next "takeoff_landing" event, so we can find complete flights
     sq = (
         db.session.query(
             TakeoffLanding.sender_id,
-            func.lag(TakeoffLanding.sender_id).over(partition_by=pa, order_by=wo).label("sender_id_prev"),
-            func.lead(TakeoffLanding.sender_id).over(partition_by=pa, order_by=wo).label("sender_id_next"),
+            db.func.lag(TakeoffLanding.sender_id).over(partition_by=pa, order_by=wo).label("sender_id_prev"),
+            db.func.lead(TakeoffLanding.sender_id).over(partition_by=pa, order_by=wo).label("sender_id_next"),
             TakeoffLanding.timestamp,
-            func.lag(TakeoffLanding.timestamp).over(partition_by=pa, order_by=wo).label("timestamp_prev"),
-            func.lead(TakeoffLanding.timestamp).over(partition_by=pa, order_by=wo).label("timestamp_next"),
+            db.func.lag(TakeoffLanding.timestamp).over(partition_by=pa, order_by=wo).label("timestamp_prev"),
+            db.func.lead(TakeoffLanding.timestamp).over(partition_by=pa, order_by=wo).label("timestamp_next"),
             TakeoffLanding.track,
-            func.lag(TakeoffLanding.track).over(partition_by=pa, order_by=wo).label("track_prev"),
-            func.lead(TakeoffLanding.track).over(partition_by=pa, order_by=wo).label("track_next"),
+            db.func.lag(TakeoffLanding.track).over(partition_by=pa, order_by=wo).label("track_prev"),
+            db.func.lead(TakeoffLanding.track).over(partition_by=pa, order_by=wo).label("track_next"),
             TakeoffLanding.is_takeoff,
-            func.lag(TakeoffLanding.is_takeoff).over(partition_by=pa, order_by=wo).label("is_takeoff_prev"),
-            func.lead(TakeoffLanding.is_takeoff).over(partition_by=pa, order_by=wo).label("is_takeoff_next"),
+            db.func.lag(TakeoffLanding.is_takeoff).over(partition_by=pa, order_by=wo).label("is_takeoff_prev"),
+            db.func.lead(TakeoffLanding.is_takeoff).over(partition_by=pa, order_by=wo).label("is_takeoff_next"),
             TakeoffLanding.airport_id,
-            func.lag(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label("airport_id_prev"),
-            func.lead(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label("airport_id_next")
+            db.func.lag(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label("airport_id_prev"),
+            db.func.lead(TakeoffLanding.airport_id).over(partition_by=pa, order_by=wo).label("airport_id_next")
         )
         #.filter(between(TakeoffLanding.timestamp, start, end))
         .subquery()
@@ -196,8 +193,8 @@ def update_logbook(offset_days=None):
             sq.c.track.label("takeoff_track"),
             sq.c.airport_id.label("takeoff_airport_id")
         )
-        .filter(sq.c.is_takeoff == true())
-        .filter(or_(sq.c.is_takeoff_next == true(), sq.c.is_takeoff_next == null()))
+        .filter(sq.c.is_takeoff == db.true())
+        .filter(db.or_(sq.c.is_takeoff_next == db.true(), sq.c.is_takeoff_next == db.null()))
         .filter(~Logbook.query.filter(db.and_(Logbook.sender_id==sq.c.sender_id, Logbook.takeoff_timestamp==sq.c.timestamp, Logbook.takeoff_airport_id==sq.c.airport_id)).exists())
     )
     ins = insert(Logbook).from_select(
@@ -221,8 +218,8 @@ def update_logbook(offset_days=None):
             sq.c.track.label("landing_track"),
             sq.c.airport_id.label("landing_airport_id"),
         )
-        .filter(or_(sq.c.is_takeoff_prev == false(), sq.c.is_takeoff_prev == null()))
-        .filter(sq.c.is_takeoff == false())
+        .filter(db.or_(sq.c.is_takeoff_prev == db.false(), sq.c.is_takeoff_prev == db.null()))
+        .filter(sq.c.is_takeoff == db.false())
         .filter(~Logbook.query.filter(db.and_(Logbook.sender_id==sq.c.sender_id, Logbook.landing_timestamp==sq.c.timestamp, Logbook.landing_airport_id==sq.c.airport_id)).exists())
     )
     ins = insert(Logbook).from_select(
@@ -249,8 +246,8 @@ def update_logbook(offset_days=None):
             sq.c.track_next.label("landing_track"),
             sq.c.airport_id_next.label("landing_airport_id"),
         )
-        .filter(sq.c.is_takeoff == true())
-        .filter(sq.c.is_takeoff_next == false())
+        .filter(sq.c.is_takeoff == db.true())
+        .filter(sq.c.is_takeoff_next == db.false())
         .subquery()
     )
 
@@ -277,12 +274,12 @@ def update_logbook(offset_days=None):
     db.session.commit()
 
     # update existing landing with takeoff from complete flight
-    upd = update(Logbook) \
+    upd = db.update(Logbook) \
         .where(db.and_(
             Logbook.sender_id==complete_flight_query.c.sender_id,
-            Logbook.takeoff_timestamp==null(),
-            Logbook.takeoff_airport_id==null(),
-            Logbook.landing_timestamp!=null(),
+            Logbook.takeoff_timestamp==db.null(),
+            Logbook.takeoff_airport_id==db.null(),
+            Logbook.landing_timestamp!=db.null(),
             Logbook.landing_timestamp==complete_flight_query.c.landing_timestamp,
             Logbook.landing_airport_id==complete_flight_query.c.landing_airport_id
         )) \
@@ -295,14 +292,14 @@ def update_logbook(offset_days=None):
     db.session.commit()
 
     # update existing takeoff with landing from complete flight
-    upd = update(Logbook) \
+    upd = db.update(Logbook) \
         .where(db.and_(
             Logbook.sender_id==complete_flight_query.c.sender_id,
-            Logbook.takeoff_timestamp!=null(),
+            Logbook.takeoff_timestamp!=db.null(),
             Logbook.takeoff_timestamp==complete_flight_query.c.takeoff_timestamp,
             Logbook.takeoff_airport_id==complete_flight_query.c.takeoff_airport_id,
-            Logbook.landing_timestamp==null(),
-            Logbook.landing_airport_id==null()
+            Logbook.landing_timestamp==db.null(),
+            Logbook.landing_airport_id==db.null()
         )) \
         .values(landing_timestamp=complete_flight_query.c.landing_timestamp,
                 landing_track=complete_flight_query.c.landing_track,
@@ -316,60 +313,56 @@ def update_logbook(offset_days=None):
 
 
 
-def update_max_altitudes(offset_days=100):
-    MAX_UPDATES = 100
+def update_max_altitudes():
+    MAX_UPDATES = 60
 
     query = f"""
-        UPDATE logbooks AS l
-        SET max_altitude = sq2.max_altitude
-		FROM (
-			SELECT
-				sq.logbook_id,
-				MAX(sp.altitude) AS max_altitude
-			FROM
-				sender_positions AS sp,
-				(
-					SELECT
-						l.id AS logbook_id, s.name, l.takeoff_timestamp, l.landing_timestamp
-					FROM logbooks AS l
-					INNER JOIN senders AS s ON l.sender_id = s.id
-                    WHERE
-						l.takeoff_timestamp IS NOT NULL and l.landing_timestamp IS NOT NULL
-						AND l.max_altitude IS NULL
-                    ORDER BY l.takeoff_timestamp
-					LIMIT {MAX_UPDATES}
-				) AS sq
-			WHERE sq.name = sp.name AND sp.timestamp BETWEEN sq.takeoff_timestamp AND sq.landing_timestamp
-			GROUP BY sq.logbook_id
-		) AS sq2
-		WHERE l.id = sq2.logbook_id;
+        UPDATE logbooks
+            SET max_altitude = sq2.max_altitude
+        FROM (
+            SELECT sq.logbook_id, MAX(sp.altitude) AS max_altitude
+            FROM (
+                SELECT
+                    l.id AS logbook_id, s.name, l.takeoff_timestamp, l.landing_timestamp
+                FROM logbooks AS l
+                INNER JOIN senders AS s ON l.sender_id = s.id
+                WHERE
+                    l.takeoff_timestamp IS NOT NULL
+                    AND l.landing_timestamp IS NOT NULL
+                    AND l.max_altitude IS NULL
+                LIMIT 1
+            ) AS sq,
+            sender_positions AS sp
+            WHERE sp.reference_timestamp BETWEEN sq.takeoff_timestamp AND sq.landing_timestamp
+                AND sp.name = sq.name
+            GROUP BY sq.logbook_id
+        ) AS sq2
+        WHERE logbooks.id = sq2.logbook_id;
     """
 
-    result = db.session.execute(query)
-    db.session.commit()
+    update_counter = 0
+    for _ in range(MAX_UPDATES):
+        result = db.session.execute(query)
+        db.session.commit()
 
-    return result.rowcount
+    return update_counter
 
-def update_max_altitudes_orm(offset_days):
+def update_max_altitudes_orm():
     """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
 
     current_app.logger.info("Update logbook max altitude.")
 
-    (start, end) = date_to_timestamps(datetime.today() - timedelta(days=offset_days))
-
     logbook_entries = (
         db.session.query(Logbook.id, Sender.name)
-            .filter(and_(Logbook.takeoff_timestamp != null(), Logbook.landing_timestamp != null(), Logbook.max_altitude == null()))
-            #.filter(between(Logbook.reference, start, end))
+            .filter(db.and_(Logbook.takeoff_timestamp != db.null(), Logbook.landing_timestamp != db.null(), Logbook.max_altitude == db.null()))
             .filter(Logbook.sender_id == Sender.id)
-            .limit(10)
+            .limit(1)
             .subquery()
     )
 
     max_altitudes = (
-        db.session.query(Logbook.id, func.max(SenderPosition.altitude).label("max_altitude"))
-            .filter(and_(SenderPosition.name == logbook_entries.c.name, SenderPosition.timestamp >= Logbook.takeoff_timestamp, SenderPosition.timestamp <= Logbook.landing_timestamp))
-            .filter(Logbook.id == logbook_entries.c.id)
+        db.session.query(logbook_entries.c.id, db.func.max(SenderPosition.altitude).label("max_altitude"))
+            .filter(db.and_(db.between_(SenderPosition.timestamp >= Logbook.takeoff_timestamp, SenderPosition.timestamp <= Logbook.landing_timestamp), SenderPosition.name == logbook_entries.c.name))
             .group_by(Logbook.id)
             .subquery()
     )
@@ -386,5 +379,6 @@ if __name__ == '__main__':
     app = create_app()
     with app.app_context():
         #result = update_takeoff_landings(start=datetime(2020, 11, 9, 10, 0, 0), end=datetime(2020, 11, 9, 15, 30, 0))
-        result = update_logbook(0)
+        #result = update_logbook()
+        result = update_max_altitudes_orm()
         print(result)

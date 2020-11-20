@@ -4,7 +4,6 @@ from geoalchemy2.types import Geometry
 from .geo import Location
 
 from app import db
-from sqlalchemy import Index
 
 from .airport import Airport
 
@@ -35,7 +34,7 @@ class Receiver(db.Model):
     airport_id = db.Column(db.Integer, db.ForeignKey("airports.id", ondelete="CASCADE"), index=True)
     airport = db.relationship("Airport", foreign_keys=[airport_id], backref=db.backref("receivers", order_by="Receiver.name.asc()"))
 
-    __table_args__ = (Index('idx_receivers_name_uc', 'name', unique=True), )
+    __table_args__ = (db.Index('idx_receivers_name_uc', 'name', unique=True), )
 
     @property
     def location(self):

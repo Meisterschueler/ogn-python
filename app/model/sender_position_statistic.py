@@ -1,8 +1,5 @@
 from app import db
 
-from sqlalchemy import Index
-from sqlalchemy.orm import backref
-
 from .aircraft_type import AircraftType
 
 from sqlalchemy.dialects.postgresql import ENUM
@@ -23,4 +20,4 @@ class SenderPositionStatistic(db.Model):
 
     messages_count = db.Column(db.Integer)
 
-    __table_args__ = (Index('idx_sender_position_statistics_uc', 'date', 'dstcall', 'address_type', 'aircraft_type', 'stealth', 'software_version', 'hardware_version', unique=True), )
+    __table_args__ = (db.Index('idx_sender_position_statistics_uc', 'date', 'dstcall', 'address_type', 'aircraft_type', 'stealth', 'software_version', 'hardware_version', unique=True), )

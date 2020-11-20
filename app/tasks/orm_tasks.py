@@ -36,10 +36,10 @@ def update_logbook(offset_days=None):
 
 
 @celery.task(name="update_logbook_max_altitude")
-def update_logbook_max_altitude(offset_days=0):
+def update_logbook_max_altitude():
     """Add max altitudes in logbook when flight is complete (takeoff and landing)."""
 
-    result = logbook_update_max_altitudes(offset_days=offset_days)
+    result = logbook_update_max_altitudes()
     return result
 
 

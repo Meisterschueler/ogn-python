@@ -1,7 +1,6 @@
 import datetime
 
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import Index
 
 from app import db
 from app.model.aircraft_type import AircraftType
@@ -22,7 +21,7 @@ class Sender(db.Model):
     hardware_version = db.Column(db.SmallInteger)
     real_address = db.Column(db.String(6))
 
-    __table_args__ = (Index('idx_senders_name_uc', 'name', unique=True), )
+    __table_args__ = (db.Index('idx_senders_name_uc', 'name', unique=True), )
 
     def __repr__(self):
         return "<Sender: %s,%s,%s,%s,%s,%s>" % (self.address, self.aircraft_type, self.stealth, self.software_version, self.hardware_version, self.real_address)

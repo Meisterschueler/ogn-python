@@ -2,7 +2,6 @@ from app import db
 from .sender_info_origin import SenderInfoOrigin
 from .aircraft_type import AircraftType
 
-from sqlalchemy.orm import backref
 #from sqlalchemy.dialects.postgresql import ENUM
 
 class SenderInfo(db.Model):
@@ -22,7 +21,7 @@ class SenderInfo(db.Model):
 
     # Relations
     sender_id = db.Column(db.Integer, db.ForeignKey("senders.id"), index=True)
-    sender = db.relationship("Sender", foreign_keys=[sender_id], backref=backref("infos", order_by=address_origin))
+    sender = db.relationship("Sender", foreign_keys=[sender_id], backref=db.backref("infos", order_by=address_origin))
 
     def __repr__(self):
         return "<SenderInfo: %s,%s,%s,%s,%s,%s,%s,%s,%s>" % (
