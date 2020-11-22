@@ -4,6 +4,7 @@ from .aircraft_type import AircraftType
 
 from sqlalchemy.dialects.postgresql import ENUM
 
+
 class SenderPositionStatistic(db.Model):
     __tablename__ = "sender_position_statistics"
 

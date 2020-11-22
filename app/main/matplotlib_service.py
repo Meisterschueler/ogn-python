@@ -1,9 +1,10 @@
 from app import db
-from app.model import *
+from app.model import SenderDirectionStatistic
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+
 
 def create_range_figure2(sender_id):
     fig = Figure()
@@ -13,6 +14,7 @@ def create_range_figure2(sender_id):
     axis.plot(xs, ys)
 
     return fig
+
 
 def create_range_figure(sender_id):
     sds = db.session.query(SenderDirectionStatistic) \
@@ -24,11 +26,11 @@ def create_range_figure(sender_id):
     fig = Figure()
 
     direction_data = sds.direction_data
-    max_range = max([r['max_range']/1000.0 for r in direction_data])
+    max_range = max([r['max_range'] / 1000.0 for r in direction_data])
 
-    theta = np.array([i['direction']/180*np.pi for i in direction_data])
-    radii = np.array([i['max_range']/1000 if i['max_range'] > 0 else 0 for i in direction_data])
-    width = np.array([13/180*np.pi for i in direction_data])
+    theta = np.array([i['direction'] / 180 * np.pi for i in direction_data])
+    radii = np.array([i['max_range'] / 1000 if i['max_range'] > 0 else 0 for i in direction_data])
+    width = np.array([13 / 180 * np.pi for i in direction_data])
     colors = plt.cm.viridis(radii / max_range)
 
     ax = fig.add_subplot(111, projection='polar')
@@ -38,5 +40,5 @@ def create_range_figure(sender_id):
     ax.set_theta_direction(-1)
 
     fig.suptitle(f"Range between sender '{sds.sender.name}' and receiver '{sds.receiver.name}'")
-    
+
     return fig

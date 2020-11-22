@@ -76,7 +76,6 @@ class TestLogbook(TestBaseDB):
         self.assertEqual(entries[0].takeoff_airport_id, self.koenigsdorf.id)
         self.assertEqual(entries[0].landing_airport_id, self.koenigsdorf.id)
 
-
     @unittest.skip('needs information about airport timezone')
     def test_takeoff_and_landing_on_different_days(self):
         db.session.add(self.takeoff_koenigsdorf_dd0815)

@@ -18,11 +18,11 @@ SENDER_POSITION_BEACON_FIELDS = [
     "receiver_name",
     "timestamp",
     "location",
-    
+
     "track",
     "ground_speed",
     "altitude",
-    
+
     "address_type",
     "aircraft_type",
     "stealth",
@@ -38,7 +38,7 @@ SENDER_POSITION_BEACON_FIELDS = [
     "hardware_version",
     "real_address",
     "signal_power",
-    
+
     "distance",
     "bearing",
     "normalized_quality",
@@ -66,7 +66,7 @@ RECEIVER_POSITION_BEACON_FIELDS = [
 
 RECEIVER_STATUS_BEACON_FIELDS = [
     "reference_timestamp",
-    
+
     "name",
     "dstcall",
     "receiver_name",
@@ -90,7 +90,7 @@ def sender_position_message_to_csv_string(message, none_character=''):
 
     csv_string = "{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30}\n".format(
         message['reference_timestamp'],
-        
+
         message['name'],
         message['dstcall'],
         message['relay'] if 'relay' in message and message['relay'] else none_character,
@@ -101,8 +101,8 @@ def sender_position_message_to_csv_string(message, none_character=''):
         message['track'] if 'track' in message and message['track'] else none_character,
         message['ground_speed'] if 'ground_speed' in message and message['ground_speed'] else none_character,
         int(message['altitude']) if message['altitude'] else none_character,
-       
-        message['address_type'] if 'address_type' in message and message['address_type'] else none_character,   #10
+
+        message['address_type'] if 'address_type' in message and message['address_type'] else none_character,   # 10
         message['aircraft_type'].name if 'aircraft_type' in message and message['aircraft_type'] else AircraftType.UNKNOWN.name,
         message['stealth'] if 'stealth' in message and message['stealth'] else none_character,
         message['address'] if 'address' in message and message['address'] else none_character,
@@ -112,12 +112,12 @@ def sender_position_message_to_csv_string(message, none_character=''):
         message['error_count'] if 'error_count' in message and message['error_count'] else none_character,
         message['frequency_offset'] if 'frequency_offset' in message and message['frequency_offset'] else none_character,
         message['gps_quality_horizontal'] if 'gps_quality_horizontal' in message and message['gps_quality_horizontal'] else none_character,
-        message['gps_quality_vertical'] if 'gps_quality_vertical' in message and message['gps_quality_vertical'] else none_character, #20
+        message['gps_quality_vertical'] if 'gps_quality_vertical' in message and message['gps_quality_vertical'] else none_character,   # 20
         message['software_version'] if 'software_version' in message and message['software_version'] else none_character,
         message['hardware_version'] if 'hardware_version' in message and message['hardware_version'] else none_character,
         message['real_address'] if 'real_address' in message and message['real_address'] else none_character,
         message['signal_power'] if 'signal_power' in message and message['signal_power'] else none_character,
-        
+
         message['distance'] if 'distance' in message and message['distance'] else none_character,
         message['bearing'] if 'bearing' in message and message['bearing'] else none_character,
         message['normalized_quality'] if 'normalized_quality' in message and message['normalized_quality'] else none_character,
@@ -132,7 +132,7 @@ def sender_position_message_to_csv_string(message, none_character=''):
 def receiver_position_message_to_csv_string(message, none_character=''):
     csv_string = "{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}\n".format(
         message['reference_timestamp'],
-        
+
         message['name'],
         message['dstcall'],
         message['receiver_name'],
@@ -180,7 +180,7 @@ def sender_position_csv_strings_to_db(lines):
 
     cursor.execute(f"CREATE TEMPORARY TABLE {tmp_tablename} (LIKE sender_positions) ON COMMIT DROP;")
     cursor.copy_from(file=string_buffer, table=tmp_tablename, sep=",", columns=SENDER_POSITION_BEACON_FIELDS)
-    
+
     # Update agl
     cursor.execute(f"""
         UPDATE {tmp_tablename} AS tmp
@@ -238,7 +238,7 @@ def sender_position_csv_strings_to_db(lines):
     """)
 
     # Update sender_infos FK -> senders
-    cursor.execute(f"""
+    cursor.execute("""
         UPDATE sender_infos AS si
         SET sender_id = s.id
         FROM senders AS s
@@ -316,7 +316,7 @@ def receiver_position_csv_strings_to_db(lines):
             tmp.name,
             tmp.timestamp,
             tmp.location,
-            
+
             tmp.altitude,
 
             tmp.agl
@@ -340,18 +340,18 @@ def receiver_position_csv_strings_to_db(lines):
     """)
 
     # Update receiver country
-    cursor.execute(f"""
+    cursor.execute("""
         UPDATE receivers AS r
-        SET 
+        SET
             country_id = c.gid
         FROM countries AS c
         WHERE r.country_id IS NULL AND ST_Within(r.location, c.geom);
     """)
 
     # Update receiver airport
-    cursor.execute(f"""
+    cursor.execute("""
         UPDATE receivers AS r
-        SET 
+        SET
             airport_id = (
                 SELECT id
                 FROM airports AS a
@@ -400,7 +400,7 @@ def receiver_status_csv_strings_to_db(lines):
 
             tmp.name,
             tmp.timestamp,
-            
+
             tmp.version,
             tmp.platform,
 

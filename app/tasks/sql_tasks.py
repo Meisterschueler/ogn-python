@@ -10,7 +10,7 @@ def update_statistics(date_str=None):
     if date_str is None:
         date_str = datetime.utcnow().strftime("%Y-%m-%d")
 
-    # Update relation statistics 
+    # Update relation statistics
     db.session.execute(f"""
         DELETE FROM relation_statistics
         WHERE date = '{date_str}';
@@ -22,7 +22,7 @@ def update_statistics(date_str=None):
             tmp.receiver_id,
 
             is_trustworthy,
-            
+
             MAX(tmp.max_distance) AS max_distance,
             MAX(tmp.max_normalized_quality) AS max_normalized_quality,
             SUM(tmp.messages_count) AS messages_count,
@@ -43,7 +43,7 @@ def update_statistics(date_str=None):
             tmp.sender_id,
 
             is_trustworthy,
-            
+
             MAX(tmp.max_distance) AS max_distance,
             MAX(tmp.max_normalized_quality) AS max_normalized_quality,
             SUM(tmp.messages_count) AS messages_count,
@@ -65,7 +65,7 @@ def update_statistics(date_str=None):
             tmp.receiver_id,
 
             is_trustworthy,
-            
+
             MAX(tmp.max_distance) AS max_distance,
             MAX(tmp.max_normalized_quality) AS max_normalized_quality,
             SUM(tmp.messages_count) AS messages_count,
@@ -84,7 +84,7 @@ def update_sender_direction_statistics():
     """ Update sender_direction_statistics."""
 
     db.session.execute("""
-		DELETE FROM sender_direction_statistics;
+        DELETE FROM sender_direction_statistics;
 
         INSERT INTO sender_direction_statistics(sender_id, receiver_id, directions_count, messages_count, direction_data)
         SELECT
@@ -93,7 +93,7 @@ def update_sender_direction_statistics():
             COUNT(sq2.*) AS directions_count,
             SUM(sq2.messages_count) AS messages_count,
             json_agg(json_build_object('direction', direction, 'messages_count', messages_count, 'max_range', max_range)) AS direction_data
-		FROM (
+        FROM (
             SELECT
                 sq.sender_id,
                 sq.receiver_id,

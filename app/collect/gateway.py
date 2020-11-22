@@ -4,8 +4,10 @@ from flask import current_app
 from app import redis_client
 from app.gateway.message_handling import sender_position_csv_strings_to_db, receiver_position_csv_strings_to_db, receiver_status_csv_strings_to_db
 
+
 def transfer_from_redis_to_database():
-    unmapping = lambda s: s[0].decode('utf-8')
+    def unmapping(string):
+        return string[0].decode('utf-8')
 
     receiver_status_data = list(map(unmapping, redis_client.zpopmin('receiver_status', 100000)))
     receiver_position_data = list(map(unmapping, redis_client.zpopmin('receiver_position', 100000)))

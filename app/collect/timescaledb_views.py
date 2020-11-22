@@ -3,8 +3,9 @@ from app.utils import get_sql_trustworthy
 
 SQL_TRUSTWORTHY = get_sql_trustworthy(source_table_alias='sp')
 
+
 def create_views():
-    db.session.execute(f"""
+    db.session.execute("""
         DROP VIEW IF EXISTS receiver_ranking CASCADE;
 
         CREATE VIEW receiver_ranking AS
@@ -23,7 +24,7 @@ def create_views():
         ORDER BY max_distance DESC;
     """)
 
-    db.session.execute(f"""
+    db.session.execute("""
         DROP VIEW IF EXISTS sender_ranking CASCADE;
 
         CREATE VIEW sender_ranking AS
@@ -44,6 +45,7 @@ def create_views():
 
     db.session.commit()
 
+
 def create_timescaledb_views():
     # 1. Since the reference_timestamps are strictly increasing we can set
     #    the parameter 'refresh_lag' to a very short time so the materialization
@@ -51,11 +53,11 @@ def create_timescaledb_views():
     # 2. The feature realtime aggregation from TimescaleDB is quite time consuming.
     #    So we set materialized_only=true
 
-    ### Sender statistics
+    # --- Sender statistics ---
     # These stats will be used in the daily ranking, so we make the bucket < 1d
     db.session.execute(f"""
         DROP VIEW IF EXISTS sender_stats_1h CASCADE;
-        
+
         CREATE VIEW sender_stats_1h
         WITH (timescaledb.continuous, timescaledb.materialized_only=true, timescaledb.refresh_lag='5 minutes') AS
         SELECT
@@ -90,7 +92,7 @@ def create_timescaledb_views():
         GROUP BY bucket, sp.name, is_trustworthy;
     """)
 
-    ### Receiver statistics
+    # --- Receiver statistics ---
     # These stats will be used in the daily ranking, so we make the bucket < 1d
     db.session.execute(f"""
         DROP VIEW IF EXISTS receiver_stats_1h CASCADE;
@@ -128,8 +130,8 @@ def create_timescaledb_views():
         FROM sender_positions AS sp
         GROUP BY bucket, sp.receiver_name, is_trustworthy;
     """)
-    
-    ### Relation statistics (sender <-> receiver)
+
+    # --- Relation statistics (sender <-> receiver) ---
     # these stats will be used on a >= 1d basis, so we make the bucket = 1d
     db.session.execute(f"""
         DROP VIEW IF EXISTS relation_stats_1d CASCADE;

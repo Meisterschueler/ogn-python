@@ -119,6 +119,7 @@ def import_airports(path="tests/SeeYou.cup"):
     db.session.commit()
     print("Imported {} airports.".format(len(airports)))
 
+
 @user_cli.command("create_timescaledb_views")
 def cmd_create_timescaledb_views():
     """Create TimescaleDB views."""
@@ -126,11 +127,10 @@ def cmd_create_timescaledb_views():
     create_timescaledb_views()
     print("Done")
 
+
 @user_cli.command("create_views")
 def cmd_create_views():
     """Create views."""
 
     create_views()
     print("Done")
-
-

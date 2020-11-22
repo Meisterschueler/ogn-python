@@ -25,7 +25,7 @@ def get_used_countries():
 
 @cache.memoize()
 def get_used_airports_by_country(sel_country):
-    query = db.session.query(Airport).filter(Airport.country_code == sel_country).filter(TakeoffLanding.airport_id==Airport.id).filter(TakeoffLanding.country_id == Country.gid).order_by(Airport.name).distinct(Airport.name)
+    query = db.session.query(Airport).filter(Airport.country_code == sel_country).filter(TakeoffLanding.airport_id == Airport.id).filter(TakeoffLanding.country_id == Country.gid).order_by(Airport.name).distinct(Airport.name)
     return [used_airport for used_airport in query]
 
 
@@ -45,17 +45,18 @@ def get_dates_for_airport(sel_airport):
 @bp.route("/")
 @bp.route("/index.html")
 def index():
-    today_beginning = datetime.combine(date.today(), time()) 
-    
-    senders_today = db.session.query(db.func.count(Sender.id)).filter(Sender.lastseen>=today_beginning).one()[0]
-    receivers_today = db.session.query(db.func.count(Receiver.id)).filter(Receiver.lastseen>=today_beginning).one()[0]
-    takeoffs_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp>=today_beginning, TakeoffLanding.is_takeoff==True)).one()[0]
-    landings_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp>=today_beginning, TakeoffLanding.is_takeoff==False)).one()[0]
-    sender_positions_today = db.session.query(db.func.sum(ReceiverStatistic.messages_count)).filter(ReceiverStatistic.date==date.today()).one()[0]
+    today_beginning = datetime.combine(date.today(), time())
+
+    senders_today = db.session.query(db.func.count(Sender.id)).filter(Sender.lastseen >= today_beginning).one()[0]
+    receivers_today = db.session.query(db.func.count(Receiver.id)).filter(Receiver.lastseen >= today_beginning).one()[0]
+    takeoffs_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp >= today_beginning, TakeoffLanding.is_takeoff is True)).one()[0]
+    landings_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp >= today_beginning, TakeoffLanding.is_takeoff is False)).one()[0]
+    sender_positions_today = db.session.query(db.func.sum(ReceiverStatistic.messages_count)).filter(ReceiverStatistic.date == date.today()).one()[0]
     sender_positions_total = db.session.query(db.func.sum(ReceiverStatistic.messages_count)).one()[0]
 
     last_logbook_entries = db.session.query(Logbook).order_by(Logbook.reference_timestamp.desc()).limit(10)
-    return render_template("index.html",
+    return render_template(
+        "index.html",
         senders_today=senders_today,
         receivers_today=receivers_today,
         takeoffs_today=takeoffs_today,
@@ -80,13 +81,14 @@ def sender_detail():
 
     return render_template("sender_detail.html", title="Sender", sender=sender)
 
+
 @bp.route("/range_view.png")
 def range_view():
     import io
     from flask import Response
 
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-    
+
     sender_id = request.args.get("sender_id")
 
     fig = create_range_figure(sender_id)
@@ -210,24 +212,28 @@ def download_flight():
 
     return send_file(buffer, as_attachment=True, attachment_filename="wtf.igc", mimetype="text/plain")
 
+
 @bp.route("/sender_ranking.html")
 def sender_ranking():
     sender_statistics = db.session.query(SenderStatistic) \
-        .filter(db.and_(SenderStatistic.date==date.today(), SenderStatistic.is_trustworthy==True)) \
+        .filter(db.and_(SenderStatistic.date == date.today(), SenderStatistic.is_trustworthy is True)) \
         .order_by(SenderStatistic.max_distance.desc()) \
         .all()
 
-    return render_template("sender_ranking.html",
+    return render_template(
+        "sender_ranking.html",
         title="Sender Ranking",
         ranking=sender_statistics)
+
 
 @bp.route("/receiver_ranking.html")
 def receiver_ranking():
     receiver_statistics = db.session.query(ReceiverStatistic) \
-        .filter(db.and_(ReceiverStatistic.date==date.today(), ReceiverStatistic.is_trustworthy==True)) \
+        .filter(db.and_(ReceiverStatistic.date == date.today(), ReceiverStatistic.is_trustworthy is True)) \
         .order_by(ReceiverStatistic.max_distance.desc()) \
         .all()
 
-    return render_template("receiver_ranking.html",
+    return render_template(
+        "receiver_ranking.html",
         title="Receiver Ranking",
         ranking=receiver_statistics)

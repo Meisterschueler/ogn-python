@@ -40,7 +40,6 @@ def aprs_string_to_message(aprs_string):
             bearing = int(message['bearing'])
             message['bearing'] = bearing if bearing < 360 else 0
 
-
         if "aircraft_type" in message:
             message["aircraft_type"] = AircraftType(message["aircraft_type"]) if message["aircraft_type"] in AircraftType.list() else AircraftType.UNKNOWN
 

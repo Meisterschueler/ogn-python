@@ -137,8 +137,9 @@ def open_file(filename):
         f = open(filename, "rt", encoding="latin-1")
         return f
 
+
 def get_sql_trustworthy(source_table_alias):
-    MIN_DISTANCE =   1000
+    MIN_DISTANCE = 1000
     MAX_DISTANCE = 640000
     MAX_NORMALIZED_QUALITY = 40     # this is enough for > 640km
     MAX_ERROR_COUNT = 5

@@ -48,7 +48,7 @@ class SenderPosition(db.Model):
     hardware_version = db.Column(db.SmallInteger)
     real_address = db.Column(db.String(6))
     signal_power = db.Column(db.Float(precision=2))
-    
+
     #proximity = None
 
     # Calculated values (from parser)
@@ -60,4 +60,3 @@ class SenderPosition(db.Model):
     location_mgrs = db.Column(db.String(15))                # full mgrs (15 chars)
     location_mgrs_short = db.Column(db.String(9))           # reduced mgrs (9 chars), e.g. used for melissas range tool
     agl = db.Column(db.Float(precision=2))
-

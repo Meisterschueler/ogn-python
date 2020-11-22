@@ -26,22 +26,24 @@ def create_app(config_name='default'):
     configuration = configs[config_name]
     app.config.from_object(configuration)
     app.config.from_envvar("OGN_CONFIG_MODULE", silent=True)
-    
+
     # Initialize other things
     bootstrap.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
     cache.init_app(app)
     redis_client.init_app(app)
-    
+
     init_celery(app)
     register_blueprints(app)
-    
+
     return app
+
 
 def register_blueprints(app):
     from app.main import bp as bp_main
     app.register_blueprint(bp_main)
+
 
 def init_celery(app=None):
     app = app or create_app(os.getenv('FLASK_CONFIG') or 'default')

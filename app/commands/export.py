@@ -15,6 +15,7 @@ from app import db
 user_cli = AppGroup("export")
 user_cli.help = "Export data in several file formats."
 
+
 @user_cli.command("debug_sql")
 @click.argument("start")
 @click.argument("end")
@@ -24,7 +25,7 @@ def debug_sql(start, end, name):
 
     # First: get all the positions (and the receiver names for later)
     sql_sender_positions = f"""
-        SELECT reference_timestamp, name, receiver_name, timestamp, location, track, ground_speed, altitude, aircraft_type, climb_rate, turn_rate, distance, bearing, agl 
+        SELECT reference_timestamp, name, receiver_name, timestamp, location, track, ground_speed, altitude, aircraft_type, climb_rate, turn_rate, distance, bearing, agl
         FROM sender_positions
         WHERE reference_timestamp BETWEEN '{start}' AND '{end}' AND name = '{name}'
         ORDER BY reference_timestamp;
@@ -38,7 +39,7 @@ def debug_sql(start, end, name):
             receiver_names.append("'" + row[2] + "'")
         row = [f"'{r}'" if r else "DEFAULT" for r in row]
         sender_position_values.append(f"({','.join(row)})")
-    
+
     # Second: get the receivers
     sql_receivers = f"""
         SELECT name, location
@@ -50,8 +51,8 @@ def debug_sql(start, end, name):
     results = db.session.execute(sql_receivers)
     for row in results:
         row = [f"'{r}'" if r else "DEFAULT" for r in row]
-        receiver_values.append(f"({','.join(row)})")    
-    
+        receiver_values.append(f"({','.join(row)})")
+
     # Third: get the airports
     sql_airports = f"""
         SELECT DISTINCT a.name, a.location, a.altitude, a.style, a.border
@@ -66,23 +67,22 @@ def debug_sql(start, end, name):
     results = db.session.execute(sql_airports)
     for row in results:
         row = [f"'{r}'" if r else "DEFAULT" for r in row]
-        airport_values.append(f"({','.join(row)})")  
+        airport_values.append(f"({','.join(row)})")
 
     # Last: write all into file
     with open(f'{start}_{end}_{name}.sql', 'w') as file:
-        file.write(f'/*\n')
-        file.write(f'OGN Python SQL Export\n')
+        file.write('/*\n')
+        file.write('OGN Python SQL Export\n')
         file.write(f'Created by: {os.getlogin()}\n')
         file.write(f'Created at: {datetime.datetime.utcnow()}\n')
-        file.write(f'*/\n\n')
-
+        file.write('*/\n\n')
 
         file.write("INSERT INTO airports(name, location, altitude, style, border) VALUES\n")
         file.write(',\n'.join(airport_values) + ';\n\n')
 
         file.write("INSERT INTO receivers(name, location) VALUES\n")
         file.write(',\n'.join(receiver_values) + ';\n\n')
-        
+
         file.write("INSERT INTO sender_positions(reference_timestamp, name, receiver_name, timestamp, location, track, ground_speed, altitude, aircraft_type, climb_rate, turn_rate, distance, bearing, agl) VALUES\n")
         file.write(',\n'.join(sender_position_values) + ';\n\n')
 
@@ -139,7 +139,7 @@ def igc(address, date):
         return
 
     try:
-        sender = db.session.query(Sender).filter(Sender.address==address).one()
+        sender = db.session.query(Sender).filter(Sender.address == address).one()
     except NoResultFound as e:
         print(f"No data for '{address}' in the DB")
         return
@@ -173,9 +173,9 @@ def igc(address, date):
 
         points = (
             db.session.query(SenderPosition)
-                .filter(db.between(SenderPosition.reference_timestamp, f"{date} 00:00:00", f"{date} 23:59:59"))
-                .filter(SenderPosition.name == sender.name)
-                .order_by(SenderPosition.timestamp)
+            .filter(db.between(SenderPosition.reference_timestamp, f"{date} 00:00:00", f"{date} 23:59:59"))
+            .filter(SenderPosition.name == sender.name)
+            .order_by(SenderPosition.timestamp)
         )
 
         for point in points:

@@ -6,6 +6,7 @@ import time
 import datetime
 import math
 
+
 @bp.app_template_filter()
 def timestamp_to_status(timestamp):
     if datetime.datetime.utcnow() - timestamp < datetime.timedelta(minutes=10):
@@ -14,6 +15,7 @@ def timestamp_to_status(timestamp):
         return '<b>?</b>'
     else:
         return '<b>OFFLINE</b>'
+
 
 @bp.app_template_filter()
 def to_html_link(obj):
@@ -39,6 +41,7 @@ def to_html_link(obj):
 
     else:
         raise NotImplementedError("cant apply filter 'to_html_link' to object {type(obj)}")
+
 
 @bp.app_template_filter()
 def to_ordinal(rad):

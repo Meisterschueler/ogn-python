@@ -37,7 +37,7 @@ class Logbook(db.Model):
     @duration.expression
     def duration(cls):
         return db.case({False: None, True: cls.landing_timestamp - cls.takeoff_timestamp}, cls.landing_timestamp != db.null() and cls.takeoff_timestamp != db.null())
-    
+
     @hybrid_property
     def reference_timestamp(self):
         return self.takeoff_timestamp if self.takeoff_timestamp is not None else self.landing_timestamp
@@ -50,7 +50,7 @@ class Logbook(db.Model):
     # FIXME: does not work...
 
 # FIXME: this does not throw an error as the __table_args__ above, but there is no index created
-#_wrapped_case = f"({db.case(whens={True: Logbook.takeoff_timestamp, False: Logbook.landing_timestamp}, value=Logbook.takeoff_timestamp != db.null())})"   
+#_wrapped_case = f"({db.case(whens={True: Logbook.takeoff_timestamp, False: Logbook.landing_timestamp}, value=Logbook.takeoff_timestamp != db.null())})"
 #Index("idx_logbook_reference_timestamp", _wrapped_case)
 
 # TODO:

@@ -47,11 +47,10 @@ class Receiver(db.Model):
     def airports_nearby(self):
         query = (
             db.session.query(Airport, db.func.st_distance_sphere(self.location_wkt, Airport.location_wkt), db.func.st_azimuth(self.location_wkt, Airport.location_wkt))
-                .filter(db.func.st_contains(db.func.st_buffer(Airport.location_wkt, 1), self.location_wkt))
-                .filter(Airport.style.in_((2,4,5)))
-                .order_by(db.func.st_distance_sphere(self.location_wkt, Airport.location_wkt).asc())
-                .limit(5)
+            .filter(db.func.st_contains(db.func.st_buffer(Airport.location_wkt, 1), self.location_wkt))
+            .filter(Airport.style.in_((2, 4, 5)))
+            .order_by(db.func.st_distance_sphere(self.location_wkt, Airport.location_wkt).asc())
+            .limit(5)
         )
-        airports = [(airport,distance,azimuth) for airport, distance, azimuth in query]
+        airports = [(airport, distance, azimuth) for airport, distance, azimuth in query]
         return airports
-

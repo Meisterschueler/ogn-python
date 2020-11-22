@@ -6,6 +6,7 @@ NOTHING = ""
 CONTEST_RELEVANT = "AND agl < 1000"
 LOW_PASS = "AND agl < 50 and ground_speed > 250"
 
+
 def compute_flights(date, flight_type=0):
     if flight_type == 0:
         filter = NOTHING
@@ -66,6 +67,7 @@ def compute_flights(date, flight_type=0):
     db.session.execute(query)
     db.session.commit()
 
+
 def compute_gaps(date):
     date_str = date.strftime("%Y-%m-%d")
 
@@ -104,6 +106,7 @@ def compute_gaps(date):
 
     db.session.execute(query)
     db.session.commit()
+
 
 if __name__ == '__main__':
     from app import create_app

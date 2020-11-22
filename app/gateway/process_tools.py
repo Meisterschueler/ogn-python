@@ -37,6 +37,7 @@ class Timer(object):
             print("[{}]".format(self.name))
         print("Elapsed: {}".format(time.time() - self.tstart))
 
+
 def export_to_path(path):
     connection = db.engine.raw_connection()
     cursor = connection.cursor()

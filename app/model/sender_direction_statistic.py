@@ -2,6 +2,7 @@ from app import db
 
 from sqlalchemy.dialects.postgresql import JSON
 
+
 class SenderDirectionStatistic(db.Model):
     __tablename__ = "sender_direction_statistics"
 

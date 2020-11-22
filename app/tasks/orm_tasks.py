@@ -9,13 +9,14 @@ from app.collect.gateway import transfer_from_redis_to_database
 
 from app import db, celery
 
+
 @celery.task(name="transfer_to_database")
 def transfer_to_database():
     """Transfer APRS data from Redis to database."""
-    
+
     result = transfer_from_redis_to_database()
     return result
-    
+
 
 @celery.task(name="update_takeoff_landings")
 def update_takeoff_landings(last_minutes):
