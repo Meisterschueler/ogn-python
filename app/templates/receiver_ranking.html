@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
+
+<div class="container">
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Receiver Ranking</h3></div>
+<div class="panel-body">
+  <table id="myTable" class="table table-striped table-bordered tablesorter tablesorter-bootstrap">
+    <tr>
+      <th>#</th>
+      <th>Country</th>
+      <th>Name</th>
+      <th>Airport</th>
+      <th class="text-right">Maximum distance [km]</th>
+      <th class="text-right">Maximal normalized signal quality [dB]</th>
+      <th class="text-right">Sender counter</th>
+      <th class="text-right">Coverage counter</th>
+      <th class="text-right">Message counter</th>
+    </tr>
+
+    {% for entry in ranking %}
+	<tr>
+    <td>{{ loop.index }}</td>
+    <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ entry.receiver.country.iso2|lower }}" alt="{{ entry.receiver.country.iso2 }}"/></td>
+    <td>{{ entry.receiver|to_html_link|safe }}</a></td>
+    <td>{{ entry.receiver.airport|to_html_link|safe }}</a></td>
+    <td class="text-right">{{ '%0.1f' | format(entry.max_distance/1000.0) }}</td>
+    <td class="text-right">{{ '%0.1f' | format(entry.max_normalized_quality) }}</td>
+    <td class="text-right">{{ entry.senders_count }}</td>
+    <td class="text-right">{{ entry.coverages_count }}</td>
+    <td class="text-right">{{ entry.messages_count }}</td>
+	</tr>
+	{% endfor %}
+  </table>
+</div>
+</div>
+
+{% endblock %}

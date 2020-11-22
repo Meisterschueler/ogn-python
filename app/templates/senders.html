@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Senders</h3></div>
+<div class="panel-body">
+  <table class="datatable table table-striped table-bordered">
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Registration</th>
+      <th>Software version</th>
+    </tr>
+
+    {% for sender in senders %}
+	<tr>
+    <td>{{ loop.index }}</td>
+	  <td><a href="{{ url_for('main.sender_detail', sender_id=sender.id) }}">{{ sender.name }}</a></td>
+	  <td>{{ sender.infos[0].registration if sender.infos|length > 0 else '-' }}</td>
+	  <td {% if sender.software_version and sender.software_version < 6.6 %}class="danger"{% endif %}>{% if sender.software_version is not none %}{{ sender.software_version }}{% else %} - {% endif %}</td>
+	</tr>
+	{% endfor %}
+  </table>
+</div>
+</div>
+
+{% endblock %}

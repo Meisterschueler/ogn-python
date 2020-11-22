@@ -1,21 +1,39 @@
 sudo: false
 language: python
 
+services:
+  - redis
+  - postgresql
+
+addons:
+  postgresql: "11.2"
+
+before_install:
+  - sudo service postgresql stop
+  - sudo apt-get update
+  - sudo apt-get remove -y postgresql\*
+  - sudo apt-get install postgresql-11-postgis-2.5 postgresql-client
+  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/11/main/postgresql.conf
+  - sudo cp /etc/postgresql/{9.6,11}/main/pg_hba.conf
+  - sudo service postgresql start 11
+
 install:
+  - pip install --upgrade pip
   - pip install tox
 
 before_script:
+  - sudo add-apt-repository ppa:timescale/timescaledb-ppa -y
+  - sudo apt-get update -q
+  - sudo apt-get install -y timescaledb-postgresql-11 timescaledb-tools
+  - sudo timescaledb-tune -yes -pg-version 11
+  - sudo service postgresql restart 11
   - psql -U postgres -c 'CREATE DATABASE ogn_test;'
   - psql -U postgres -c 'CREATE EXTENSION postgis;'
 
 script:
   - tox
 
-addons:
-  postgresql: 9.6
-  apt:
-    packages:
-      - postgresql-9.6-postgis-2.4
+
 
 matrix:
   include:
@@ -28,3 +46,8 @@ matrix:
 
 after_success:
   - tox -e codecov
+
+after_failure:
+  - echo "Job failed..."
+  - sudo cat /var/log/syslog
+  - psql --version

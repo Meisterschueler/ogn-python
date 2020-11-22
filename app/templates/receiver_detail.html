@@ -12,17 +12,37 @@
 <table class="datatable table table-striped table-bordered">
 	<tr><td>Name:</td><td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/> {{ receiver.name }}</td></tr>
 	<tr><td>Airport:</td>
-		<td>{% if airport is not none %}<img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/>
-			{% if airport.takeoff_landings %}<a href="{{ url_for('main.airport_detail', airport=airport.id) }}">{{ airport.name }}</a>{% else %}{{ airport.name }}{% endif %}
+		<td>{% if receiver.airport is not none %}<img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.airport.country_code|lower }}" alt="{{ receiver.airport.country_code }}"/>
+			<a href="{{ url_for('main.airport_detail', airport_id=receiver.airport.id) }}">{{ receiver.airport.name }}</a>
 		{% else %}-{% endif %}
 		</td>
 	</tr>
-	<tr><td>Version:</td><td>{{ receiver.version }}</td></tr>
-	<tr><td>Platform:</td><td>{{ receiver.platform }}</td></tr>
+	<tr><td>Altitude:</td><td>{{ receiver.altitude|int }}m</td></tr>
+	<tr><td>AGL:</td><td>{{ receiver.agl|int }}m</td></tr>
+	<tr><td>Version:</td><td>{{ receiver.version if receiver.version else '-' }}</td></tr>
+	<tr><td>Platform:</td><td>{{ receiver.platform if receiver.platform else '-' }}</td></tr>
 	<tr><td>First seen:</td><td>{{ receiver.firstseen }}</td></tr>
 	<tr><td>Last seen:</td><td>{{ receiver.lastseen }}</td></tr>
 </table>
 </div>
+
+<div class="panel panel-success">
+	<div class="panel-heading"><h3 class="panel-title">Airport nearby</h3></div>
+	<table class="datatable table table-striped table-bordered">
+		<tr>	
+			<th>#</th>
+			<th>Name</th>
+			<th class="text-right">Distance [km]</th>
+		</tr>
+		{% for (airport,distance,azimuth) in receiver.airports_nearby() %}
+		<tr>
+			<td>{{ loop.index }}</td>
+			<td>{% if airport.takeoff_landings|length > 0 %}{{ airport|to_html_link|safe }}{% else %}{{ airport.name }}{% endif %}</td>
+			<td class="text-right">{{ '%0.1f' | format(distance/1000.0) }} ({{ azimuth|to_ordinal }})</td>
+		</tr>
+		{% endfor %}
+	</table>
+	</div>
 
 </div>
 

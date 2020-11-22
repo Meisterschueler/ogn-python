@@ -21,21 +21,36 @@
 </div>
 
 <div class="panel panel-success">
-<div class="panel-heading"><h3 class="panel-title">Seen Devices</h3></div>
+	<div class="panel-heading"><h3 class="panel-title">Receivers</h3></div>
+	<table class="datatable table table-striped table-bordered">
+		<tr>
+			<th>Name</th>
+		</tr>
+	
+		{% for receiver in airport.receivers %}
+		<tr>
+			<td><a href="{{ url_for('main.receiver_detail', receiver_id=receiver.id) }}">{{ receiver.name }}</a></td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">Seen Senders</h3></div>
 <table class="datatable table table-striped table-bordered">
     <tr>
-   	  <th>Address</th>
-   	  <th>Registration</th>
-   	  <th>Last takeoff/landing</th>
-      <th>Software version</th>
+		<th>Name</th>
+		<th>Last takeoff/landing</th>
+		<th>Hardware version</th>
+		<th>Software version</th>
     </tr>
 
-	{% for device in devices %}
+	{% for sender in senders %}
 	<tr>
-		<td><a href="{{ url_for('main.device_detail', id=device.id) }}">{{ device.address }}</a></td>
-		<td>{% if device.info is none %}-{% else %}{{ device.info.registration }}{% endif %}</a></td>
-		<td>{% if device.takeoff_landings %}{% set last_action = device.takeoff_landings|last %}{% if last_action.is_takeoff == True %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
-		<td>{% if device.software_version is not none %}{{ device.software_version }}{% else %}-{% endif %}</td>
+		<td>{{ sender|to_html_link|safe }}</td>
+		<td>{% if sender.takeoff_landings %}{% set last_action = sender.takeoff_landings|last %}{% if last_action.is_takeoff == True %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
+		<td>{% if sender.hardware_version is not none %}{{ sender.hardware_version }}{% else %}-{% endif %}</td>
+		<td>{% if sender.software_version is not none %}{{ sender.software_version }}{% else %}-{% endif %}</td>
 	</tr>
 	{% endfor %}
 </table>

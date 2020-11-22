@@ -26,8 +26,11 @@ setup(
         'Topic :: Scientific/Engineering :: GIS',
         'License :: OSI Approved :: GNU Affero General Public License v3',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9-dev'
     ],
     keywords='gliding ogn',
     packages=find_packages(exclude=['tests', 'tests.*']),
@@ -39,7 +42,8 @@ setup(
         'Flask-WTF==0.14.3',
         'Flask-Caching==1.9.0',
         'geopy==2.0.0',
-        'celery==5.0.2',
+        'celery==4.4.7',
+        'Flask-Redis==0.4.0',
         'redis==3.5.3',
         'aerofiles==1.0.0',
         'geoalchemy2==0.8.4',
@@ -50,7 +54,8 @@ setup(
         'xmlunittest==0.5.0',
         'flower==0.9.5',
         'tqdm==4.51.0',
-	'requests==2.25.0',
+        'requests==2.25.0',
+        'matplotlib==3.3.3'
     ],
     test_require=[
         'pytest==5.0.1',

@@ -22,14 +22,26 @@
 
   <table class="datatable table table-striped table-bordered">
     <tr>
-   	  <th>Name</th>
+      <th>#</th>
+      <th>Country</th>
+      <th>Name</th>
+      <th>Airport</th>
       <th>Altitude</th>
+      <th>Status</th>
+      <th>Version</th>
+      <th>Platform</th>
     </tr>
 
     {% for receiver in receivers %}
 	<tr>
-	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/> <a href="{{ url_for('main.receiver_detail', receiver_id=receiver.id) }}">{{ receiver.name }}</a></td>
-	  <td>{{ receiver.altitude|int }} m</td>
+    <td>{{ loop.index }}</td>
+    <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/></td>
+    <td>{{ receiver|to_html_link|safe }}</td>
+    <td>{{ receiver.airport|to_html_link|safe }}</td>
+    <td>{{ receiver.altitude|int }} m</td>
+    <td>{{ receiver.lastseen|timestamp_to_status|safe }}</td>
+	  <td>{{ receiver.version if receiver.version else '-' }}</td>
+	  <td>{{ receiver.platform if receiver.platform else '-' }}</td>
 	</tr>
 	{% endfor %}
   </table>

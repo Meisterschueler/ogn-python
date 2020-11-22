@@ -1,8 +1,6 @@
 import json
 from datetime import datetime, timedelta
 
-from sqlalchemy import func, case
-from sqlalchemy.sql.expression import label
 from app.model import Receiver, ReceiverCoverage
 
 from app import db
@@ -26,11 +24,11 @@ def stations2_filtered_pl(start, end):
     query = (
         db.session.query(
             Receiver.name.label("s"),
-            label("lt", func.round(func.ST_Y(Receiver.location_wkt) * 10000) / 10000),
-            label("lg", func.round(func.ST_X(Receiver.location_wkt) * 10000) / 10000),
-            case([(Receiver.lastseen > last_10_minutes, "U")], else_="D").label("u"),
+            db.label("lt", db.func.round(db.func.ST_Y(Receiver.location_wkt) * 10000) / 10000),
+            db.label("lg", db.func.round(db.func.ST_X(Receiver.location_wkt) * 10000) / 10000),
+            db.case([(Receiver.lastseen > last_10_minutes, "U")], else_="D").label("u"),
             Receiver.lastseen.label("ut"),
-            label("v", Receiver.version + "." + Receiver.platform),
+            db.label("v", Receiver.version + "." + Receiver.platform),
         )
         .order_by(Receiver.lastseen)
         .filter(db.or_(db.and_(start < Receiver.firstseen, end > Receiver.firstseen), db.and_(start < Receiver.lastseen, end > Receiver.lastseen)))
@@ -44,10 +42,10 @@ def stations2_filtered_pl(start, end):
 
 def max_tile_mgrs_pl(station, start, end, squares):
     query = (
-        db.session.query(func.right(ReceiverCoverage.location_mgrs_short, 4), func.count(ReceiverCoverage.location_mgrs_short))
+        db.session.query(db.func.right(ReceiverCoverage.location_mgrs_short, 4), db.func.count(ReceiverCoverage.location_mgrs_short))
         .filter(db.and_(Receiver.id == ReceiverCoverage.receiver_id, Receiver.name == station))
         .filter(ReceiverCoverage.location_mgrs_short.like(squares + "%"))
-        .group_by(func.right(ReceiverCoverage.location_mgrs_short, 4))
+        .group_by(db.func.right(ReceiverCoverage.location_mgrs_short, 4))
     )
 
     res = {"t": squares, "p": ["{}/{}".format(r[0], r[1]) for r in query.all()]}

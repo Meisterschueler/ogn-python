@@ -23,6 +23,7 @@
   <table class="datatable table table-striped table-bordered">
     <tr>
       <th>#</th>
+      <th>Country</th>
    	  <th>Name</th>
    	  <th>Logbook (takeoff and landings)</th>
     </tr>
@@ -30,8 +31,9 @@
     {% for airport in airports %}
 	<tr>
 	  <td>{{ loop.index }}
-	  <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ sel_country|lower }}" alt="{{ sel_country }}"/> <a href="{{ url_for('main.airport_detail', airport=airport.id) }}">{{ airport.name }}</a></td>
-	  <td><a href="{{ url_for('main.logbook', country=sel_country, airport=airport.id) }}">Logbook</a></td>
+    <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ sel_country|lower }}" alt="{{ sel_country }}"/></td>
+    <td>{{ airport|to_html_link|safe }}</td>
+	  <td><a href="{{ url_for('main.logbooks', country=sel_country, airport_id=airport.id) }}">Logbook</a></td>
 	</tr>
 	{% endfor %}
   </table>

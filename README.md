@@ -34,7 +34,7 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
 4. Install [PostgreSQL](http://www.postgresql.org/) with [PostGIS](http://www.postgis.net/) and [TimescaleDB](https://www.timescale.com) Extension.
     Create a database (use "ogn" as default, otherwise you have to modify the configuration, see below)
 
-5.  Optional: Install redis for asynchronous tasks (like takeoff/landing-detection)
+5.  Install redis for asynchronous tasks (like database feeding, takeoff/landing-detection, ...)
 
     ```
     apt-get install redis-server
@@ -53,13 +53,7 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
     ./flask database init
     ```
 
-8. Optional: Prepare tables for TimescaleDB
-
-    ```
-    ./flask database init_timescaledb
-    ```
-
-9. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
+8. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
     Get the [World Borders Dataset](http://thematicmapping.org/downloads/world_borders.php) and unpack it.
     Then import it into your database (we use "ogn" as database name).
     
@@ -69,40 +63,30 @@ It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postg
     psql -d ogn -c "DROP TABLE world_borders_temp;"
     ```
     
-10. Get world elevation data (needed for AGL calculation)
+9. Get world elevation data (needed for AGL calculation)
 	Sources: There are many sources for DEM data. It is important that the spatial reference system (SRID) is the same as the database which is 4326.
 	The [GMTED2010 Viewer](https://topotools.cr.usgs.gov/gmted_viewer/viewer.htm) provides data for the world with SRID 4326. Just download the data you need.
-	
-	For Europe we can get the DEM as GeoTIFF files from the [European Environment Agency](https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1).
-    Because the SRID of these files is 3035 and we want 4326 we have to convert them (next step)
     
-11. Optional: Convert the elevation data into correct SRID
-
-	We convert elevation from one SRID (here: 3035) to target SRID (4326):
+    
+10. Import the GeoTIFF into the elevation table:
     
     ```
-    gdalwarp -s_srs "EPSG:3035" -t_srs "EPSG:4326" source.tif target.tif
-    ```
-    
-12. Import the GeoTIFF into the elevation table:
-    
-    ```
-    raster2pgsql -s 4326 -c -C -I -M -t 100x100 elevation_data.tif public.elevation | psql -d ogn
+    raster2pgsql *.tif -s 4326 -d -M -C -I -F -t 25x25 public.elevation | psql -d ogn
     ```
 
-13. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
+11. Import Airports (needed for takeoff and landing calculation). A cup file is provided under tests:
 	
 	```
 	flask database import_airports tests/SeeYou.cup 
 	```
 
-14. Import DDB (needed for registration signs in the logbook).
+12. Import DDB (needed for registration signs in the logbook).
 
 	```
 	flask database import_ddb
 	```
 
-15. Optional: Use supervisord
+13. Optional: Use supervisord
 	You can use [Supervisor](http://supervisord.org/) to control the complete system. In the directory deployment/supervisor
 	we have some configuration files to feed the database (ogn-feed), run the celery worker (celeryd), the celery beat
 	(celerybeatd), the celery monitor (flower), and the python wsgi server (gunicorn). All files assume that
@@ -128,13 +112,13 @@ The following scripts run in the foreground and should be deamonized
 - Start a task server (make sure redis is up and running)
 
   ```
-  celery -A app.collect worker -l info
+  celery -A celery_app worker -l info
   ```
 
 - Start the task scheduler (make sure a task server is up and running)
 
   ```
-  celery -A app.collect beat -l info
+  celery -A celery_app beat -l info
   ```
 
 ### Flask - Command Line Interface
@@ -173,14 +157,10 @@ Most commands are command groups, so if you execute this command you will get fu
 
 ### Available tasks
 
-- `app.collect.celery.update_takeoff_landings` - Compute takeoffs and landings.
-- `app.collect.celery.update_logbook_entries` - Add/update logbook entries.
-- `app.collect.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
-- `app.collect.celery.import_ddb` - Import registered devices from the DDB.
-- `app.collect.celery.update_receivers_country_code` - Update country code in receivers table if None.
-- `app.collect.celery.purge_old_data` - Delete AircraftBeacons and ReceiverBeacons older than given 'age'.
-- `app.collect.celery.update_stats` - Create stats and update receivers/devices with stats.
-- `app.collect.celery.update_ognrange` - Create receiver coverage stats for Melissas ognrange.
+- `app.tasks.update_takeoff_landings` - Compute takeoffs and landings.
+- `app.tasks.celery.update_logbook_entries` - Add/update logbook entries.
+- `app.tasks.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
+- `app.tasks.celery.import_ddb` - Import registered devices from the DDB.
 
 If the task server is up and running, tasks could be started manually. Here we compute takeoffs and landings for the past 90 minutes:
 
@@ -188,6 +168,19 @@ If the task server is up and running, tasks could be started manually. Here we c
 python3
 >>>from app.collect.celery import update_takeoff_landings
 >>>update_takeoff_landings.delay(last_minutes=90)
+```
+
+or directly from command line:
+
+```
+celery -A celery_app call takeoff_landings
+```
+
+## Notes for Raspberry Pi
+For matplotlib we need several apt packages installed:
+
+```
+apt install libatlas3-base libopenjp2-7 libtiff5
 ```
 
 ## License
