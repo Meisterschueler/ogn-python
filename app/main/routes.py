@@ -49,8 +49,8 @@ def index():
 
     senders_today = db.session.query(db.func.count(Sender.id)).filter(Sender.lastseen >= today_beginning).one()[0]
     receivers_today = db.session.query(db.func.count(Receiver.id)).filter(Receiver.lastseen >= today_beginning).one()[0]
-    takeoffs_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp >= today_beginning, TakeoffLanding.is_takeoff is True)).one()[0]
-    landings_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp >= today_beginning, TakeoffLanding.is_takeoff is False)).one()[0]
+    takeoffs_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp >= today_beginning, TakeoffLanding.is_takeoff == db.true())).one()[0]
+    landings_today = db.session.query(db.func.count(TakeoffLanding.id)).filter(db.and_(TakeoffLanding.timestamp >= today_beginning, TakeoffLanding.is_takeoff == db.false())).one()[0]
     sender_positions_today = db.session.query(db.func.sum(ReceiverStatistic.messages_count)).filter(ReceiverStatistic.date == date.today()).one()[0]
     sender_positions_total = db.session.query(db.func.sum(ReceiverStatistic.messages_count)).one()[0]
 
@@ -216,7 +216,7 @@ def download_flight():
 @bp.route("/sender_ranking.html")
 def sender_ranking():
     sender_statistics = db.session.query(SenderStatistic) \
-        .filter(db.and_(SenderStatistic.date == date.today(), SenderStatistic.is_trustworthy is True)) \
+        .filter(db.and_(SenderStatistic.date == date.today(), SenderStatistic.is_trustworthy == db.true())) \
         .order_by(SenderStatistic.max_distance.desc()) \
         .all()
 
@@ -229,7 +229,7 @@ def sender_ranking():
 @bp.route("/receiver_ranking.html")
 def receiver_ranking():
     receiver_statistics = db.session.query(ReceiverStatistic) \
-        .filter(db.and_(ReceiverStatistic.date == date.today(), ReceiverStatistic.is_trustworthy is True)) \
+        .filter(db.and_(ReceiverStatistic.date == date.today(), ReceiverStatistic.is_trustworthy == db.true())) \
         .order_by(ReceiverStatistic.max_distance.desc()) \
         .all()
 
