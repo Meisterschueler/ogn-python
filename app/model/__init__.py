@@ -8,6 +8,7 @@ from .sender_position import SenderPosition
 from .receiver_position import ReceiverPosition
 from .receiver_status import ReceiverStatus
 from .receiver import Receiver
+from .receiver_state import ReceiverState
 from .takeoff_landing import TakeoffLanding
 from .airport import Airport
 from .logbook import Logbook

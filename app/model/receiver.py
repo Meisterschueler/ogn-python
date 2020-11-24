@@ -6,6 +6,7 @@ from .geo import Location
 from app import db
 
 from .airport import Airport
+from .receiver_state import ReceiverState
 
 
 class Receiver(db.Model):
@@ -43,6 +44,16 @@ class Receiver(db.Model):
 
         coords = to_shape(self.location_wkt)
         return Location(lat=coords.y, lon=coords.x)
+
+    @property
+    def state(self):
+        import datetime
+        if datetime.datetime.utcnow() - self.lastseen < datetime.timedelta(minutes=10):
+            return ReceiverState.OK if len(self.statistics) > 0 else ReceiverState.ZOMBIE
+        elif datetime.datetime.utcnow() - self.lastseen < datetime.timedelta(hours=1):
+            return ReceiverState.UNKNOWN
+        else:
+            return ReceiverState.OFFLINE
 
     def airports_nearby(self):
         query = (

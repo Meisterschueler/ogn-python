@@ -2,19 +2,8 @@ from app.main import bp
 from app.model import Airport, Sender, Receiver
 
 from flask import url_for
-import time
 import datetime
 import math
-
-
-@bp.app_template_filter()
-def timestamp_to_status(timestamp):
-    if datetime.datetime.utcnow() - timestamp < datetime.timedelta(minutes=10):
-        return 'OK'
-    elif datetime.datetime.utcnow() - timestamp < datetime.timedelta(hours=1):
-        return '<b>?</b>'
-    else:
-        return '<b>OFFLINE</b>'
 
 
 @bp.app_template_filter()

@@ -25,11 +25,17 @@
 	<table class="datatable table table-striped table-bordered">
 		<tr>
 			<th>Name</th>
+			<th>Status</th>
+			<th>Version</th>
+			<th>Platform</th>
 		</tr>
 	
 		{% for receiver in airport.receivers %}
 		<tr>
 			<td><a href="{{ url_for('main.receiver_detail', receiver_id=receiver.id) }}">{{ receiver.name }}</a></td>
+			<td>{{ receiver.state.name }}</td>
+			<td>{{ receiver.version if receiver.version else '-' }}</td>
+			<td>{{ receiver.platform if receiver.platform else '-' }}</td>
 		</tr>
 		{% endfor %}
 	</table>
@@ -48,7 +54,7 @@
 	{% for sender in senders %}
 	<tr>
 		<td>{{ sender|to_html_link|safe }}</td>
-		<td>{% if sender.takeoff_landings %}{% set last_action = sender.takeoff_landings|last %}{% if last_action.is_takeoff == db.true() %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
+		<td>{% if sender.takeoff_landings %}{% set last_action = sender.takeoff_landings|last %}{% if last_action.is_takeoff %}↗{% else %}↘{% endif %} @ {{ last_action.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}{% endif %}
 		<td>{% if sender.hardware_version is not none %}{{ sender.hardware_version }}{% else %}-{% endif %}</td>
 		<td>{% if sender.software_version is not none %}{{ sender.software_version }}{% else %}-{% endif %}</td>
 	</tr>
