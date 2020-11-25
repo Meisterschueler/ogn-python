@@ -39,6 +39,17 @@ class DefaultConfig(BaseConfig):
         #"purge_old_data": {"task": "purge_old_data", "schedule": timedelta(hours=1), "kwargs": {"max_hours": 48}},
     }
 
+    FLASK_PROFILER = {
+        "enabled": True,
+        "storage": {
+            "engine": "sqlalchemy",
+            "db_url": SQLALCHEMY_DATABASE_URI
+        },
+        "ignore": [
+            "^/static/.*"
+        ]
+    }
+
 
 class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = "postgresql://postgres:postgres@localhost:5432/ogn_test"

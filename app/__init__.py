@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from flask_caching import Cache
 from celery import Celery
 from flask_redis import FlaskRedis
+from flask_profiler import Profiler
 
 from config import configs
 
@@ -16,6 +17,7 @@ migrate = Migrate()
 cache = Cache()
 redis_client = FlaskRedis()
 celery = Celery()
+profiler = Profiler()
 
 
 def create_app(config_name='default'):
@@ -33,6 +35,7 @@ def create_app(config_name='default'):
     migrate.init_app(app, db)
     cache.init_app(app)
     redis_client.init_app(app)
+    profiler.init_app(app)
 
     init_celery(app)
     register_blueprints(app)
