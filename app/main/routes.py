@@ -10,14 +10,14 @@ from app.main import bp
 from app.main.matplotlib_service import create_range_figure
 
 
-@cache.cached(key_prefix="countries_in_receivers")
+@cache.cached()
 def get_countries_in_receivers():
     query = db.session.query(Country.iso2).filter(Country.gid == Receiver.country_id).order_by(Country.iso2).distinct(Country.iso2)
 
     return [{"iso2": country[0]} for country in query.all()]
 
 
-@cache.cached(key_prefix="countries_in_takeoff_landings")
+@cache.cached()
 def get_used_countries():
     query = db.session.query(Country.iso2).filter(Country.gid == TakeoffLanding.country_id).order_by(Country.iso2).distinct(Country.iso2)
     return [{"iso2": country[0]} for country in query.all()]
@@ -44,6 +44,7 @@ def get_dates_for_airport(sel_airport):
 
 @bp.route("/")
 @bp.route("/index.html")
+@cache.cached()
 def index():
     today_beginning = datetime.combine(date.today(), time())
 
@@ -67,6 +68,7 @@ def index():
 
 
 @bp.route("/senders.html", methods=["GET", "POST"])
+@cache.cached()
 def senders():
     senders = db.session.query(Sender) \
         .options(db.joinedload(Sender.infos)) \
@@ -98,6 +100,7 @@ def range_view():
 
 
 @bp.route("/receivers.html")
+@cache.cached()
 def receivers():
     sel_country = request.args.get("country")
 
@@ -214,6 +217,7 @@ def download_flight():
 
 
 @bp.route("/sender_ranking.html")
+@cache.cached()
 def sender_ranking():
     sender_statistics = db.session.query(SenderStatistic) \
         .filter(db.and_(SenderStatistic.date == date.today(), SenderStatistic.is_trustworthy == db.true())) \
@@ -227,6 +231,7 @@ def sender_ranking():
 
 
 @bp.route("/receiver_ranking.html")
+@cache.cached()
 def receiver_ranking():
     receiver_statistics = db.session.query(ReceiverStatistic) \
         .filter(db.and_(ReceiverStatistic.date == date.today(), ReceiverStatistic.is_trustworthy == db.true())) \

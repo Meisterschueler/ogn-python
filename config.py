@@ -5,7 +5,7 @@ class BaseConfig:
     SECRET_KEY = "i-like-ogn"
 
     # Flask-Cache stuff
-    CACHE_TYPE = "simple"
+    CACHE_TYPE = "redis"
     CACHE_DEFAULT_TIMEOUT = 300
 
     # Redis stuff
