@@ -99,8 +99,8 @@ def range_view():
     return Response(output.getvalue(), mimetype='image/png')
 
 
-@bp.route("/receivers.html")
-@cache.cached()
+@bp.route("/receivers.html", methods=["GET", "POST"])
+@cache.cached(query_string=True)
 def receivers():
     sel_country = request.args.get("country")
 
@@ -109,12 +109,11 @@ def receivers():
     # Get receiver selection list
     if sel_country:
         receivers = db.session.query(Receiver) \
-            .options(db.joinedload(Receiver.airport)) \
+            .join(Country) \
             .filter(db.and_(Receiver.country_id == Country.gid, Country.iso2 == sel_country)) \
             .order_by(Receiver.name)
     else:
         receivers = db.session.query(Receiver) \
-            .options(db.joinedload(Receiver.airport)) \
             .order_by(Receiver.name)
 
     return render_template("receivers.html", title="Receivers", sel_country=sel_country, countries=countries, receivers=receivers)
