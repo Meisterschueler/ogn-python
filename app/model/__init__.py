@@ -12,6 +12,7 @@ from .receiver_state import ReceiverState
 from .takeoff_landing import TakeoffLanding
 from .airport import Airport
 from .logbook import Logbook
+from .frequency_scan_file import FrequencyScanFile
 
 from .geo import Location
 
