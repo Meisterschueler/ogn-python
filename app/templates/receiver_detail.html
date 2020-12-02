@@ -45,6 +45,30 @@
 	</table>
 	</div>
 
+{% if receiver.frequency_scan_files %}
+<div class="panel panel-success">
+	<div class="panel-heading"><h3 class="panel-title">Frequency Scans</h3></div>
+	<table class="datatable table table-striped table-bordered">
+		<tr>	
+			<th>#</th>
+			<th>Name</th>
+			<th>Gain</th>
+			<th>Upload Timestamp</th>
+			<th>Analysis</th>
+		</tr>
+		{% for file in receiver.frequency_scan_files %}
+		<tr>
+			<td>{{ loop.index }}</td>
+			<td>{{ file.name }}</td>
+			<td>{{ file.gain }}</td>
+			<td>{{ file.upload_timestamp }}</td>
+			<td><a href="{{ url_for('main.frequency_scan', frequency_scan_file_id=file.id) }}" target="_blank">Plot</a></td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+{% endif %}
+
 </div>
 
 {% endblock %}

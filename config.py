@@ -17,6 +17,11 @@ class BaseConfig:
 
     APRS_USER = "OGNPYTHON"
 
+    # Upload configuration
+    MAX_CONTENT_LENGTH = 1024 * 1024    # max. 1MB
+    UPLOAD_EXTENSIONS = ['.csv']
+    UPLOAD_PATH = 'uploads'
+
 
 class DefaultConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/ogn")

@@ -1,13 +1,17 @@
+import os
+import re
 from datetime import date, time, datetime
 
-from flask import request, render_template, send_file
+from flask import request, render_template, send_file, abort, current_app, make_response
+from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app import cache
-from app.model import Airport, Country, Sender, SenderInfo, TakeoffLanding, Logbook, Receiver, SenderPosition, RelationStatistic, ReceiverStatistic, SenderStatistic
+from app.model import Airport, Country, Sender, SenderInfo, TakeoffLanding, Logbook, Receiver, SenderPosition, RelationStatistic, ReceiverStatistic, SenderStatistic, FrequencyScanFile
 
 from app.main import bp
 from app.main.matplotlib_service import create_range_figure
+from app.main.bokeh_utils import get_bokeh_frequency_scan
 
 
 @cache.cached()
@@ -204,17 +208,6 @@ def logbooks():
     return render_template("logbooks.html", title="Logbook", sel_country=sel_country, countries=countries, sel_airport_id=sel_airport_id, airports=airports, sel_date=sel_date, dates=dates, logbooks=logbooks)
 
 
-@bp.route("/download.html")
-def download_flight():
-    from io import StringIO
-
-    buffer = StringIO()
-    buffer.write("Moin moin\nAlter Verwalter")
-    buffer.seek(0)
-
-    return send_file(buffer, as_attachment=True, attachment_filename="wtf.igc", mimetype="text/plain")
-
-
 @bp.route("/sender_ranking.html")
 @cache.cached()
 def sender_ranking():
@@ -241,3 +234,47 @@ def receiver_ranking():
         "receiver_ranking.html",
         title="Receiver Ranking",
         ranking=receiver_statistics)
+
+
+@bp.route("/upload_file", methods=["POST"])
+def upload_file():
+    """For uploading frequency scans. Example:
+    curl -X POST -F file=@Sonnblick_g49.6.csv http://localhost:5000/upload_file
+    """
+
+    if 'file' not in request.files:
+        abort(400, "Missing parameter 'file'")
+
+    file = request.files['file']
+    filename = file.filename
+    match = re.match(r'^(?P<receiver_name>([A-Za-z0-9]+))\_g(?P<gain>([0-9]{1,2}(\.[0-9])?))\.csv$', filename)
+    if match is None:
+        abort(400, f"No valid filename '{filename}'.")
+
+    try:
+        receiver = db.session.query(Receiver).filter(Receiver.name == match.group('receiver_name')).one()
+    except NoResultFound as e:
+        abort(400, f"No receiver found with name '{match.group('receiver_name')}'.")
+
+    file.save(os.path.join(current_app.config['UPLOAD_PATH'], filename))
+
+    uploaded_file = FrequencyScanFile(name=filename, gain=match.group('gain'), upload_ip_address=request.remote_addr, upload_timestamp=datetime.utcnow(), receiver=receiver)
+    db.session.add(uploaded_file)
+    db.session.commit()
+
+    return 'OK', 202
+
+
+@bp.route("/frequency_scan", methods=["GET"])
+def frequency_scan():
+    frequency_scan_file_id = request.args.get("frequency_scan_file_id")
+    try:
+        frequency_scan_file = db.session.query(FrequencyScanFile).filter(FrequencyScanFile.id == frequency_scan_file_id).one()
+    except NoResultFound as e:
+        abort(400, f"No frequency_scan_file found id '{frequency_scan_file_id}'.")
+
+    html = get_bokeh_frequency_scan(frequency_scan_file)
+
+    resp = make_response(html)
+    resp.mimetype = 'text/html'
+    return resp

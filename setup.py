@@ -56,7 +56,9 @@ setup(
         'flower==0.9.5',
         'tqdm==4.53.0',
         'requests==2.25.0',
-        'matplotlib==3.3.3'
+        'matplotlib==3.3.3',
+        'bokeh==2.2.3',
+        'pandas==1.1.4'
     ],
     test_require=[
         'pytest==5.0.1',
