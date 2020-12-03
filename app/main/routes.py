@@ -229,7 +229,8 @@ def receiver_ranking():
 
     countries = db.session.query(Country) \
         .filter(Country.gid == ReceiverRanking.country_id) \
-        .filter(ReceiverRanking.date == date.today())
+        .filter(ReceiverRanking.date == date.today()) \
+        .order_by(Country.iso2)
 
     # Get receiver selection list
     if sel_country:
