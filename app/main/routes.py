@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app import cache
-from app.model import Airport, Country, Sender, SenderInfo, TakeoffLanding, Logbook, Receiver, SenderPosition, RelationStatistic, ReceiverStatistic, SenderStatistic, FrequencyScanFile
+from app.model import Airport, Country, Sender, SenderInfo, TakeoffLanding, Logbook, Receiver, SenderPosition, RelationStatistic, ReceiverRanking, ReceiverStatistic, SenderStatistic, FrequencyScanFile
 
 from app.main import bp
 from app.main.matplotlib_service import create_range_figure
@@ -222,18 +222,36 @@ def sender_ranking():
         ranking=sender_statistics)
 
 
-@bp.route("/receiver_ranking.html")
-@cache.cached()
+@bp.route("/receiver_ranking.html", methods=["GET", "POST"])
+@cache.cached(query_string=True)
 def receiver_ranking():
-    receiver_statistics = db.session.query(ReceiverStatistic) \
-        .filter(db.and_(ReceiverStatistic.date == date.today(), ReceiverStatistic.is_trustworthy == db.true())) \
-        .order_by(ReceiverStatistic.max_distance.desc()) \
-        .all()
+    sel_country = request.args.get("country")
+
+    countries = db.session.query(Country) \
+        .filter(Country.gid == ReceiverRanking.country_id) \
+        .filter(ReceiverRanking.date == date.today()) \
+        .order_by(Country.iso2)
+
+    # Get receiver selection list
+    if sel_country:
+        ranking = db.session.query(ReceiverRanking) \
+            .join(Country) \
+            .filter(db.and_(ReceiverRanking.country_id == Country.gid, Country.iso2 == sel_country)) \
+            .filter(db.and_(ReceiverRanking.date == date.today())) \
+            .order_by(ReceiverRanking.global_rank.asc()) \
+            .all()
+    else:
+        ranking = db.session.query(ReceiverRanking) \
+            .filter(db.and_(ReceiverRanking.date == date.today())) \
+            .order_by(ReceiverRanking.global_rank.asc()) \
+            .all()
 
     return render_template(
         "receiver_ranking.html",
         title="Receiver Ranking",
-        ranking=receiver_statistics)
+        sel_country=sel_country,
+        countries=countries,
+        ranking=ranking)
 
 
 @bp.route("/upload_file", methods=["POST"])

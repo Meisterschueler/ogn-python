@@ -41,8 +41,3 @@ class ReceiverStatus(db.Model):
     good_senders_signal = None
     good_senders = None
     good_and_bad_senders = None
-
-    # Calculated values (from this software)
-    location_mgrs = db.Column(db.String(15))                # full mgrs (15 chars)
-    location_mgrs_short = db.Column(db.String(9))           # reduced mgrs (9 chars), e.g. used for melissas range tool
-    agl = db.Column(db.Float(precision=2))

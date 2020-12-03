@@ -76,6 +76,30 @@ def update_statistics(date_str=None):
         GROUP BY date, receiver_id, is_trustworthy;
     """)
 
+    # Update receiver rankings
+    db.session.execute(f"""
+        DELETE FROM receiver_rankings
+        WHERE date = '{date_str}';
+
+        INSERT INTO receiver_rankings AS rr (date, receiver_id, country_id, local_rank, global_rank, max_distance, max_normalized_quality, messages_count, coverages_count, senders_count)
+        SELECT
+            rs.date,
+            rs.receiver_id,
+
+            r.country_id,
+            RANK() OVER (PARTITION BY rs.date, r.country_id ORDER BY rs.max_distance DESC) AS local_rank,
+            RANK() OVER (ORDER BY rs.max_distance DESC) AS global_rank,
+
+            rs.max_distance,
+            rs.max_normalized_quality,
+            rs.messages_count,
+            rs.coverages_count,
+            rs.senders_count
+        FROM receiver_statistics AS rs
+        LEFT JOIN receivers AS r ON rs.receiver_id = r.id
+        WHERE rs.date = '{date_str}' AND rs.is_trustworthy IS TRUE;
+    """)
+
     db.session.commit()
 
 
