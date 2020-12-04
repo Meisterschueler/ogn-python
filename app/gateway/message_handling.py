@@ -230,9 +230,10 @@ def sender_position_csv_strings_to_db(lines):
 
     # Update sender position statistics
     cursor.execute(f"""
-        INSERT INTO sender_position_statistics AS sps (date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version, messages_count)
+        INSERT INTO sender_position_statistics AS sps (date, sender_id, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version, messages_count)
         SELECT
             tmp.reference_timestamp::DATE AS date,
+            s.id AS sender_id,
             tmp.dstcall,
             tmp.address_type,
             tmp.aircraft_type,
@@ -241,8 +242,9 @@ def sender_position_csv_strings_to_db(lines):
             tmp.hardware_version,
             COUNT(tmp.*) AS messages_count
         FROM {tmp_tablename} AS tmp
-        GROUP BY date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version
-        ON CONFLICT (date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version) DO UPDATE
+        INNER JOIN senders AS s ON tmp.name = s.name
+        GROUP BY date, sender_id, tmp.dstcall, tmp.address_type, tmp.aircraft_type, tmp.stealth, tmp.software_version, tmp.hardware_version
+        ON CONFLICT (date, sender_id, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version) DO UPDATE
         SET
             messages_count = EXCLUDED.messages_count + sps.messages_count;
     """)
