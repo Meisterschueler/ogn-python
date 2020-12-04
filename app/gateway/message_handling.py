@@ -190,25 +190,6 @@ def sender_position_csv_strings_to_db(lines):
         WHERE ST_Intersects(tmp.location, e.rast);
     """)
 
-    # Update sender position statistics
-    cursor.execute(f"""
-        INSERT INTO sender_position_statistics AS sps (date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version, messages_count)
-        SELECT
-            tmp.reference_timestamp::DATE AS date,
-            tmp.dstcall,
-            tmp.address_type,
-            tmp.aircraft_type,
-            tmp.stealth,
-            tmp.software_version,
-            tmp.hardware_version,
-            COUNT(tmp.*) AS messages_count
-        FROM {tmp_tablename} AS tmp
-        GROUP BY date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version
-        ON CONFLICT (date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version) DO UPDATE
-        SET
-            messages_count = EXCLUDED.messages_count + sps.messages_count;
-    """)
-
     # Update senders
     cursor.execute(f"""
         INSERT INTO senders AS s (firstseen, lastseen, name, aircraft_type, stealth, address, software_version, hardware_version, real_address)
@@ -246,6 +227,25 @@ def sender_position_csv_strings_to_db(lines):
     """)
 
     SQL_TRUSTWORTHY = get_sql_trustworthy(source_table_alias='tmp')
+
+    # Update sender position statistics
+    cursor.execute(f"""
+        INSERT INTO sender_position_statistics AS sps (date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version, messages_count)
+        SELECT
+            tmp.reference_timestamp::DATE AS date,
+            tmp.dstcall,
+            tmp.address_type,
+            tmp.aircraft_type,
+            tmp.stealth,
+            tmp.software_version,
+            tmp.hardware_version,
+            COUNT(tmp.*) AS messages_count
+        FROM {tmp_tablename} AS tmp
+        GROUP BY date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version
+        ON CONFLICT (date, dstcall, address_type, aircraft_type, stealth, software_version, hardware_version) DO UPDATE
+        SET
+            messages_count = EXCLUDED.messages_count + sps.messages_count;
+    """)
 
     # Update coverage statistics
     cursor.execute(f"""
@@ -423,6 +423,22 @@ def receiver_status_csv_strings_to_db(lines):
             platform = EXCLUDED.platform,
             cpu_temp = EXCLUDED.cpu_temp,
             rec_input_noise = EXCLUDED.rec_input_noise;
+    """)
+
+    # Update receiver position statistics
+    cursor.execute(f"""
+        INSERT INTO receiver_status_statistics AS rss (date, receiver_id, version, platform, messages_count)
+        SELECT
+            tmp.reference_timestamp::DATE AS date,
+            r.id AS receiver_id,
+            COALESCE(tmp.version, ''),
+            COALESCE(tmp.platform, ''),
+            COUNT(tmp.*) AS messages_count
+        FROM {tmp_tablename} AS tmp INNER JOIN receivers AS r ON tmp.name = r.name
+        GROUP BY tmp.reference_timestamp::DATE, r.id, tmp.version, tmp.platform
+        ON CONFLICT (date, receiver_id, version, platform) DO UPDATE
+        SET
+            messages_count = EXCLUDED.messages_count + rss.messages_count;
     """)
 
     # Insert all the beacons
