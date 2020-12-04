@@ -276,7 +276,7 @@ def upload_file():
 
     file.save(os.path.join(current_app.config['UPLOAD_PATH'], filename))
 
-    uploaded_file = FrequencyScanFile(name=filename, gain=match.group('gain'), upload_ip_address=request.remote_addr, upload_timestamp=datetime.utcnow(), receiver=receiver)
+    uploaded_file = FrequencyScanFile(name=filename, gain=match.group('gain'), upload_ip_address=request.headers['X-Real-IP'], upload_timestamp=datetime.utcnow(), receiver=receiver)
     db.session.add(uploaded_file)
     db.session.commit()
 
