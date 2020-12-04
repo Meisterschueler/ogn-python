@@ -9,6 +9,10 @@ class ReceiverRanking(db.Model):
     date = db.Column(db.Date)
     local_rank = db.Column(db.Integer)
     global_rank = db.Column(db.Integer)
+    longtime_local_rank = db.Column(db.Integer)
+    longtime_local_rank_delta = db.Column(db.Integer)
+    longtime_global_rank = db.Column(db.Integer)
+    longtime_global_rank_delta = db.Column(db.Integer)
 
     max_distance = db.Column(db.Float(precision=2))
     max_normalized_quality = db.Column(db.Float(precision=2))
