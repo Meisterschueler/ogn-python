@@ -10,9 +10,9 @@
 <div class="panel panel-success">
 <div class="panel-heading"><h3 class="panel-title">Receiver Details</h3></div>
 <table class="datatable table table-striped table-bordered">
-	<tr><td>Name:</td><td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/> {{ receiver.name }}</td></tr>
+	<tr><td>Name:</td><td>{{ receiver.country|to_html_flag|safe }} {{ receiver.name }}</td></tr>
 	<tr><td>Airport:</td>
-		<td>{% if receiver.airport is not none %}<img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.airport.country_code|lower }}" alt="{{ receiver.airport.country_code }}"/>
+		<td>{% if receiver.airport is not none %}{{ receiver.airport|to_html_flag|safe }}
 			<a href="{{ url_for('main.airport_detail', airport_id=receiver.airport.id) }}">{{ receiver.airport.name }}</a>
 		{% else %}-{% endif %}
 		</td>

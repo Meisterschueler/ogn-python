@@ -9,7 +9,7 @@
 <div class="panel panel-success">
 <div class="panel-heading"><h3 class="panel-title">Airport Details</h3></div>
 <table class="datatable table table-striped table-bordered">
-	<tr><td>Name:</td><td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ airport.country_code|lower }}" alt="{{ airport.country_code }}"/> {{ airport.name }}</td></tr>
+	<tr><td>Name:</td><td>{{ airport|to_html_flag|safe }} {{ airport.name }}</td></tr>
 	<tr><td>Code:</td><td>{{ airport.code }}</td></tr>
 	<tr><td>Altitude:</td><td>{{ airport.altitude|int }} m</td></tr>
 	<tr><td>Style:</td><td>{{ airport.style }}</td></tr>

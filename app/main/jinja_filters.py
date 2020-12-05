@@ -1,9 +1,24 @@
 from app.main import bp
-from app.model import Airport, Sender, Receiver
+from app.model import Airport, Country, Sender, Receiver
 
 from flask import url_for
 import datetime
 import math
+
+
+@bp.app_template_filter()
+def to_html_flag(obj):
+    if obj is None:
+        return ""
+
+    if isinstance(obj, str):
+        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.lower()}" alt="{obj}"/>"""
+
+    elif isinstance(obj, Airport):
+        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.country_code.lower()}" alt="{obj.country_code}"/>"""
+
+    elif isinstance(obj, Country):
+        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.iso2.lower()}" alt="{obj.iso2}"/>"""
 
 
 @bp.app_template_filter()

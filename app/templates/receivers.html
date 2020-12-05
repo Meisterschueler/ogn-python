@@ -38,7 +38,7 @@
       {% for receiver in receivers %}
       <tr>
         <td>{{ loop.index }}</td>
-        <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/></td>
+        <td>{{ receiver.country|to_html_flag|safe }}</td>
         <td>{{ receiver|to_html_link|safe }}</td>
         <td>{{ receiver.airport|to_html_link|safe }}</td>
         <td>{{ receiver.altitude|int }} m</td>

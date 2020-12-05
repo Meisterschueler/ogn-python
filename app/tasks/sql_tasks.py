@@ -135,8 +135,8 @@ def update_statistics(date_str=None):
     db.session.execute(f"""
         UPDATE receiver_rankings AS rr
         SET
-            longtime_global_rank_delta = rr.longtime_global_rank - sq.longtime_global_rank_yesterday,
-            longtime_local_rank_delta = rr.longtime_local_rank - sq.longtime_local_rank_yesterday
+            longtime_global_rank_delta = sq.longtime_global_rank_yesterday - rr.longtime_global_rank,
+            longtime_local_rank_delta = sq.longtime_local_rank_yesterday - rr.longtime_local_rank
         FROM (
             SELECT
                 rr.receiver_id,

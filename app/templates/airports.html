@@ -31,7 +31,7 @@
     {% for airport in airports %}
 	<tr>
 	  <td>{{ loop.index }}
-    <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ sel_country|lower }}" alt="{{ sel_country }}"/></td>
+    <td>{{ sel_country|to_html_flag|safe }}</td>
     <td>{{ airport|to_html_link|safe }}</td>
 	  <td><a href="{{ url_for('main.logbooks', country=sel_country, airport_id=airport.id) }}">Logbook</a></td>
 	</tr>
