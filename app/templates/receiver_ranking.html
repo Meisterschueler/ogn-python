@@ -21,45 +21,51 @@
   </form>
 
   <table id="myTable" class="table table-striped table-bordered tablesorter tablesorter-bootstrap">
-    <tr>
-      <th colspan="2">Ranking</th>
-      <th colspan="2">Receiver</th>
-      <th colspan="2">Maximum</th>
-      <th colspan="3">Counter</th>
-    </tr>
-    <tr>
-      <th class="text-right">Total</th>
-      <th class="text-right">Today</th>
-      <th>Name</th>
-      <th>Airport</th>
-      <th class="text-right">Distance [km]</th>
-      <th class="text-right">Normalized signal quality [dB]</th>
-      <th class="text-right">Senders</th>
-      <th class="text-right">Coverages</th>
-      <th class="text-right">Messages</th>
-    </tr>
+    <thead>
+      <tr>
+        <th class="text-right">Total</th>
+        <th class="text-right">Today</th>
+        <th>Name</th>
+        <th>Airport</th>
+        <th class="text-right">Distance [km]</th>
+        <th class="text-right">Normalized signal quality [dB]</th>
+        <th class="text-right">Senders</th>
+        <th class="text-right">Coverages</th>
+        <th class="text-right">Messages</th>
+      </tr>
+    </thead>
 
-
+    <tbody>
     {% for entry in ranking %}
-    {% if sel_country == '' %}
+    {% if sel_country is none or sel_country == '' %}
       {% set rank = entry.global_rank %}{% set longtime_rank = entry.longtime_global_rank %}{% set longtime_rank_delta = entry.longtime_global_rank_delta %}
     {% else %}
       {% set rank = entry.local_rank %}{% set longtime_rank = entry.longtime_local_rank %}{% set longtime_rank_delta = entry.longtime_local_rank_delta %}
     {% endif %}
-	<tr>
-    <td class="text-right">{{ longtime_rank }} ({% if longtime_rank_delta is none or longtime_rank_delta == 0%}±0{% elif longtime_rank_delta > 0 %}<span class="text-success">+{{ longtime_rank_delta }}</span>{% else %}<span class="text-danger">{{ longtime_rank_delta }}</span>{% endif %})</td>
-    <td class="text-right">{{ rank }}</td>
-    <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ entry.receiver.country.iso2|lower }}" alt="{{ entry.receiver.country.iso2 }}"/> {{ entry.receiver|to_html_link|safe }}</td>
-    <td>{{ entry.receiver.airport|to_html_link|safe }}</td>
-    <td class="text-right">{{ '%0.1f' | format(entry.max_distance/1000.0) }}</td>
-    <td class="text-right">{{ '%0.1f' | format(entry.max_normalized_quality) }}</td>
-    <td class="text-right">{{ entry.senders_count }}</td>
-    <td class="text-right">{{ entry.coverages_count }}</td>
-    <td class="text-right">{{ entry.messages_count }}</td>
-	</tr>
-	{% endfor %}
+      <tr>
+        <td class="text-right">{{ longtime_rank }} ({% if longtime_rank_delta is none or longtime_rank_delta == 0%}±0{% elif longtime_rank_delta > 0 %}<span class="text-success">+{{ longtime_rank_delta }}</span>{% else %}<span class="text-danger">{{ longtime_rank_delta }}</span>{% endif %})</td>
+        <td class="text-right">{{ rank }}</td>
+        <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ entry.receiver.country.iso2|lower }}" alt="{{ entry.receiver.country.iso2 }}"/> {{ entry.receiver|to_html_link|safe }}</td>
+        <td>{{ entry.receiver.airport|to_html_link|safe }}</td>
+        <td class="text-right">{{ '%0.1f' | format(entry.max_distance/1000.0) }}</td>
+        <td class="text-right">{{ '%0.1f' | format(entry.max_normalized_quality) }}</td>
+        <td class="text-right">{{ entry.senders_count }}</td>
+        <td class="text-right">{{ entry.coverages_count }}</td>
+        <td class="text-right">{{ entry.messages_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $(function() {
+      $("#myTable").tablesorter({sortList: [[0,0]], theme:"bootstrap", headerTemplate:"{content} {icon}", widgets:["uitheme"]});
+    });
+  </script>
 {% endblock %}

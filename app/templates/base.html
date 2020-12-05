@@ -1,5 +1,11 @@
 {% extends 'bootstrap/base.html' %}
 
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.default.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.bootstrap_3.min.css">
+{% endblock %}
+
 {% block title %}
     {% if title %}{{ title }}{% else %}No page title{% endif %}
 {% endblock %}
@@ -54,4 +60,10 @@
 <footer class="text-center"><small>&copy; 2019 The OGN Team</small></footer>
 {%- endblock footer %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js"></script>
 {% endblock %}

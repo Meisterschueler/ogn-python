@@ -20,32 +20,45 @@
 </div>
 </form>
 
-  <table class="datatable table table-striped table-bordered">
-    <tr>
-      <th>#</th>
-      <th>Country</th>
-      <th>Name</th>
-      <th>Airport</th>
-      <th>Altitude</th>
-      <th>Status</th>
-      <th>Version</th>
-      <th>Platform</th>
-    </tr>
+  <table id="myTable" class="datatable table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Country</th>
+        <th>Name</th>
+        <th>Airport</th>
+        <th>Altitude</th>
+        <th>Status</th>
+        <th>Version</th>
+        <th>Platform</th>
+      </tr>
+    </thead>
 
-    {% for receiver in receivers %}
-	<tr>
-    <td>{{ loop.index }}</td>
-    <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/></td>
-    <td>{{ receiver|to_html_link|safe }}</td>
-    <td>{{ receiver.airport|to_html_link|safe }}</td>
-    <td>{{ receiver.altitude|int }} m</td>
-    <td>{{ receiver.state.name }}</td>
-	  <td>{{ receiver.version if receiver.version else '-' }}</td>
-	  <td>{{ receiver.platform if receiver.platform else '-' }}</td>
-	</tr>
-	{% endfor %}
+    <tbody>
+      {% for receiver in receivers %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td><img src="{{ url_for('static', filename='img/Transparent.gif') }}" class="flag flag-{{ receiver.country.iso2|lower }}" alt="{{ receiver.country.iso2 }}"/></td>
+        <td>{{ receiver|to_html_link|safe }}</td>
+        <td>{{ receiver.airport|to_html_link|safe }}</td>
+        <td>{{ receiver.altitude|int }} m</td>
+        <td>{{ receiver.state.name }}</td>
+        <td>{{ receiver.version if receiver.version else '-' }}</td>
+        <td>{{ receiver.platform if receiver.platform else '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $(function() {
+      $("#myTable").tablesorter({sortList: [[0,0]], theme:"bootstrap", headerTemplate:"{content} {icon}", widgets:["uitheme"]});
+    });
+  </script>
 {% endblock %}
