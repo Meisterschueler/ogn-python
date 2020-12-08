@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import date, time, datetime
+from datetime import date, time, datetime, timedelta
 
 from flask import request, render_template, send_file, abort, current_app, make_response
 from sqlalchemy.orm.exc import NoResultFound
@@ -226,25 +226,78 @@ def sender_ranking():
 @cache.cached(query_string=True)
 def receiver_ranking():
     sel_country = request.args.get("country")
+    DAYS_FOR_AVERAGING = 28
 
     countries = db.session.query(Country) \
         .filter(Country.gid == ReceiverRanking.country_id) \
         .filter(ReceiverRanking.date == date.today()) \
         .order_by(Country.iso2)
 
+    # Make the rank for today
+    rank_today = db.session.query(
+            ReceiverRanking.receiver_id,
+            ReceiverRanking.country_id,
+            db.func.rank().over(partition_by=ReceiverRanking.country_id, order_by=ReceiverRanking.local_distance_pareto.desc()).label('local_rank'),
+            db.func.rank().over(order_by=ReceiverRanking.global_distance_pareto.desc()).label('global_rank')) \
+        .filter(ReceiverRanking.date == date.today()) \
+        .subquery()
+
+    # Sum the pareto values for the last 28 days
+    longtime_today = db.session.query(
+            ReceiverRanking.receiver_id,
+            ReceiverRanking.country_id,
+            db.func.sum(ReceiverRanking.local_distance_pareto).label('local_distance_pareto'),
+            db.func.sum(ReceiverRanking.global_distance_pareto).label('global_distance_pareto')) \
+        .filter(ReceiverRanking.date.between(date.today() - timedelta(days=DAYS_FOR_AVERAGING), date.today())) \
+        .group_by(ReceiverRanking.receiver_id, ReceiverRanking.country_id) \
+        .subquery()
+
+    # ... and make the longtime_ranking for today
+    longtime_rank_today = db.session.query(
+            longtime_today.c.receiver_id,
+            longtime_today.c.country_id,
+            db.func.rank().over(partition_by=longtime_today.c.country_id, order_by=longtime_today.c.local_distance_pareto.desc()).label('local_rank'),
+            db.func.rank().over(order_by=longtime_today.c.global_distance_pareto.desc()).label('global_rank')) \
+        .subquery()
+
+    # Sum the pareto values for the last 28 days (beginning from yesterday!)
+    longtime_yesterday = db.session.query(
+            ReceiverRanking.receiver_id,
+            ReceiverRanking.country_id,
+            db.func.sum(ReceiverRanking.local_distance_pareto).label('local_distance_pareto'),
+            db.func.sum(ReceiverRanking.global_distance_pareto).label('global_distance_pareto')) \
+        .filter(ReceiverRanking.date.between(date.today() - timedelta(days=DAYS_FOR_AVERAGING + 1), date.today() - timedelta(days=1))) \
+        .group_by(ReceiverRanking.receiver_id, ReceiverRanking.country_id) \
+        .subquery()
+
+    # ... and make the longtime_ranking for yesterday
+    longtime_rank_yesterday = db.session.query(
+            longtime_yesterday.c.receiver_id,
+            longtime_yesterday.c.country_id,
+            db.func.rank().over(partition_by=longtime_yesterday.c.country_id, order_by=longtime_yesterday.c.local_distance_pareto.desc()).label('local_rank'),
+            db.func.rank().over(order_by=longtime_yesterday.c.global_distance_pareto.desc()).label('global_rank')) \
+        .subquery()
+
+    # we need the ReceiverRanking, but only from today
+    receiver_rankings_from_today = db.session.query(ReceiverRanking).filter(ReceiverRanking.date == date.today()).subquery()
+    receiver_rankings_from_today = db.aliased(ReceiverRanking, receiver_rankings_from_today)
+
     # Get receiver selection list
     if sel_country:
-        ranking = db.session.query(ReceiverRanking) \
-            .join(Country) \
-            .filter(db.and_(ReceiverRanking.country_id == Country.gid, Country.iso2 == sel_country)) \
-            .filter(db.and_(ReceiverRanking.date == date.today())) \
-            .order_by(ReceiverRanking.global_rank.asc()) \
-            .all()
+        ranking = db.session.query(Receiver, receiver_rankings_from_today, rank_today.c.local_rank.label('rank_today'), longtime_rank_today.c.local_rank.label('longtime_rank_today'), longtime_rank_yesterday.c.local_rank.label('longtime_rank_yesterday')) \
+            .join(receiver_rankings_from_today, isouter=True) \
+            .join(rank_today, rank_today.c.receiver_id == Receiver.id, isouter=True) \
+            .join(longtime_rank_yesterday, longtime_rank_yesterday.c.receiver_id == Receiver.id, isouter=True) \
+            .join(longtime_rank_today, longtime_rank_today.c.receiver_id == Receiver.id) \
+            .filter(db.and_(Receiver.country_id == Country.gid, Country.iso2 == sel_country)) \
+            .order_by(longtime_rank_today.c.local_rank)
     else:
-        ranking = db.session.query(ReceiverRanking) \
-            .filter(db.and_(ReceiverRanking.date == date.today())) \
-            .order_by(ReceiverRanking.global_rank.asc()) \
-            .all()
+        ranking = db.session.query(Receiver, receiver_rankings_from_today, rank_today.c.global_rank.label('rank_today'), longtime_rank_today.c.global_rank.label('longtime_rank_today'), longtime_rank_yesterday.c.global_rank.label('longtime_rank_yesterday')) \
+            .join(receiver_rankings_from_today, isouter=True) \
+            .join(rank_today, rank_today.c.receiver_id == Receiver.id, isouter=True) \
+            .join(longtime_rank_yesterday, longtime_rank_yesterday.c.receiver_id == Receiver.id, isouter=True) \
+            .join(longtime_rank_today, longtime_rank_today.c.receiver_id == Receiver.id) \
+            .order_by(longtime_rank_today.c.global_rank)
 
     return render_template(
         "receiver_ranking.html",
