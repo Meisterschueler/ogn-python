@@ -36,23 +36,18 @@
     </thead>
 
     <tbody>
-    {% for entry in ranking %}
-    {% if sel_country is none or sel_country == '' %}
-      {% set rank = entry.global_rank %}{% set longtime_rank = entry.longtime_global_rank %}{% set longtime_rank_delta = entry.longtime_global_rank_delta %}
-    {% else %}
-      {% set rank = entry.local_rank %}{% set longtime_rank = entry.longtime_local_rank %}{% set longtime_rank_delta = entry.longtime_local_rank_delta %}
-    {% endif %}
+    {% for (receiver, ranking, current, today, yesterday) in ranking %}
       <tr>
-        <td class="text-right">{{ longtime_rank }}</td>
-        <td class="text-right">{% if longtime_rank_delta is none %}{% elif longtime_rank_delta > 0 %}<span class="text-success"><i class="fa fa-long-arrow-up"></i>{{ longtime_rank_delta }}</span>{% elif longtime_rank_delta < 0 %}<span class="text-danger"><i class="fa fa-long-arrow-down"></i>{{ -longtime_rank_delta }}</span>{% endif %}</td>
-        <td class="text-right">{{ rank }}</td>
-        <td>{{ entry.receiver.country|to_html_flag|safe }} {{ entry.receiver|to_html_link|safe }}</td>
-        <td>{{ entry.receiver.airport|to_html_link|safe }}</td>
-        <td class="text-right">{{ '%0.1f' | format(entry.max_distance/1000.0) }}</td>
-        <td class="text-right">{{ '%0.1f' | format(entry.max_normalized_quality) }}</td>
-        <td class="text-right">{{ entry.senders_count }}</td>
-        <td class="text-right">{{ entry.coverages_count }}</td>
-        <td class="text-right">{{ entry.messages_count }}</td>
+        <td class="text-right">{{ today }}</td>
+        <td class="text-right">{% if yesterday is none %}(new){% elif yesterday - today > 0 %}<span class="text-success"><i class="fa fa-long-arrow-up"></i>{{ yesterday - today }}</span>{% elif yesterday - today < 0 %}<span class="text-danger"><i class="fa fa-long-arrow-down"></i>{{ today - yesterday }}</span>{% endif %}</td>
+        <td class="text-right">{% if current is not none %}{{ current }}{% else %}-{% endif %}</td>
+        <td>{{ receiver.country|to_html_flag|safe }} {{ receiver|to_html_link|safe }}</td>
+        <td>{{ receiver.airport|to_html_link|safe }}</td>
+        <td class="text-right">{% if ranking is not none %}{{ '%0.1f' | format(ranking.max_distance/1000.0) }}{% else %}-{% endif %}</td>
+        <td class="text-right">{% if ranking is not none %}{{ '%0.1f' | format(ranking.max_normalized_quality) }}{% else %}-{% endif %}</td>
+        <td class="text-right">{% if ranking is not none %}{{ ranking.senders_count }}{% else %}-{% endif %}</td>
+        <td class="text-right">{% if ranking is not none %}{{ ranking.coverages_count }}{% else %}-{% endif %}</td>
+        <td class="text-right">{% if ranking is not none %}{{ ranking.messages_count }}{% else %}-{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>

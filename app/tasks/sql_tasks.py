@@ -81,14 +81,14 @@ def update_statistics(date_str=None):
         DELETE FROM receiver_rankings
         WHERE date = '{date_str}';
 
-        INSERT INTO receiver_rankings AS rr (date, receiver_id, country_id, local_rank, global_rank, max_distance, max_normalized_quality, messages_count, coverages_count, senders_count)
+        INSERT INTO receiver_rankings AS rr (date, receiver_id, country_id, local_distance_pareto, global_distance_pareto, max_distance, max_normalized_quality, messages_count, coverages_count, senders_count)
         SELECT
             rs.date,
             rs.receiver_id,
 
             r.country_id,
-            RANK() OVER (PARTITION BY rs.date, r.country_id ORDER BY rs.max_distance DESC) AS local_rank,
-            RANK() OVER (ORDER BY rs.max_distance DESC) AS global_rank,
+            1.0 * RANK() OVER (PARTITION BY rs.date, r.country_id ORDER BY rs.max_distance) / COUNT(rs.*) OVER (PARTITION BY rs.date, r.country_id) AS local_distance_pareto,
+            1.0 * RANK() OVER (PARTITION BY rs.date ORDER BY rs.max_distance) / COUNT(rs.*) OVER (PARTITION BY rs.date) AS global_distance_pareto,
 
             rs.max_distance,
             rs.max_normalized_quality,
@@ -98,54 +98,6 @@ def update_statistics(date_str=None):
         FROM receiver_statistics AS rs
         LEFT JOIN receivers AS r ON rs.receiver_id = r.id
         WHERE rs.date = '{date_str}' AND rs.is_trustworthy IS TRUE;
-    """)
-
-    db.session.execute(f"""
-        UPDATE receiver_rankings AS rr
-        SET
-            longtime_global_rank = sq3.longtime_global_rank,
-            longtime_local_rank = sq3.longtime_local_rank
-        FROM (
-            SELECT
-                sq2.receiver_id,
-                RANK() OVER (ORDER BY sq2.longtime_global_scores DESC) AS longtime_global_rank,
-                RANK() OVER (PARTITION BY sq2.country_id ORDER BY sq2.longtime_local_scores DESC) AS longtime_local_rank
-            FROM (
-                SELECT
-                    sq.receiver_id,
-                    sq.country_id,
-                    SUM(sq.global_scores) AS longtime_global_scores,
-                    SUM(sq.local_scores) AS longtime_local_scores
-                FROM (
-                    SELECT
-                        rr.receiver_id,
-                        rr.country_id,
-                        rr.date,
-                        MAX(rr.global_rank) OVER (PARTITION BY rr.date) + 1 - rr.global_rank AS global_scores,
-                        MAX(rr.local_rank) OVER (PARTITION BY rr.country_id, rr.date) + 1 - rr.local_rank AS local_scores
-                    FROM receiver_rankings AS rr
-                ) AS sq
-                WHERE sq.date BETWEEN DATE '{date_str}' - INTEGER '28' AND DATE '{date_str}'
-                GROUP BY sq.receiver_id, sq.country_id
-            ) AS sq2
-        ) AS sq3
-        WHERE rr.receiver_id = sq3.receiver_id AND rr.date = '{date_str}';
-    """)
-
-    db.session.execute(f"""
-        UPDATE receiver_rankings AS rr
-        SET
-            longtime_global_rank_delta = sq.longtime_global_rank_yesterday - rr.longtime_global_rank,
-            longtime_local_rank_delta = sq.longtime_local_rank_yesterday - rr.longtime_local_rank
-        FROM (
-            SELECT
-                rr.receiver_id,
-                rr.longtime_global_rank AS longtime_global_rank_yesterday,
-                rr.longtime_local_rank AS longtime_local_rank_yesterday
-            FROM receiver_rankings AS rr
-            WHERE rr.date = DATE '{date_str}' - INTEGER '1'
-        ) AS sq
-        WHERE rr.receiver_id = sq.receiver_id;
     """)
 
     db.session.commit()
