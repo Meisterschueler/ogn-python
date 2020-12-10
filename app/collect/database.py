@@ -1,8 +1,10 @@
 from sqlalchemy.dialects.postgresql import insert
 from flask import current_app
 
+from flydenity import parser as flydenity_parser
+
 from app import db
-from app.model import SenderInfo, SenderInfoOrigin, Receiver
+from app.model import Country, SenderInfo, SenderInfoOrigin, Receiver
 from app.utils import get_ddb, get_flarmnet
 
 
@@ -34,6 +36,19 @@ def update_device_infos(address_origin, path=None):
         device_info.address_origin = address_origin
 
     db.session.bulk_save_objects(device_infos)
+    db.session.commit()
+
+    countries = {c.iso2: c for c in db.session.query(Country)}
+
+    parser = flydenity_parser.ARParser()
+    for device_info in db.session.query(SenderInfo).filter(SenderInfo.country_id == db.null()):
+        datasets = parser.parse(device_info.registration, strict=True)
+        if datasets is None:
+            continue
+
+        for dataset in datasets:
+            if 'iso2' in dataset:
+                device_info.country = countries[dataset['iso2']]
     db.session.commit()
 
     return len(device_infos)

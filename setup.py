@@ -58,7 +58,8 @@ setup(
         'requests==2.25.0',
         'matplotlib==3.3.3',
         'bokeh==2.2.3',
-        'pandas==1.1.5'
+        'pandas==1.1.5',
+        'flydenity==0.1.5'
     ],
     test_require=[
         'pytest==5.0.1',
