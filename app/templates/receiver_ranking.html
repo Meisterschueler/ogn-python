@@ -28,7 +28,6 @@
         <th>Name</th>
         <th>Airport</th>
         <th class="text-right">Distance [km]</th>
-        <th class="text-right">Normalized signal quality [dB]</th>
         <th class="text-right">Senders</th>
         <th class="text-right">Coverages</th>
         <th class="text-right">Messages</th>
@@ -44,7 +43,6 @@
         <td>{{ receiver.country|to_html_flag|safe }} {{ receiver|to_html_link|safe }}</td>
         <td>{{ receiver.airport|to_html_link|safe }}</td>
         <td class="text-right">{% if ranking is not none %}{{ '%0.1f' | format(ranking.max_distance/1000.0) }}{% else %}-{% endif %}</td>
-        <td class="text-right">{% if ranking is not none %}{{ '%0.1f' | format(ranking.max_normalized_quality) }}{% else %}-{% endif %}</td>
         <td class="text-right">{% if ranking is not none %}{{ ranking.senders_count }}{% else %}-{% endif %}</td>
         <td class="text-right">{% if ranking is not none %}{{ ranking.coverages_count }}{% else %}-{% endif %}</td>
         <td class="text-right">{% if ranking is not none %}{{ ranking.messages_count }}{% else %}-{% endif %}</td>
