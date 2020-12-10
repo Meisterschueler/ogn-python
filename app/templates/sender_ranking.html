@@ -45,7 +45,12 @@
   {{ super() }}
   <script>
     $(function() {
-      $("#myTable").tablesorter({sortList: [[0,0]], theme:"bootstrap", headerTemplate:"{content} {icon}", widgets:["uitheme"]});
+      $("#myTable").tablesorter({
+          stringTo:"bottom",
+          theme:"bootstrap",
+          headerTemplate:"{content} {icon}",
+          widgets:["uitheme"]
+        });
     });
   </script>
 {% endblock %}
