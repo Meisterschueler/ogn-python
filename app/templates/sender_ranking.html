@@ -2,8 +2,6 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
-
 <div class="container">
 <div class="panel panel-success">
 <div class="panel-heading"><h3 class="panel-title">Sender Ranking</h3></div>
@@ -25,7 +23,7 @@
       {% for entry in ranking %}
       <tr>
         <td>{{ loop.index }}</td>
-        <td>{% if entry.sender.infos|length > 0 and entry.sender.infos[0].country is not none %}{{ entry.sender.infos[0].country|to_html_flag|safe }} {% endif %}{{ entry.sender|to_html_link|safe }}</a></td>
+        <td>{{ entry.sender|to_html_flag|safe }}{{ entry.sender|to_html_link|safe }}</a></td>
         <td>{% if entry.sender.infos|length > 0 %}{{ entry.sender.infos[0].aircraft }}{% else %}-{% endif %}</td>
         <td class="text-right">{{ '%0.1f' | format(entry.max_distance/1000.0) }}</td>
         <td class="text-right">{{ entry.receivers_count }}</td>

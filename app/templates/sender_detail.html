@@ -32,7 +32,7 @@
 	{% for info in sender.infos %}
 	<tr>
 		<td>{{ info.aircraft }}</td>
-		<td>{{ info.registration }}</td>
+		<td>{{ info|to_html_flag|safe }}{{ info.registration }}</td>
 		<td>{{ info.competition }}</td>
 		<td>{{ info.aircraft_type.name }}</td>
 		<td>{{ info.address_origin.name }}</td>
