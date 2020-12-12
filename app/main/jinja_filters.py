@@ -12,13 +12,25 @@ def to_html_flag(obj):
         return ""
 
     if isinstance(obj, str):
-        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.lower()}" alt="{obj}"/>"""
+        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.lower()}" alt="{obj}"/> """
 
     elif isinstance(obj, Airport):
-        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.country_code.lower()}" alt="{obj.country_code}"/>"""
+        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.country_code.lower()}" alt="{obj.country_code}"/> """
 
     elif isinstance(obj, Country):
-        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.iso2.lower()}" alt="{obj.iso2}"/>"""
+        return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.iso2.lower()}" alt="{obj.iso2}"/> """
+
+    elif isinstance(obj, Sender):
+        if obj is not None and len(obj.infos) > 0 and obj.infos[0].country is not None:
+            return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.infos[0].country.iso2.lower()}" alt="{obj.infos[0].country.iso2}"/> """
+        else:
+            return ""
+
+    elif isinstance(obj, Receiver):
+        if obj.country:
+            return f"""<img src="{url_for('static', filename='img/Transparent.gif')}" class="flag flag-{obj.country.iso2.lower()}" alt="{obj.country.iso2}"/> """
+        else:
+            return ""
 
 
 @bp.app_template_filter()

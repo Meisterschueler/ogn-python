@@ -3,7 +3,8 @@ import unittest
 from datetime import date
 
 from app.model import AircraftType
-from app.utils import get_days, get_ddb, get_trackable, get_airports
+from app.utils import get_days, get_trackable, get_airports
+from app.commands.database import read_ddb
 
 
 class TestStringMethods(unittest.TestCase):
@@ -14,25 +15,25 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(days, [date(2018, 2, 27), date(2018, 2, 28), date(2018, 3, 1), date(2018, 3, 2)])
 
     def test_get_devices(self):
-        devices = get_ddb()
-        self.assertGreater(len(devices), 1000)
+        sender_infos = read_ddb()
+        self.assertGreater(len(sender_infos), 1000)
 
     def test_get_ddb_from_file(self):
-        devices = get_ddb(os.path.dirname(__file__) + "/custom_ddb.txt")
-        self.assertEqual(len(devices), 6)
-        device = devices[0]
+        sender_infos = read_ddb(os.path.dirname(__file__) + "/custom_ddb.txt")
+        self.assertEqual(len(sender_infos), 6)
+        sender_info = sender_infos[0]
 
-        self.assertEqual(device.address, "DD4711")
-        self.assertEqual(device.aircraft, "HK36 TTC")
-        self.assertEqual(device.registration, "D-EULE")
-        self.assertEqual(device.competition, "CU")
-        self.assertTrue(device.tracked)
-        self.assertTrue(device.identified)
-        self.assertEqual(device.aircraft_type, AircraftType.GLIDER_OR_MOTOR_GLIDER)
+        self.assertEqual(sender_info['address'], "DD4711")
+        self.assertEqual(sender_info['aircraft'], "HK36 TTC")
+        self.assertEqual(sender_info['registration'], "D-EULE")
+        self.assertEqual(sender_info['competition'], "CU")
+        self.assertTrue(sender_info['tracked'])
+        self.assertTrue(sender_info['identified'])
+        self.assertEqual(sender_info['aircraft_type'], AircraftType.GLIDER_OR_MOTOR_GLIDER)
 
     def test_get_trackable(self):
-        devices = get_ddb(os.path.dirname(__file__) + "/custom_ddb.txt")
-        trackable = get_trackable(devices)
+        sender_infos = read_ddb(os.path.dirname(__file__) + "/custom_ddb.txt")
+        trackable = get_trackable(sender_infos)
         self.assertEqual(len(trackable), 4)
         self.assertIn("FLRDD4711", trackable)
         self.assertIn("FLRDD0815", trackable)

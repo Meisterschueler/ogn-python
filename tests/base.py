@@ -33,6 +33,11 @@ class TestBaseDB(unittest.TestCase):
         db.session.execute("SELECT create_hypertable('receiver_statuses', 'reference_timestamp', chunk_time_interval => interval '1 day', if_not_exists => TRUE);")
         db.session.commit()
 
+        # ... and insert some countries
+        db.session.execute("INSERT INTO countries(name, iso2) VALUES ('Germany', 'DE');")
+        db.session.execute("INSERT INTO countries(name, iso2) VALUES ('Austria', 'AT');")
+        db.session.execute("INSERT INTO countries(name, iso2) VALUES ('United Kingdom', 'GB');")
+
     def tearDown(self):
         db.session.remove()
 
