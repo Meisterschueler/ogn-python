@@ -4,6 +4,7 @@
     {{ super() }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.default.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/css/theme.bootstrap_3.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
 {% endblock %}
 
 {% block title %}

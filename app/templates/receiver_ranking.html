@@ -2,8 +2,6 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/flags/flags.css') }}"/>
-
 <div class="container">
 <div class="panel panel-success">
 <div class="panel-heading"><h3 class="panel-title">Receiver Ranking</h3></div>
@@ -28,7 +26,6 @@
         <th>Name</th>
         <th>Airport</th>
         <th class="text-right">Distance [km]</th>
-        <th class="text-right">Normalized signal quality [dB]</th>
         <th class="text-right">Senders</th>
         <th class="text-right">Coverages</th>
         <th class="text-right">Messages</th>
@@ -41,10 +38,9 @@
         <td class="text-right">{{ today }}</td>
         <td class="text-right">{% if yesterday is none %}(new){% elif yesterday - today > 0 %}<span class="text-success"><i class="fa fa-long-arrow-up"></i>{{ yesterday - today }}</span>{% elif yesterday - today < 0 %}<span class="text-danger"><i class="fa fa-long-arrow-down"></i>{{ today - yesterday }}</span>{% endif %}</td>
         <td class="text-right">{% if current is not none %}{{ current }}{% else %}-{% endif %}</td>
-        <td>{{ receiver.country|to_html_flag|safe }} {{ receiver|to_html_link|safe }}</td>
+        <td>{{ receiver|to_html_flag|safe }}{{ receiver|to_html_link|safe }}</td>
         <td>{{ receiver.airport|to_html_link|safe }}</td>
         <td class="text-right">{% if ranking is not none %}{{ '%0.1f' | format(ranking.max_distance/1000.0) }}{% else %}-{% endif %}</td>
-        <td class="text-right">{% if ranking is not none %}{{ '%0.1f' | format(ranking.max_normalized_quality) }}{% else %}-{% endif %}</td>
         <td class="text-right">{% if ranking is not none %}{{ ranking.senders_count }}{% else %}-{% endif %}</td>
         <td class="text-right">{% if ranking is not none %}{{ ranking.coverages_count }}{% else %}-{% endif %}</td>
         <td class="text-right">{% if ranking is not none %}{{ ranking.messages_count }}{% else %}-{% endif %}</td>
@@ -61,7 +57,12 @@
   {{ super() }}
   <script>
     $(function() {
-      $("#myTable").tablesorter({sortList: [[0,0]], theme:"bootstrap", headerTemplate:"{content} {icon}", widgets:["uitheme"]});
+      $("#myTable").tablesorter({
+          stringTo:"bottom",
+          theme:"bootstrap",
+          headerTemplate:"{content} {icon}",
+          widgets:["uitheme"]
+        });
     });
   </script>
 {% endblock %}

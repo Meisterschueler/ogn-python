@@ -5,10 +5,10 @@ import click
 from datetime import datetime
 from sqlalchemy.sql import func
 
-from app.collect.database import update_device_infos
-from app.model import SenderPosition, SenderInfoOrigin
+from app.model import SenderPosition
 from app.utils import get_airports, get_days
 from app.collect.timescaledb_views import create_timescaledb_views, create_views
+from app.collect.database import read_ddb, read_flarmnet, merge_sender_infos
 
 from app import db
 
@@ -77,21 +77,17 @@ def drop(sure):
 
 
 @user_cli.command("import_ddb")
-def import_ddb():
+@click.option('--path', default=None, help='path to a local ddb file.')
+def import_ddb(path):
     """Import registered devices from the DDB."""
 
-    print("Import registered devices fom the DDB...")
-    counter = update_device_infos(SenderInfoOrigin.OGN_DDB)
-    print("Imported %i devices." % counter)
-
-
-@user_cli.command("import_file")
-@click.argument("path")
-def import_file(path="tests/custom_ddb.txt"):
-    """Import registered devices from a local file."""
-
-    print("Import registered devices from '{}'...".format(path))
-    counter = update_device_infos(SenderInfoOrigin.USER_DEFINED, path=path)
+    if path is None:
+        print("Import registered devices fom the DDB...")
+        sender_info_dicts = read_ddb()
+    else:
+        print("Import registered devices from '{}'...".format(path))
+        sender_info_dicts = read_ddb(csv_file=path)
+    counter = merge_sender_infos(sender_info_dicts)
     print("Imported %i devices." % counter)
 
 
@@ -101,7 +97,8 @@ def import_flarmnet(path=None):
     """Import registered devices from a local file."""
 
     print("Import registered devices from '{}'...".format("internet" if path is None else path))
-    counter = update_device_infos(SenderInfoOrigin.FLARMNET, path=path)
+    sender_info_dicts = read_flarmnet(path=path)
+    counter = merge_sender_infos(sender_info_dicts)
     print("Imported %i devices." % counter)
 
 

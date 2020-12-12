@@ -146,11 +146,10 @@ Commands:
   export    Export data in several file formats.
   flights   Create 2D flight paths from data.
   gateway   Connection to APRS servers.
-  logbook   Handling of logbook data.
+  logbook   Handling of takeoff/landings and logbook data.
   routes    Show the routes for the app.
-  run       Runs a development server.
-  shell     Runs a shell in the app context.
-  stats     Handling of statistical data.
+  run       Run a development server.
+  shell     Run a shell in the app context.
 ```
 
 Most commands are command groups, so if you execute this command you will get further (sub)commands.

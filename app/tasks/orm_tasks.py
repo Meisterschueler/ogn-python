@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from app.collect.logbook import update_takeoff_landings as logbook_update_takeoff_landings, update_logbook as logbook_update
 from app.collect.logbook import update_max_altitudes as logbook_update_max_altitudes
 
-from app.collect.database import import_ddb as device_infos_import_ddb
+from app.collect.database import read_ddb, merge_sender_infos
 
 from app.collect.gateway import transfer_from_redis_to_database
 
@@ -48,5 +48,6 @@ def update_logbook_max_altitude():
 def import_ddb():
     """Import registered devices from the DDB."""
 
-    result = device_infos_import_ddb()
+    sender_info_dicts = read_ddb()
+    result = merge_sender_infos(sender_info_dicts)
     return result
