@@ -19,4 +19,4 @@ class SenderCoverageStatistic(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey("senders.id", ondelete="CASCADE"), index=True)
     sender = db.relationship("Sender", foreign_keys=[sender_id], backref=db.backref("sender_coverage_stats", order_by=date))
 
-    __table_args__ = (db.Index('idx_sender_coverage_statistics_uc', 'date', 'location_mgrs_short', 'sender_id', 'is_trustworthy', unique=True), )
+    __table_args__ = (db.Index('idx_sender_coverage_statistics_uc', 'date', 'sender_id', 'location_mgrs_short', 'is_trustworthy', unique=True), )

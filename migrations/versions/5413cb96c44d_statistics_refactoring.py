@@ -31,7 +31,7 @@ def upgrade():
         sa.ForeignKeyConstraint(['sender_id'], ['senders.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('idx_sender_coverage_statistics_uc', 'sender_coverage_statistics', ['date', 'location_mgrs_short', 'sender_id', 'is_trustworthy'], unique=True)
+    op.create_index('idx_sender_coverage_statistics_uc', 'sender_coverage_statistics', ['date', 'sender_id', 'location_mgrs_short', 'is_trustworthy'], unique=True)
     op.create_index(op.f('ix_sender_coverage_statistics_sender_id'), 'sender_coverage_statistics', ['sender_id'], unique=False)
     
     op.create_table('receiver_coverage_statistics',
@@ -47,7 +47,7 @@ def upgrade():
         sa.ForeignKeyConstraint(['receiver_id'], ['receivers.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('idx_receiver_coverage_statistics_uc', 'receiver_coverage_statistics', ['date', 'location_mgrs_short', 'receiver_id', 'is_trustworthy'], unique=True)
+    op.create_index('idx_receiver_coverage_statistics_uc', 'receiver_coverage_statistics', ['date', 'receiver_id', 'location_mgrs_short', 'is_trustworthy'], unique=True)
     op.create_index(op.f('ix_receiver_coverage_statistics_receiver_id'), 'receiver_coverage_statistics', ['receiver_id'], unique=False)
 
     op.drop_index('idx_relation_statistics_date_sender_id', table_name='relation_statistics')
