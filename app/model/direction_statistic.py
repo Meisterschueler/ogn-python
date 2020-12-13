@@ -3,8 +3,8 @@ from app import db
 from sqlalchemy.dialects.postgresql import JSON
 
 
-class SenderDirectionStatistic(db.Model):
-    __tablename__ = "sender_direction_statistics"
+class DirectionStatistic(db.Model):
+    __tablename__ = "direction_statistics"
 
     id = db.Column(db.Integer, primary_key=True)
 
