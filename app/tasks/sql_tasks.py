@@ -10,12 +10,12 @@ def update_statistics(date_str=None):
     if date_str is None:
         date_str = datetime.utcnow().strftime("%Y-%m-%d")
 
-    # Update sender_coverage_statistics AS scs (date, sender_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, messages_count, receivers_count)
+    # Update sender_coverage_statistics AS scs (date, sender_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, receivers_count)
     db.session.execute(f"""
         DELETE FROM sender_coverage_statistics
         WHERE date = '{date_str}';
 
-        INSERT INTO sender_coverage_statistics AS scs (date, sender_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, messages_count, receivers_count)
+        INSERT INTO sender_coverage_statistics AS scs (date, sender_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, receivers_count)
         SELECT
             tmp.date,
             tmp.sender_id,
@@ -25,6 +25,9 @@ def update_statistics(date_str=None):
 
             MAX(tmp.max_distance) AS max_distance,
             MAX(tmp.max_normalized_quality) AS max_normalized_quality,
+            MAX(tmp.max_signal_quality) AS max_signal_quality,
+            MIN(tmp.min_altitude) AS min_altitude,
+            MAX(tmp.max_altitude) AS max_altitude,
             SUM(tmp.messages_count) AS messages_count,
             COUNT(DISTINCT tmp.receiver_id) AS receivers_count
         FROM coverage_statistics AS tmp
@@ -32,12 +35,12 @@ def update_statistics(date_str=None):
         GROUP BY date, sender_id, location_mgrs_short, is_trustworthy;
     """)
 
-    # Update receiver_coverage_statistics AS rcs (date, sender_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, messages_count, senders_count)
+    # Update receiver_coverage_statistics AS rcs (date, sender_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count)
     db.session.execute(f"""
         DELETE FROM receiver_coverage_statistics
         WHERE date = '{date_str}';
 
-        INSERT INTO receiver_coverage_statistics AS rcs (date, receiver_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, messages_count, senders_count)
+        INSERT INTO receiver_coverage_statistics AS rcs (date, receiver_id, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count)
         SELECT
             tmp.date,
             tmp.receiver_id,
@@ -47,11 +50,39 @@ def update_statistics(date_str=None):
 
             MAX(tmp.max_distance) AS max_distance,
             MAX(tmp.max_normalized_quality) AS max_normalized_quality,
+            MAX(tmp.max_signal_quality) AS max_signal_quality,
+            MIN(tmp.min_altitude) AS min_altitude,
+            MAX(tmp.max_altitude) AS max_altitude,
             SUM(tmp.messages_count) AS messages_count,
             COUNT(DISTINCT tmp.sender_id) AS senders_count
         FROM coverage_statistics AS tmp
         WHERE tmp.date = '{date_str}'
         GROUP BY date, receiver_id, location_mgrs_short, is_trustworthy;
+    """)
+
+    # Update flat_coverage_statistics AS rcs (date, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count, receivers_count)
+    db.session.execute(f"""
+        DELETE FROM flat_coverage_statistics
+        WHERE date = '{date_str}';
+
+        INSERT INTO flat_coverage_statistics AS rcs (date, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count, receivers_count)
+        SELECT
+            tmp.date,
+            tmp.location_mgrs_short,
+
+            tmp.is_trustworthy,
+
+            MAX(tmp.max_distance) AS max_distance,
+            MAX(tmp.max_normalized_quality) AS max_normalized_quality,
+            MAX(tmp.max_signal_quality) AS max_signal_quality,
+            MIN(tmp.min_altitude) AS min_altitude,
+            MAX(tmp.max_altitude) AS max_altitude,
+            SUM(tmp.messages_count) AS messages_count,
+            COUNT(DISTINCT tmp.sender_id) AS senders_count,
+            COUNT(DISTINCT tmp.receiver_id) AS receivers_count
+        FROM coverage_statistics AS tmp
+        WHERE tmp.date = '{date_str}'
+        GROUP BY date, location_mgrs_short, is_trustworthy;
     """)
 
     # Update sender statistics

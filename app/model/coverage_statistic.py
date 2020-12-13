@@ -13,6 +13,9 @@ class CoverageStatistic(db.Model):
     messages_count = db.Column(db.Integer)
     max_distance = db.Column(db.Float(precision=2))
     max_normalized_quality = db.Column(db.Float(precision=2))
+    max_signal_quality = db.Column(db.Float(precision=2))
+    min_altitude = db.Column(db.Float(precision=2))
+    max_altitude = db.Column(db.Float(precision=2))
 
     # Relations
     sender_id = db.Column(db.Integer, db.ForeignKey("senders.id", ondelete="CASCADE"), index=True)

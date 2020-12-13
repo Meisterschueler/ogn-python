@@ -13,6 +13,9 @@ class SenderCoverageStatistic(db.Model):
     messages_count = db.Column(db.Integer)
     max_distance = db.Column(db.Float(precision=2))
     max_normalized_quality = db.Column(db.Float(precision=2))
+    max_signal_quality = db.Column(db.Float(precision=2))
+    min_altitude = db.Column(db.Float(precision=2))
+    max_altitude = db.Column(db.Float(precision=2))
     receivers_count = db.Column(db.Integer)
 
     # Relations
