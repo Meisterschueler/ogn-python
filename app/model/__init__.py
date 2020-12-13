@@ -21,6 +21,7 @@ from .direction_statistic import DirectionStatistic
 from .coverage_statistic import CoverageStatistic
 from .receiver_coverage_statistic import ReceiverCoverageStatistic
 from .sender_coverage_statistic import SenderCoverageStatistic
+from .flat_coverage_statistic import FlatCoverageStatistic
 
 from .sender_statistic import SenderStatistic
 from .receiver_statistic import ReceiverStatistic
