@@ -77,7 +77,6 @@ def upgrade():
     )
     op.create_index('idx_aggregate_coverage_statistics_uc', 'aggregate_coverage_statistics', ['date', 'location_mgrs_short', 'is_trustworthy'], unique=True)
 
-    op.drop_index('idx_relation_statistics_date_sender_id', table_name='relation_statistics')
     op.drop_index('idx_relation_statistics_uc', table_name='relation_statistics')
     op.drop_index('ix_relation_statistics_receiver_id', table_name='relation_statistics')
     op.drop_index('ix_relation_statistics_sender_id', table_name='relation_statistics')
@@ -112,7 +111,6 @@ def downgrade():
     op.create_index('ix_relation_statistics_sender_id', 'relation_statistics', ['sender_id'], unique=False)
     op.create_index('ix_relation_statistics_receiver_id', 'relation_statistics', ['receiver_id'], unique=False)
     op.create_index('idx_relation_statistics_uc', 'relation_statistics', ['date', 'sender_id', 'receiver_id', 'is_trustworthy'], unique=True)
-    op.create_index('idx_relation_statistics_date_sender_id', 'relation_statistics', ['date', 'sender_id'], unique=False)
 
     op.drop_index('idx_aggregate_coverage_statistics_uc', table_name='aggregate_coverage_statistics')
     op.drop_table('aggregate_coverage_statistics')
