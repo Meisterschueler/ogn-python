@@ -60,12 +60,12 @@ def update_statistics(date_str=None):
         GROUP BY date, receiver_id, location_mgrs_short, is_trustworthy;
     """)
 
-    # Update flat_coverage_statistics AS rcs (date, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count, receivers_count)
+    # Update aggregate_coverage_statistics AS rcs (date, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count, receivers_count)
     db.session.execute(f"""
-        DELETE FROM flat_coverage_statistics
+        DELETE FROM aggregate_coverage_statistics
         WHERE date = '{date_str}';
 
-        INSERT INTO flat_coverage_statistics AS rcs (date, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count, receivers_count)
+        INSERT INTO aggregate_coverage_statistics AS rcs (date, location_mgrs_short, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count, senders_count, receivers_count)
         SELECT
             tmp.date,
             tmp.location_mgrs_short,

@@ -1,8 +1,8 @@
 from app import db
 
 
-class FlatCoverageStatistic(db.Model):
-    __tablename__ = "flat_coverage_statistics"
+class AggregateCoverageStatistic(db.Model):
+    __tablename__ = "aggregate_coverage_statistics"
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -19,4 +19,4 @@ class FlatCoverageStatistic(db.Model):
     senders_count = db.Column(db.Integer)
     receivers_count = db.Column(db.Integer)
 
-    __table_args__ = (db.Index('idx_receiver_coverage_statistics_uc', 'date', 'location_mgrs_short', 'is_trustworthy', unique=True), )
+    __table_args__ = (db.Index('idx_aggregate_coverage_statistics_uc', 'date', 'location_mgrs_short', 'is_trustworthy', unique=True), )

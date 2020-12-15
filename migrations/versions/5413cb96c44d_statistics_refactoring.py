@@ -60,7 +60,7 @@ def upgrade():
     op.create_index('idx_receiver_coverage_statistics_uc', 'receiver_coverage_statistics', ['date', 'receiver_id', 'location_mgrs_short', 'is_trustworthy'], unique=True)
     op.create_index(op.f('ix_receiver_coverage_statistics_receiver_id'), 'receiver_coverage_statistics', ['receiver_id'], unique=False)
 
-    op.create_table('flat_coverage_statistics',
+    op.create_table('aggregate_coverage_statistics',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('date', sa.Date(), nullable=True),
         sa.Column('location_mgrs_short', sa.String(length=9), nullable=True),
@@ -75,7 +75,7 @@ def upgrade():
         sa.Column('receivers_count', sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('idx_flat_coverage_statistics_uc', 'flat_coverage_statistics', ['date', 'location_mgrs_short', 'is_trustworthy'], unique=True)
+    op.create_index('idx_aggregate_coverage_statistics_uc', 'aggregate_coverage_statistics', ['date', 'location_mgrs_short', 'is_trustworthy'], unique=True)
 
     op.drop_index('idx_relation_statistics_date_sender_id', table_name='relation_statistics')
     op.drop_index('idx_relation_statistics_uc', table_name='relation_statistics')
@@ -110,8 +110,8 @@ def downgrade():
     op.create_index('idx_relation_statistics_uc', 'relation_statistics', ['date', 'sender_id', 'receiver_id', 'is_trustworthy'], unique=True)
     op.create_index('idx_relation_statistics_date_sender_id', 'relation_statistics', ['date', 'sender_id'], unique=False)
 
-    op.drop_index('idx_flat_coverage_statistics_uc', table_name='flat_coverage_statistics')
-    op.drop_table('flat_coverage_statistics')
+    op.drop_index('idx_aggregate_coverage_statistics_uc', table_name='aggregate_coverage_statistics')
+    op.drop_table('aggregate_coverage_statistics')
 
     op.drop_index(op.f('ix_receiver_coverage_statistics_receiver_id'), table_name='receiver_coverage_statistics')
     op.drop_index('idx_receiver_coverage_statistics_uc', table_name='receiver_coverage_statistics')
