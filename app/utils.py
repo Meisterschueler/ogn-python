@@ -86,12 +86,12 @@ def get_sql_trustworthy(source_table_alias):
     MIN_DISTANCE = 1000
     MAX_DISTANCE = 640000
     MAX_NORMALIZED_QUALITY = 40     # this is enough for > 640km
-    MAX_ERROR_COUNT = 5
+    MAX_ERROR_COUNT = 9
     MAX_CLIMB_RATE = 50
 
     return f"""
             ({source_table_alias}.distance IS NOT NULL AND {source_table_alias}.distance BETWEEN {MIN_DISTANCE} AND {MAX_DISTANCE})
-        AND ({source_table_alias}.normalized_quality IS NOT NULL AND {source_table_alias}.normalized_quality < {MAX_NORMALIZED_QUALITY})
-        AND ({source_table_alias}.error_count IS NULL OR {source_table_alias}.error_count < {MAX_ERROR_COUNT})
+        AND ({source_table_alias}.normalized_quality IS NOT NULL AND {source_table_alias}.normalized_quality <= {MAX_NORMALIZED_QUALITY})
+        AND ({source_table_alias}.error_count IS NULL OR {source_table_alias}.error_count <= {MAX_ERROR_COUNT})
         AND ({source_table_alias}.climb_rate IS NULL OR {source_table_alias}.climb_rate BETWEEN -{MAX_CLIMB_RATE} AND {MAX_CLIMB_RATE})
     """
