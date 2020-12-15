@@ -3,8 +3,8 @@ from app import db
 from sqlalchemy.dialects.postgresql import JSON
 
 
-class SenderDirectionStatistic(db.Model):
-    __tablename__ = "sender_direction_statistics"
+class DirectionStatistic(db.Model):
+    __tablename__ = "direction_statistics"
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -19,4 +19,4 @@ class SenderDirectionStatistic(db.Model):
     receiver_id = db.Column(db.Integer, db.ForeignKey("receivers.id", ondelete="CASCADE"), index=True)
     receiver = db.relationship("Receiver", foreign_keys=[receiver_id], backref=db.backref("direction_stats", order_by=directions_count.desc()))
 
-    __table_args__ = (db.Index('idx_sender_direction_statistics_uc', 'sender_id', 'receiver_id', unique=True), )
+    __table_args__ = (db.Index('idx_direction_statistics_uc', 'sender_id', 'receiver_id', unique=True), )

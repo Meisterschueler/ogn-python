@@ -2,12 +2,12 @@ import os
 import re
 from datetime import date, time, datetime, timedelta
 
-from flask import request, render_template, send_file, abort, current_app, make_response
+from flask import request, render_template, abort, current_app, make_response, jsonify
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
 from app import cache
-from app.model import Airport, Country, Sender, SenderInfo, TakeoffLanding, Logbook, Receiver, SenderPosition, RelationStatistic, ReceiverRanking, ReceiverStatistic, SenderStatistic, FrequencyScanFile
+from app.model import Airport, Country, CoverageStatistic, AggregateCoverageStatistic, Sender, TakeoffLanding, Logbook, Receiver, ReceiverRanking, ReceiverStatistic, SenderStatistic, FrequencyScanFile
 
 from app.main import bp
 from app.main.matplotlib_service import create_range_figure

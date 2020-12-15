@@ -16,11 +16,15 @@ from .frequency_scan_file import FrequencyScanFile
 
 from .geo import Location
 
-from .relation_statistic import RelationStatistic
+from .direction_statistic import DirectionStatistic
+
 from .coverage_statistic import CoverageStatistic
+from .receiver_coverage_statistic import ReceiverCoverageStatistic
+from .sender_coverage_statistic import SenderCoverageStatistic
+from .aggregate_coverage_statistic import AggregateCoverageStatistic
+
 from .sender_statistic import SenderStatistic
 from .receiver_statistic import ReceiverStatistic
 from .sender_position_statistic import SenderPositionStatistic
-from .sender_direction_statistic import SenderDirectionStatistic
 from .receiver_ranking import ReceiverRanking
 from .receiver_status_statistic import ReceiverStatusStatistic

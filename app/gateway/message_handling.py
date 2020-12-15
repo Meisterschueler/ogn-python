@@ -251,7 +251,7 @@ def sender_position_csv_strings_to_db(lines):
 
     # Update coverage statistics
     cursor.execute(f"""
-        INSERT INTO coverage_statistics AS rs (date, location_mgrs_short, sender_id, receiver_id, is_trustworthy, max_distance, max_normalized_quality, messages_count)
+        INSERT INTO coverage_statistics AS rs (date, location_mgrs_short, sender_id, receiver_id, is_trustworthy, max_distance, max_normalized_quality, max_signal_quality, min_altitude, max_altitude, messages_count)
         SELECT
             tmp.reference_timestamp::DATE AS date,
             tmp.location_mgrs_short,
@@ -262,6 +262,9 @@ def sender_position_csv_strings_to_db(lines):
 
             MAX(tmp.distance) AS max_distance,
             MAX(tmp.normalized_quality) AS max_normalized_quality,
+            MAX(tmp.signal_quality) AS max_signal_quality,
+            MIN(tmp.altitude) AS min_altitude,
+            MAX(tmp.altitude) AS max_altitude,
             COUNT(tmp.*) AS messages_count
         FROM (SELECT x.*, s.id AS sender_id, r.id AS receiver_id FROM {tmp_tablename} AS x INNER JOIN senders AS s ON x.name = s.name INNER JOIN receivers AS r ON x.receiver_name = r.name) AS tmp
         GROUP BY date, location_mgrs_short, sender_id, receiver_id, is_trustworthy

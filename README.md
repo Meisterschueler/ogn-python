@@ -6,7 +6,7 @@
 A database backend for the [Open Glider Network](http://wiki.glidernet.org/).
 The ogn-python module saves all received beacons into a database with [SQLAlchemy](http://www.sqlalchemy.org/).
 It connects to the OGN aprs servers with [python-ogn-client](https://github.com/glidernet/python-ogn-client).
-It requires [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postgis.net/) and [TimescaleDB](https://www.timescale.com).
+It requires [redis](http://redis.io), [PostgreSQL](http://www.postgresql.org/), [PostGIS](http://www.postgis.net/) and [TimescaleDB](https://www.timescale.com).
 
 [Examples](https://github.com/glidernet/ogn-python/wiki/Examples)
 
@@ -156,23 +156,25 @@ Most commands are command groups, so if you execute this command you will get fu
 
 ### Available tasks
 
+- `app.tasks.transfer_to_database` - Take sender and receiver messages from redis and put them into the db.
 - `app.tasks.update_takeoff_landings` - Compute takeoffs and landings.
-- `app.tasks.celery.update_logbook_entries` - Add/update logbook entries.
-- `app.tasks.celery.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
-- `app.tasks.celery.import_ddb` - Import registered devices from the DDB.
+- `app.tasks.update_logbook` - Add/update logbook entries.
+- `app.tasks.update_logbook_max_altitude` - Add max altitudes in logbook when flight is complete (takeoff and landing).
+- `app.tasks.update_statistics` - Calculate several statistics (also the sender/receiver rankings).
+- `app.tasks.import_ddb` - Import registered devices from the DDB.
 
 If the task server is up and running, tasks could be started manually. Here we compute takeoffs and landings for the past 90 minutes:
 
 ```
 python3
->>>from app.collect.celery import update_takeoff_landings
+>>>from app.tasks import update_takeoff_landings
 >>>update_takeoff_landings.delay(last_minutes=90)
 ```
 
 or directly from command line:
 
 ```
-celery -A celery_app call takeoff_landings
+celery -A celery_app call import_ddb
 ```
 
 ## Notes for Raspberry Pi

@@ -1,5 +1,5 @@
 from app import db
-from app.model import SenderDirectionStatistic
+from app.model import DirectionStatistic
 import random
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,9 +17,9 @@ def create_range_figure2(sender_id):
 
 
 def create_range_figure(sender_id):
-    sds = db.session.query(SenderDirectionStatistic) \
-        .filter(SenderDirectionStatistic.sender_id == sender_id) \
-        .order_by(SenderDirectionStatistic.directions_count.desc()) \
+    sds = db.session.query(DirectionStatistic) \
+        .filter(DirectionStatistic.sender_id == sender_id) \
+        .order_by(DirectionStatistic.directions_count.desc()) \
         .limit(1) \
         .one()
 
