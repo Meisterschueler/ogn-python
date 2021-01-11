@@ -54,7 +54,7 @@ setup(
         'psycopg2-binary==2.8.6',
         'xmlunittest==0.5.0',
         'flower==0.9.7',
-        'tqdm==4.55.1',
+        'tqdm==4.56.0',
         'requests==2.25.1',
         'matplotlib==3.3.3',
         'bokeh==2.2.3',
