@@ -56,7 +56,7 @@ setup(
         'flower==0.9.7',
         'tqdm==4.56.2',
         'requests==2.25.1',
-        'matplotlib==3.3.3',
+        'matplotlib==3.3.4',
         'bokeh==2.2.3',
         'pandas==1.1.5',
         'flydenity==0.1.5',
