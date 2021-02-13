@@ -58,7 +58,7 @@ setup(
         'requests==2.25.1',
         'matplotlib==3.3.4',
         'bokeh==2.2.3',
-        'pandas==1.1.5',
+        'pandas==1.2.2',
         'flydenity==0.1.5',
         'gunicorn==20.0.4'
     ],
