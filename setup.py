@@ -40,7 +40,7 @@ setup(
         'Flask-Migrate==2.6.0',
         'Flask-Bootstrap==3.3.7.1',
         'Flask-WTF==0.14.3',
-        'Flask-Caching==1.9.0',
+        'Flask-Caching==1.10.0',
         'Flask-Profiler==1.8.1',
         'geopy==2.1.0',
         'celery==4.4.7',
