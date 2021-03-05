@@ -43,7 +43,7 @@ setup(
         'Flask-Caching==1.10.0',
         'Flask-Profiler==1.8.1',
         'geopy==2.1.0',
-        'celery==4.4.7',
+        'celery==5.0.5',
         'Flask-Redis==0.4.0',
         'redis==3.5.3',
         'aerofiles==1.0.0',
