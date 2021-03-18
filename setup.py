@@ -57,7 +57,7 @@ setup(
         'tqdm==4.59.0',
         'requests==2.25.1',
         'matplotlib==3.3.4',
-        'bokeh==2.2.3',
+        'bokeh==2.3.0',
         'pandas==1.1.5',
         'flydenity==0.1.5',
         'gunicorn==20.0.4'
