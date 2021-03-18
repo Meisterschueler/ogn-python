@@ -59,7 +59,7 @@ setup(
         'matplotlib==3.3.4',
         'bokeh==2.3.0',
         'pandas==1.1.5',
-        'flydenity==0.1.5',
+        'flydenity==0.1.6',
         'gunicorn==20.0.4'
     ],
     test_require=[
