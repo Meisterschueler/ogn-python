@@ -36,7 +36,7 @@ setup(
     packages=find_packages(exclude=['tests', 'tests.*']),
     install_requires=[
         'Flask==1.1.2',
-        'Flask-SQLAlchemy==2.4.4',
+        'Flask-SQLAlchemy==2.5.1',
         'Flask-Migrate==2.7.0',
         'Flask-Bootstrap==3.3.7.1',
         'Flask-WTF==0.14.3',
