@@ -60,7 +60,7 @@ setup(
         'bokeh==2.3.2',
         'pandas==1.1.5',
         'flydenity==0.1.5',
-        'gunicorn==20.0.4'
+        'gunicorn==20.1.0'
     ],
     test_require=[
         'pytest==5.0.1',
