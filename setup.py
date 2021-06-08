@@ -49,7 +49,7 @@ setup(
         'aerofiles==1.0.0',
         'geoalchemy2==0.8.4',
         'shapely==1.7.1',
-        'ogn-client==1.0.1',
+        'ogn-client==1.2.1',
         'mgrs==1.4.0',
         'psycopg2-binary==2.8.6',
         'xmlunittest==0.5.0',
