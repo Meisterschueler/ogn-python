@@ -34,23 +34,24 @@ It requires [redis](http://redis.io), [PostgreSQL](http://www.postgresql.org/), 
 4. Install [PostgreSQL](http://www.postgresql.org/) with [PostGIS](http://www.postgis.net/) and [TimescaleDB](https://www.timescale.com) Extension.
     Create a database (use "ogn" as default, otherwise you have to modify the configuration, see below)
 
-5.  Install redis for asynchronous tasks (like database feeding, takeoff/landing-detection, ...)
+5. Install redis for asynchronous tasks (like database feeding, takeoff/landing-detection, ...)
 
     ```
     apt-get install redis-server
     ```
 
-6.	Optional: Custom configuration file
-	Write a custom configuration file and let the environment variable `OGN_CONFIG_MODULE` point to the configuration file:
+6. Set the environment
+  Your environment variables must point to the configuration file and to the app path.
 
-	```
-	export OGN_CONFIG_MODULE="config/my_custom_configuration.py"
-	```
+    ```
+    export OGN_CONFIG_MODULE="config.py"
+    export FLASK_APP=ogn_python.py
+    ```
 
 7. Create database
 
     ```
-    ./flask database init
+    flask database init
     ```
 
 8. Optional: Import world border dataset (needed if you want to know the country a receiver belongs to, etc.)
@@ -106,7 +107,7 @@ The following scripts run in the foreground and should be deamonized
 - Start the aprs client
 
   ```
-  ./flask gateway run
+  flask gateway run
   ```
 
 - Start a task server (make sure redis is up and running)
