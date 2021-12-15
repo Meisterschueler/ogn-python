@@ -1,13 +1,14 @@
-FROM alpine as builder
-RUN apk update && apk add wget && rm -rf /var/cache/apk/*
-RUN wget --no-check-certificate -O borders.zip http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip
-RUN unzip borders.zip
+FROM debian:bullseye-slim AS builder
 
-# We use the postgis image because it includes shp2pgsql
-FROM mdillon/postgis:11
-RUN mkdir /extra
+RUN apt update && \
+    apt install -y --no-install-recommends \
+    wget unzip postgis
+
+RUN wget --no-check-certificate -O borders.zip http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip && \
+    unzip borders.zip -d /extra
+
 WORKDIR /extra
-COPY --from=builder /TM_* /extra/
-RUN shp2pgsql -s 4326 TM_WORLD_BORDERS-0.3.shp world_borders_temp > world_borders_temp 
+
+RUN shp2pgsql -s 4326 TM_WORLD_BORDERS-0.3.shp world_borders_temp > world_borders_temp
 COPY deployment/docker/ogn-pg-importer/docker-entrypoint.sh .
 ENTRYPOINT [ "./docker-entrypoint.sh" ]
