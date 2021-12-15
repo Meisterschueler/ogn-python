@@ -1,6 +1,7 @@
 # OGN stuff
 *.db
 *.log
+srtm/
 
 # Python
 __pycache__/
