@@ -51,7 +51,7 @@ setup(
         'shapely==1.7.1',
         'ogn-client==1.2.1',
         'mgrs==1.4.0',
-        'psycopg2-binary==2.8.6',
+        'psycopg2-binary==2.9.2',
         'xmlunittest==0.5.0',
         'flower==0.9.7',
         'tqdm==4.62.3',
