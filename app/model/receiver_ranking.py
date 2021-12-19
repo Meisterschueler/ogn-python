@@ -7,8 +7,8 @@ class ReceiverRanking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     date = db.Column(db.Date)
-    local_distance_pareto = db.Column(db.Integer)
-    global_distance_pareto = db.Column(db.Integer)
+    local_distance_pareto = db.Column(db.Float)
+    global_distance_pareto = db.Column(db.Float)
 
     max_distance = db.Column(db.Float(precision=2))
     max_normalized_quality = db.Column(db.Float(precision=2))
