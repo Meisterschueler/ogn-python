@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    {{ super() }}
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css" rel="stylesheet" />
+    <style>
+
+        #map { position: relative; top: 0; bottom: 0; width: 100%; height: 800px}
+
+        #menu {
+            background: #fff;
+            position: absolute;
+            z-index: 1;
+            top: 50px;
+            right: 10px;
+            border-radius: 3px;
+            width: 120px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+            font-family: 'Open Sans', sans-serif;
+        }
+ 
+        #menu a {
+            font-size: 13px;
+            color: #404040;
+            display: block;
+            margin: 0;
+            padding: 0;
+            padding: 10px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+ 
+        #menu a:last-child {
+            border: none;
+        }
+ 
+        #menu a:hover {
+            background-color: #f8f8f8;
+            color: #404040;
+        }
+ 
+        #menu a.active {
+            background-color: #3887be;
+            color: #ffffff;
+        }
+ 
+        #menu a.active:hover {
+            background: #3074a4;
+        }
+
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+<div class="panel panel-success">
+<div class="panel-heading"><h3 class="panel-title">{{ map_description }}</h3></div>
+
+<div class="float-right">
+    <div id="map">
+        <nav id="menu"></nav>
+    </div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js"></script>
+    <script src="{{ url_for('static', filename='js/mgrs.js') }}"></script>
+    <script>
+        receiverFeatureCollection = {{ receivers|safe }}
+
+        receiverFeatureCollection.features.forEach(element => {
+            element.properties.description = element.properties.receiver_name;
+        });
+
+        squareFeatureCollection = {{ squares|safe }}
+
+        squareFeatureCollection.features.forEach(element => {
+            try {
+                points = mgrs.inverse(element.properties.mgrs)
+            } catch {
+                points = [0, 0, 0, 0]
+            }
+            lon1 = points[0]
+            lat1 = points[1]
+            lon2 = points[2]
+            lat2 = points[3]
+            element.geometry.coordinates = [[[lon1, lat1], [lon2, lat1], [lon2, lat2], [lon1, lat2], [lon1, lat1]]]
+        });
+
+        mapboxgl.accessToken = 'pk.eyJ1Ijoia2xhdXNrbGFwcGVyb24iLCJhIjoiY2tpamRscGh6MDFxbjJycDJ2czkwZnplaiJ9.EF2w_DAa43FdrSzrQPUEGg';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/outdoors-v11',
+            center: {{ center }},
+            zoom: 8
+        });
+
+        map.addControl(new mapboxgl.FullscreenControl());
+
+        map.on('load', function () {
+            map.addSource('receivers', {
+                'type': 'geojson',
+                'data': receiverFeatureCollection
+            });
+
+            map.addSource('squares', {
+                'type': 'geojson',
+                'data': squareFeatureCollection
+            });
+
+            map.addLayer({
+                'id': 'sqares-not-trustworthy',
+                'type': 'fill',
+                'source': 'squares',
+                'layout': {'visibility': 'visible'},
+                'paint': {
+                    'fill-color': '#0000FF',
+                    'fill-opacity': 0.4
+                },
+                'filter': ['==', 'is_trustworthy', false]
+            });
+
+            map.addLayer({
+                'id': 'sqares-trustworthy',
+                'type': 'fill',
+                'source': 'squares',
+                'layout': {'visibility': 'visible'},
+                'paint': {
+                    'fill-color': '#FF0000',
+                    'fill-opacity': 0.4
+                },
+                'filter': ['==', 'is_trustworthy', true]
+            });
+
+            map.addLayer({
+                'id': 'receivers',
+                'type': 'symbol',
+                'source': 'receivers',
+                'layout': {
+                    'visibility': 'visible',
+                    'text-field': ['get', 'receiver_name'],
+                    'text-font': ['DIN Pro Medium']
+                },
+                "paint": {
+                    "text-color": "#FB4",
+                    "text-halo-color": "#000",
+                    "text-halo-width": 1
+                },
+            });
+
+            var popup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false
+            });
+
+            /* sqares-not-trustworthy
+            map.on('click', 'sqares-not-trustworthy', function (e) {
+                console.log(e.features);
+            });
+
+            map.on('mouseenter', 'sqares-not-trustworthy', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+                
+            map.on('mouseleave', 'sqares-not-trustworthy', function () {
+                map.getCanvas().style.cursor = '';
+            });
+            */
+
+            // sqares-trustworthy
+            map.on('click', 'sqares-trustworthy', function (e) {
+                console.log(e.features[0].properties.mgrs);
+            });
+
+            map.on('mouseenter', 'sqares-trustworthy', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+                
+            map.on('mouseleave', 'sqares-trustworthy', function () {
+                map.getCanvas().style.cursor = '';
+            });
+
+            // receivers
+            map.on('click', 'receivers', function (e) {
+                console.log(e.features[0].properties.receiver_id);
+            });
+
+            map.on('mouseenter', 'receivers', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+                
+            map.on('mouseleave', 'receivers', function () {
+                map.getCanvas().style.cursor = '';
+            });
+        });
+
+        // enumerate ids of the layers
+        var toggleableLayerIds = ['receivers', 'sqares-trustworthy', 'sqares-not-trustworthy'];
+        
+        // set up the corresponding toggle button for each layer
+        for (var i = 0; i < toggleableLayerIds.length; i++) {
+            var id = toggleableLayerIds[i];
+            
+            var link = document.createElement('a');
+            link.href = '#';
+            link.className = 'active';
+            link.textContent = id;
+            
+            link.onclick = function (e) {
+                var clickedLayer = this.textContent;
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+                
+                // toggle layer visibility by changing the layout object's visibility property
+                if (visibility === 'visible') {
+                    map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                    this.className = '';
+                } else {
+                    this.className = 'active';
+                    map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+                }
+            };
+        
+            var layers = document.getElementById('menu');
+            layers.appendChild(link);
+        }
+
+    </script>
+{% endblock %}
