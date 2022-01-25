@@ -179,4 +179,12 @@ def igc(address, date):
         )
 
         for point in points:
+            
+            sql = f"""SELECT st_x('{point.location}'::geometry), st_y('{point.location}'::geometry)"""
+            result = db.session.execute(sql)
+
+            for row in result:
+              point.location.latitude = row[1]
+              point.location.longitude = row[0]
+                
             writer.write_fix(point.timestamp.time(), latitude=point.location.latitude, longitude=point.location.longitude, valid=True, pressure_alt=point.altitude, gps_alt=point.altitude)
