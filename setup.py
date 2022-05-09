@@ -45,7 +45,7 @@ setup(
         'geopy==2.1.0',
         'celery==4.4.7',
         'Flask-Redis==0.4.0',
-        'redis==3.5.3',
+        'redis==4.3.0',
         'aerofiles==1.0.0',
         'geoalchemy2==0.9.0',
         'shapely==1.7.1',
