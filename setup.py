@@ -47,7 +47,7 @@ setup(
         'Flask-Redis==0.4.0',
         'redis==3.5.3',
         'aerofiles==1.0.0',
-        'geoalchemy2==0.9.0',
+        'geoalchemy2==0.12.0',
         'shapely==1.7.1',
         'ogn-client==1.2.1',
         'mgrs==1.4.2',
