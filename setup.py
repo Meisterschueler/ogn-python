@@ -53,7 +53,7 @@ setup(
         'mgrs==1.4.2',
         'psycopg2-binary==2.9.2',
         'xmlunittest==0.5.0',
-        'flower==0.9.7',
+        'flower==1.2.0',
         'tqdm==4.62.3',
         'requests==2.25.1',
         'matplotlib==3.5.1',
